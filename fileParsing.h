@@ -1,8 +1,14 @@
+// Included Libraries
+#include <stdint.h>
+
 // Exit codes
 #define EXIT_OK 0
 #define EXIT_INVALID_ARG 20
 #define EXIT_FILE_CANNOT_BE_READ 9
 #define EXIT_FILE_PARSING_ERROR 8
+
+// cmd line argument indexes
+#define FILE_PATH_IX 1
 
 // File constants
 #define HEADER_FIELD_SIZE 2
@@ -39,5 +45,11 @@ const char* const bitMap = "BM";
 const char* const readMode = "r";
 #define EOS '\0'
 
+typedef struct { // 14 bytes
+    uint16_t id;
+    uint32_t bmpSize;
+    uint32_t offset;
+} BmpHeader;
+
 // Function prototypes
-void parse_bit_map_header(FILE* file);
+void parse_bit_map_header(BmpHeader* bmp, FILE* file);

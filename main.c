@@ -3,36 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-// Exit codes
-#define EXIT_INVALID_ARG 20
-#define EXIT_FILE_CANNOT_BE_READ 9
-#define EXIT_FILE_PARSING_ERROR 8
-#define EXIT_OK 0
-
-// File constants
-#define HEADER_FIELD_SIZE 2
-#define BMP_FILE_SIZE 4
-#define RESERVED1 2
-#define RESERVED2 2
-#define OFFSET_ADDR_SIZE 4
-#define BITMAP_FILE_HEADER_SIZE 14
-#define DIB_HEADER_SIZE 7
-#define BI_RGB 0 // compression method
-#define HALFTONING_ALGORITHM 0 // None
-
-// Functino prototypes
-void parse_bit_map_header(FILE* file);
-
-// Program constant strings
-const char* const fileOpeningErrorMessage
-        = "The provided file \"%s\" cannot be opened for reading\n";
-const char* const invalidArgsMessage = "Invalid arguments supplied\n";
-const char* const bitMap = "BM";
-
-// Assorted constant chars
-const char* const readMode = "r";
-const char endOfString = '\0';
+#include "fileParsing.h"
 
 int main(int argc, char** argv)
 {
@@ -41,8 +12,8 @@ int main(int argc, char** argv)
         exit(EXIT_INVALID_ARG);
     }
 
-    const char* filePath = argv[1];
-    if (filePath[0] == endOfString) {
+    const char* filePath = argv[FILE_PATH_IX];
+    if (filePath[0] == EOS) {
         exit(EXIT_INVALID_ARG);
     }
 
@@ -52,31 +23,31 @@ int main(int argc, char** argv)
         exit(EXIT_FILE_CANNOT_BE_READ);
     }
 
-    (void)parse_bit_map_header(file);
+    BmpHeader bmp;
+    memset(&bmp, 0, sizeof(bmp));
+    (void)parse_bit_map_header(&bmp, file);
 
     exit(EXIT_OK);
 }
 
-void parse_bit_map_header(FILE* file)
+void parse_bit_map_header(BmpHeader* bmp, FILE* file)
 {
     int bytesRead = 0;
-    uint16_t fileType = 0;
 
-    bytesRead = fread(&fileType, 2, 1, file);
+    bytesRead = fread(&(bmp->id), 2, 1, file);
     if (bytesRead != 1) {
         exit(EXIT_FILE_PARSING_ERROR);
     } else {
         uint16_t convertedVal = *(uint16_t*)bitMap;
-        if (convertedVal != fileType) {
+        if (convertedVal != bmp->id) {
             exit(EXIT_FILE_PARSING_ERROR);
         }
     }
 
-    uint32_t fileSize = 0;
-    bytesRead = fread(&fileSize, 4, 1, file);
+    bytesRead = fread(&(bmp->bmpSize), 4, 1, file);
 
     // Print number of bytes in the input file data sector
-    fprintf(stdout, "%d\n", fileSize);
+    fprintf(stdout, "%d\n", bmp->bmpSize);
 
     fclose(file);
 }
