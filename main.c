@@ -25,29 +25,32 @@ int main(int argc, char** argv)
 
     BmpHeader bmp;
     memset(&bmp, 0, sizeof(bmp));
-    (void)parse_bit_map_header(&bmp, file);
+    parse_bit_map_header(&bmp, file);
+    fclose(file);
+
+    print_bmp_header(bmp);
 
     exit(EXIT_OK);
 }
 
 void parse_bit_map_header(BmpHeader* bmp, FILE* file)
 {
-    int bytesRead = 0;
+    // Store the value in the ID field
+    fread(&(bmp->id), 2, 1, file);
 
-    bytesRead = fread(&(bmp->id), 2, 1, file);
-    if (bytesRead != 1) {
-        exit(EXIT_FILE_PARSING_ERROR);
-    } else {
-        uint16_t convertedVal = *(uint16_t*)bitMap;
-        if (convertedVal != bmp->id) {
-            exit(EXIT_FILE_PARSING_ERROR);
-        }
-    }
+    // Store the size of the BMP file
+    fread(&(bmp->bmpSize), 4, 1, file);
 
-    bytesRead = fread(&(bmp->bmpSize), 4, 1, file);
+    // Jump to pixle array offset, and store value
+    fseek(file, 0x0A, SEEK_SET);
+    fread(&(bmp->offset), 4, 1, file);
+}
 
-    // Print number of bytes in the input file data sector
-    fprintf(stdout, "%d\n", bmp->bmpSize);
-
-    fclose(file);
+void print_bmp_header(BmpHeader bmp)
+{
+    fprintf(stdout, "%-15s %-15s %s\n", "Field Name", "Data", "Hex");
+    fprintf(stdout, "---------------------------------------\n");
+    fprintf(stdout, "%-15s %-15s %d\n", "ID", (char*)&(bmp.id), bmp.id);
+    fprintf(stdout, "%-15s %-15u %X\n", "Size", bmp.bmpSize, bmp.bmpSize);
+    fprintf(stdout, "%-15s %-15u %X\n", "Offset", bmp.offset, bmp.offset);
 }

@@ -53,3 +53,4 @@ typedef struct { // 14 bytes
 
 // Function prototypes
 void parse_bit_map_header(BmpHeader* bmp, FILE* file);
+void print_bmp_header(BmpHeader bmp);
