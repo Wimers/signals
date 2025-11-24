@@ -1,6 +1,7 @@
 CC = gcc
 
-CFLAGS = -Wall -Wextra -pedantic -std=gnu99
+WARNINGS = -Wall -Wextra -pedantic
+CFLAGS = -std=gnu99
 DEBUG = -g
 
 .DEFAULT_GOAL := bmp
@@ -11,7 +12,7 @@ debug: CFLAGS += $(DEBUG)
 debug: bmp
 
 bmp.o: main.c
-	$(CC) $(CFLAGS) -c $^ -o $@
+	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
 
 bmp: bmp.o
 	$(CC) $(CFLAGS) $^ -o $@

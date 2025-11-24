@@ -34,8 +34,9 @@ int main(int argc, char** argv)
     print_bmp_header(bmp);
     print_bmp_info_header(infoHeader);
 
-    fclose(file);
+    display_image(&bmp, &infoHeader, file);
 
+    fclose(file);
     exit(EXIT_OK);
 }
 
@@ -104,4 +105,72 @@ void print_bmp_info_header(BmpInfoHeader bmp)
             bmp.coloursInPalette);
     printf(suXFormat, "Important Colours", bmp.importantColours,
             bmp.importantColours);
+}
+
+void display_image(BmpHeader* header, BmpInfoHeader* bmp, FILE* file)
+{
+    // Initialise parameters
+    uint8_t pixle[RGB_PIXEL_BYTE_SIZE];
+    int magnitude;
+    int height = 0;
+    int width;
+    uint32_t byteOffset;
+
+    // Seek to start of pixel data
+    fseek(file, header->offset, SEEK_SET);
+
+    // For each row of pixels
+    for (; height < bmp->bitmapHeight; height++) {
+        width = 0;
+
+        // For each pixel in row
+        for (; width < bmp->bitmapWidth; width++) {
+            magnitude = 0;
+            byteOffset = 0;
+
+            // For each colour (RGB)
+            for (int colour = 0; colour < RGB_PIXEL_BYTE_SIZE; colour++) {
+
+                // Read intensity, and incriment recorded brightness of the
+                // pixel
+                fread(&pixle[colour], 1, 1, file);
+                magnitude += (int)(pixle[colour]);
+            }
+
+            // Skip pixels out of range, or out of resolution context
+            if (!(width > MAX_TERMINAL_ASCII_WIDTH)
+                    && !(height % VERT_TERMINAL_RESOLUTION)) {
+                brightness_gradient_mapping(magnitude / RGB_PIXEL_BYTE_SIZE);
+            }
+        }
+
+        // Calculate offset required due to row padding (32-bit DWORD len)
+        byteOffset
+                = (((bmp->bitsPerPixel * bmp->bitmapWidth) % BMP_ROW_DWORD_LEN)
+                        / SIZE_BYTE);
+
+        if (byteOffset) { // If offset non-zero update file pointer
+            fseek(file, byteOffset, SEEK_CUR);
+        }
+
+        if (!(height % VERT_TERMINAL_RESOLUTION)) {
+            printf(newlineStr); // Newline terminates each row of pixels
+        }
+    }
+
+    // Prints offset of file pointer after iterating all pixels
+    printf(eofAddrMessage, ftell(file));
+}
+
+void brightness_gradient_mapping(const int brightness)
+{
+    const int index = brightness / BMP_ROW_DWORD_LEN;
+
+    if ((0 <= index) && (index < (int)(strlen(gradient)))) {
+        const char symbol = gradient[index];
+        fputc(symbol, stdout);
+        return;
+    }
+
+    exit(EXIT_FILE_PARSING_ERROR);
 }
