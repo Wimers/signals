@@ -33,6 +33,7 @@
 
 // Program constant strings
 const char* const usageMessage = "Options: ./bmp [-h] [-d] [-i] <file>\n";
+const char* const fileTypeMessage = "Input file must be \".bmp\"\n";
 const char* const fileOpeningErrorMessage
         = "The provided file \"%s\" cannot be opened for reading\n";
 const char* const invalidArgsMessage = "Invalid arguments supplied\n";
@@ -49,6 +50,7 @@ const char* const sudFormat = "%-25s %-15u %d\n";
 const char* const newlineStr = "\n";
 const char* const eofAddrMessage = "End of File Addr: %lu\n";
 const char* const gradient = " .:-=+#%@";
+const char* const fileType = ".bmp";
 
 // Assorted constant chars
 const char* const readMode = "r";
@@ -155,3 +157,4 @@ void read_headers(BmpHeader* restrict bmp, BmpInfoHeader* restrict infoHeader,
 void check_for_empty_args(const int argc, char** argv);
 void check_argument_validity(const int argc, char** argv);
 Flag command_mapping(const char* command);
+int endswith(const char* const target, const char* arg);

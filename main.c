@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <unistd.h>
 #include "fileParsing.h"
 
@@ -37,6 +38,11 @@ int main(const int argc, char** argv)
     }
 
     const char* filePath = argv[optind];
+
+    if (!endswith(fileType, filePath)) {
+        fputs(fileTypeMessage, stderr);
+        exit(EXIT_INVALID_ARG);
+    }
 
     FILE* file = fopen(filePath, readMode);
     check_file_opened(file, filePath);
@@ -225,6 +231,17 @@ void display_image(const BmpHeader* restrict header,
 
     // Prints offset of file pointer after iterating all pixels
     printf(eofAddrMessage, ftell(file));
+}
+
+int endswith(const char* const target, const char* arg)
+{
+    int lenArg;
+    int lenTarget;
+    if ((lenArg = strlen(arg)) < (lenTarget = strlen(target))) {
+        return -1;
+    }
+
+    return !(strcmp(target, &(arg[lenArg - lenTarget])));
 }
 
 void brightness_gradient_mapping(const int brightness)
