@@ -7,9 +7,10 @@
 #define EXIT_FILE_CANNOT_BE_READ 9
 #define EXIT_FILE_PARSING_ERROR 8
 #define EXIT_FILE_INTEGRITY 7
+#define EXIT_NO_COMMAND 6
 
 // cmd line argument indexes
-#define FILE_PATH_IX 1
+#define FILE_PATH_IX 2
 
 // File constants
 #define HEADER_FIELD_SIZE 2
@@ -22,15 +23,16 @@
 #define BI_RGB 0 // compression method
 #define HALFTONING_ALGORITHM 0 // None
 
-#define MAX_TERMINAL_ASCII_WIDTH 400
+#define MAX_TERMINAL_ASCII_WIDTH 200 // 402
 #define RGB_PIXEL_BYTE_SIZE 3
 #define SIZE_BYTE 8
 #define BMP_ROW_DWORD_LEN 32
-#define VERT_TERMINAL_RESOLUTION 4
+#define VERT_TERMINAL_RESOLUTION 1
 
 // static const char test[6][3] = {"BM", "BA", "CI", "CP", "IC", "PT"};
 
 // Program constant strings
+const char* const usageMessage = "Options: ./bmp [-h] [-d] [-i] <file>\n";
 const char* const fileOpeningErrorMessage
         = "The provided file \"%s\" cannot be opened for reading\n";
 const char* const invalidArgsMessage = "Invalid arguments supplied\n";
@@ -51,6 +53,15 @@ const char* const gradient = " .:-=+#%@";
 // Assorted constant chars
 const char* const readMode = "r";
 #define EOS '\0'
+
+const char* const optstring = "hdi"; // Defined program flags
+
+typedef enum {
+    INVALID = -1,
+    HELP = 'h',
+    HEADER_DUMP = 'd',
+    DISPLAY_IMAGE = 'i',
+} Flag;
 
 typedef struct { // 14 bytes
     uint16_t id;
@@ -106,15 +117,15 @@ void parse_bmp_info_header(BmpInfoHeader* bmp, FILE* file);
  *
  * bmp: Struct containing all parsed BMP Header metadata.
  */
-void print_bmp_header(BmpHeader bmp);
+void print_bmp_header(const BmpHeader* bmp);
 
 /* print_bmp_info_header()
  * -----------------------
  * Prints the values of each parameter from the BMP Info header parsed.
  *
- * bmp: Struct containing all parsed BMP Info Header metadata.
+ * bmp: Pointer to struct containing all parsed BMP Info Header metadata.
  */
-void print_bmp_info_header(BmpInfoHeader bmp);
+void print_bmp_info_header(const BmpInfoHeader* bmp);
 
 /* display_image() // FIX
  * ---------------
@@ -125,7 +136,8 @@ void print_bmp_info_header(BmpInfoHeader bmp);
  * bmp:
  * file:
  */
-void display_image(BmpHeader* header, BmpInfoHeader* bmp, FILE* file);
+void display_image(const BmpHeader* restrict header,
+        const BmpInfoHeader* restrict bmp, FILE* file);
 
 /* brightness_gradient_mapping()
  * -----------------------------
@@ -134,3 +146,12 @@ void display_image(BmpHeader* header, BmpInfoHeader* bmp, FILE* file);
  * Lower brightness values map to chars with a greater proportion of whitespace.
  */
 void brightness_gradient_mapping(const int brightness);
+
+void check_file_opened(FILE* file, const char* const filePath);
+void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader);
+void early_argument_checks(const int argc, char** argv);
+void read_headers(BmpHeader* restrict bmp, BmpInfoHeader* restrict infoHeader,
+        FILE* file);
+void check_for_empty_args(const int argc, char** argv);
+void check_argument_validity(const int argc, char** argv);
+Flag command_mapping(const char* command);
