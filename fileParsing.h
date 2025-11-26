@@ -1,5 +1,6 @@
 // Included Libraries
 #include <stdint.h>
+#include <stdio.h>
 
 // Exit codes
 #define EXIT_OK 0
@@ -23,7 +24,7 @@
 #define BI_RGB 0 // compression method
 #define HALFTONING_ALGORITHM 0 // None
 
-#define MAX_TERMINAL_ASCII_WIDTH 200 // 402
+#define MAX_TERMINAL_ASCII_WIDTH 426 // 402
 #define RGB_PIXEL_BYTE_SIZE 3
 #define SIZE_BYTE 8
 #define BMP_ROW_DWORD_LEN 32
