@@ -195,9 +195,7 @@ void get_pixel(const int x, const int y, const BmpHeader* restrict header,
 
     // Calculate offset required due to row padding (32-bit DWORD len)
     const uint32_t byteOffset
-            = (((bmp->bitsPerPixel * bmp->bitmapWidth) % BMP_ROW_DWORD_LEN)
-                    / SIZE_BYTE);
-
+            = calc_row_byte_offset(bmp->bitsPerPixel, bmp->bitmapWidth);
     const uint32_t pixelOffset = header->offset + ((y * x) - 1) * sizeof(pixel)
             + (y - 1) * byteOffset;
 
@@ -218,6 +216,14 @@ void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
         // Reads intensity of colour and stores into pixel
         fread(&((*pixel)[RGB_PIXEL_BYTE_SIZE - colour]), 1, 1, file);
     }
+}
+
+uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth)
+{
+    // Calculate offset required due to row padding (32-bit DWORD len)
+    uint32_t byteOffset
+            = (((bitsPerPixel * bitmapWidth) % BMP_ROW_DWORD_LEN) / SIZE_BYTE);
+    return byteOffset;
 }
 
 void display_image(const BmpHeader* restrict header,
@@ -253,9 +259,7 @@ void display_image(const BmpHeader* restrict header,
         }
 
         // Calculate offset required due to row padding (32-bit DWORD len)
-        byteOffset
-                = (((bmp->bitsPerPixel * bmp->bitmapWidth) % BMP_ROW_DWORD_LEN)
-                        / SIZE_BYTE);
+        byteOffset = calc_row_byte_offset(bmp->bitsPerPixel, bmp->bitmapWidth);
 
         if (byteOffset) { // If offset non-zero update file pointer
             fseek(file, byteOffset, SEEK_CUR);

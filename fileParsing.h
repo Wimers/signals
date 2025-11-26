@@ -162,3 +162,4 @@ int endswith(const char* const target, const char* arg);
 void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
 void get_pixel(const int x, const int y, const BmpHeader* restrict header,
         const BmpInfoHeader* restrict bmp, FILE* file);
+uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth);
