@@ -6,11 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
-
-void get_pixel(const int x, const int y, const BmpHeader* restrict header,
-        const BmpInfoHeader* restrict bmp,
-        FILE* file); // Highly inefficient
 
 int main(const int argc, char** argv)
 {
