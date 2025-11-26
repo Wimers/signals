@@ -24,7 +24,7 @@
 #define BI_RGB 0 // compression method
 #define HALFTONING_ALGORITHM 0 // None
 
-#define MAX_TERMINAL_ASCII_WIDTH 426 // 402
+#define MAX_TERMINAL_ASCII_WIDTH 200 // 402
 #define RGB_PIXEL_BYTE_SIZE 3
 #define SIZE_BYTE 8
 #define BMP_ROW_DWORD_LEN 32
@@ -159,3 +159,6 @@ void check_for_empty_args(const int argc, char** argv);
 void check_argument_validity(const int argc, char** argv);
 Flag command_mapping(const char* command);
 int endswith(const char* const target, const char* arg);
+void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
+void get_pixel(const int x, const int y, const BmpHeader* restrict header,
+        const BmpInfoHeader* restrict bmp, FILE* file);
