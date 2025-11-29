@@ -13,13 +13,16 @@ all: bmp
 debug: CFLAGS += $(DEBUG)
 debug: bmp
 
+filters.o: filters.c
+	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
+
 fileParsing.o: fileParsing.c
 	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
 
 bmp.o: main.c
 	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
 
-bmp: bmp.o fileParsing.o
+bmp: bmp.o fileParsing.o filters.o
 	$(CC) $(CFLAGS) $(WARNINGS) $^ -o $@
 
 clean:

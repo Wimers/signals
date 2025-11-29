@@ -1,5 +1,6 @@
 // Included Libraries
 #include "fileParsing.h"
+#include "filters.h"
 #include "main.h"
 #include <ctype.h>
 #include <stdint.h>
@@ -67,6 +68,7 @@ int main(const int argc, char** argv)
             exit(EXIT_FILE_INTEGRITY);
         }
 
+        filter_red(image);
         print_image_to_terminal(image);
         free_image(image);
     }
