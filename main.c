@@ -1,5 +1,6 @@
 // Included Libraries
 #include "fileParsing.h"
+#include "main.h"
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -58,7 +59,16 @@ int main(const int argc, char** argv)
         dump_headers(&bmp, &infoHeader);
     }
     if (display) {
-        display_image(&bmp, &infoHeader, file);
+        Image* image = load_bmp_2d(file, &bmp, &infoHeader);
+
+        if (image == NULL) {
+            fputs(fileOpeningErrorMessage, stderr);
+            fclose(file);
+            exit(EXIT_FILE_INTEGRITY);
+        }
+
+        print_image_to_terminal(image);
+        free_image(image);
     }
 
     fclose(file);
@@ -90,60 +100,6 @@ void early_argument_checks(const int argc, char** argv)
     }
 
     check_for_empty_args(argc, argv);
-}
-
-void read_headers(
-        BmpHeader* restrict bmp, BmpInfoHeader* restrict infoHeader, FILE* file)
-{
-    memset(bmp, 0, sizeof(*bmp));
-    parse_bmp_header(bmp, file);
-
-    memset(infoHeader, 0, sizeof(*infoHeader));
-    parse_bmp_info_header(infoHeader, file);
-}
-
-void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader)
-{
-    print_bmp_header(bmp);
-    print_bmp_info_header(infoHeader);
-}
-
-void parse_bmp_header(BmpHeader* bmp, FILE* file)
-{
-    // Store the value in the ID field
-    fread(&(bmp->id), 2, 1, file);
-
-    // Store the size of the BMP file
-    fread(&(bmp->bmpSize), 4, 1, file);
-
-    // Jump to pixle array offset, and store value
-    fseek(file, 0x0A, SEEK_SET);
-    fread(&(bmp->offset), 4, 1, file);
-}
-
-void parse_bmp_info_header(BmpInfoHeader* bmp, FILE* file)
-{
-    fseek(file, 14, SEEK_SET); // Seek to start of header
-
-    fread(&bmp->headerSize, 4, 1, file); // Header size in bytes
-    fread(&bmp->bitmapWidth, 4, 1, file); // Bitmap width in pixles
-    fread(&bmp->bitmapHeight, 4, 1, file); // Bitmap height in pixels
-    fread(&bmp->colourPlanes, 2, 1, file); // Number of colour planes
-
-    if ((int)(bmp->colourPlanes) != 1) { // Must be one
-        fprintf(stderr, invalidColourPlanesMessage, (int)(bmp->colourPlanes));
-        exit(EXIT_FILE_INTEGRITY);
-    }
-
-    fread(&bmp->bitsPerPixel, 2, 1,
-            file); // Image colour depth (i.e. 16, 24)
-    fread(&bmp->compression, 4, 1,
-            file); // BI_RGB (no compression) most common
-    fread(&bmp->imageSize, 4, 1, file); // Size of the raw bitmap data
-    fread(&bmp->horzResolution, 4, 1, file);
-    fread(&bmp->vertResolution, 4, 1, file);
-    fread(&bmp->coloursInPalette, 4, 1, file);
-    fread(&bmp->importantColours, 4, 1, file); // 0 if all colours important
 }
 
 void print_bmp_header(const BmpHeader* bmp)
@@ -178,131 +134,6 @@ void print_bmp_info_header(const BmpInfoHeader* bmp)
             bmp->importantColours);
 }
 
-void get_pixel(const int x, const int y, const BmpHeader* restrict header,
-        const BmpInfoHeader* restrict bmp,
-        FILE* file) // Highly inefficient
-{
-    if ((x - 1 > bmp->bitmapWidth) || (x <= 0)) {
-        exit(99);
-    }
-
-    if ((y - 1 > bmp->bitmapHeight) || (y <= 0)) {
-        exit(99);
-    }
-
-    // Initialise parameters
-    uint8_t pixel[RGB_PIXEL_BYTE_SIZE];
-
-    // Calculate offset required due to row padding (32-bit DWORD len)
-    const uint32_t byteOffset
-            = calc_row_byte_offset(bmp->bitsPerPixel, bmp->bitmapWidth);
-    const uint32_t pixelOffset = header->offset + ((y * x) - 1) * sizeof(pixel)
-            + (y - 1) * byteOffset;
-
-    if (pixelOffset) { // If offset non-zero seek to pixel
-        fseek(file, pixelOffset, SEEK_SET);
-    }
-
-    read_pixel(&pixel, file);
-    fprintf(stdout, "%dx%d -> RGB: (%d, %d, %d)\n", x, y, pixel[0], pixel[1],
-            pixel[2]);
-}
-
-void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
-{
-    // For each colour (RGB)
-    for (int colour = 1; colour <= RGB_PIXEL_BYTE_SIZE; colour++) {
-
-        // Reads intensity of colour and stores into pixel
-        fread(&((*pixel)[RGB_PIXEL_BYTE_SIZE - colour]), 1, 1, file);
-    }
-}
-
-void print_pixel_row_to_terminal(
-        int bitWidth, uint8_t (*pixels)[bitWidth * RGB_PIXEL_BYTE_SIZE])
-{
-    // Initialise
-    char buffer[OUTPUT_BUFFER_CAPACITY];
-    int bufferPosition = 0;
-    int pixArrIndex = 0;
-
-    // For each pixel (RGB)
-    for (int width = 0; width < bitWidth; width++) {
-
-        // If buffer does not have room for pixel, write buffer to terminal
-        // and reset buffer position.
-        if ((bufferPosition + MAX_ANSI_PIXEL_LEN) >= OUTPUT_BUFFER_CAPACITY) {
-            fwrite(buffer, 1, bufferPosition, stdout);
-            bufferPosition = 0;
-        }
-
-        // Set pixel colours
-        uint8_t blue = (*pixels)[pixArrIndex++];
-        uint8_t green = (*pixels)[pixArrIndex++];
-        uint8_t red = (*pixels)[pixArrIndex++];
-
-        // Append pixel information to buffer
-        bufferPosition += sprintf(&buffer[bufferPosition],
-                colouredBlockFormatter, red, green, blue);
-    };
-
-    // If buffer full, write to terminal, and new line terminate
-    if (bufferPosition == OUTPUT_BUFFER_CAPACITY) {
-        fwrite(buffer, 1, bufferPosition, stdout);
-        fputs(newlineStr, stdout);
-        return;
-    }
-
-    // Add new line to buffer and write to terminal
-    if (bufferPosition > 0) {
-        buffer[bufferPosition++] = '\n';
-        fwrite(buffer, 1, bufferPosition, stdout);
-    }
-}
-
-void read_pixel_row(FILE* file, int bitWidth,
-        uint8_t (*pixels)[bitWidth * RGB_PIXEL_BYTE_SIZE], uint32_t byteOffset)
-{
-    // Read row of pixels
-    fread(*pixels, bitWidth * RGB_PIXEL_BYTE_SIZE, 1, file);
-
-    if (byteOffset) { // If offset non-zero update file pointer
-        fseek(file, byteOffset, SEEK_CUR);
-    }
-}
-
-uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth)
-{
-    // Calculate offset required due to row padding (32-bit DWORD len)
-    uint32_t byteOffset
-            = (((bitsPerPixel * bitmapWidth) % BMP_ROW_DWORD_LEN) / SIZE_BYTE);
-    return byteOffset;
-}
-
-void display_image(const BmpHeader* restrict header,
-        const BmpInfoHeader* restrict bmp, FILE* file)
-{
-    // Initialise pixel array
-    int arrSize = bmp->bitmapWidth * RGB_PIXEL_BYTE_SIZE;
-    uint8_t pixels[arrSize];
-
-    // Calculate offset required due to row padding (32-bit DWORD len)
-    uint32_t byteOffset
-            = calc_row_byte_offset(bmp->bitsPerPixel, bmp->bitmapWidth);
-
-    // Seek to start of pixel data
-    fseek(file, header->offset, SEEK_SET);
-
-    // For each row of pixels
-    for (int height = 0; height < bmp->bitmapHeight; height++) {
-        read_pixel_row(file, bmp->bitmapWidth, &pixels, byteOffset);
-        print_pixel_row_to_terminal(bmp->bitmapWidth, &pixels);
-    }
-
-    // Prints offset of file pointer after iterating all pixels
-    printf(eofAddrMessage, ftell(file));
-}
-
 int ends_with(const char* const target, const char* arg)
 {
     int lenArg;
@@ -312,17 +143,4 @@ int ends_with(const char* const target, const char* arg)
     }
 
     return !(strcmp(target, &(arg[lenArg - lenTarget])));
-}
-
-void brightness_gradient_mapping(const int brightness)
-{
-    const int index = brightness / BMP_ROW_DWORD_LEN;
-
-    if ((0 <= index) && (index < (int)(strlen(gradient)))) {
-        const char symbol = gradient[index];
-        fputc(symbol, stdout);
-        return;
-    }
-
-    exit(EXIT_FILE_PARSING_ERROR);
 }

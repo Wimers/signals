@@ -1,17 +1,14 @@
+#ifndef FILEPARSING_H
+#define FILEPARSING_H
+
 // Included Libraries
 #include <stdint.h>
 #include <stdio.h>
 
 // Exit codes
-#define EXIT_OK 0
-#define EXIT_INVALID_ARG 20
-#define EXIT_FILE_CANNOT_BE_READ 9
-#define EXIT_FILE_PARSING_ERROR 8
 #define EXIT_FILE_INTEGRITY 7
-#define EXIT_NO_COMMAND 6
-
-// cmd line argument indexes
-#define FILE_PATH_IX 2
+#define EXIT_FILE_PARSING_ERROR 8
+#define EXIT_OUT_OF_BOUNDS 10
 
 // File constants
 #define HEADER_FIELD_SIZE 2
@@ -31,42 +28,17 @@
 #define MAX_ANSI_PIXEL_LEN 32
 #define OUTPUT_BUFFER_CAPACITY 8192
 
-// static const char test[6][3] = {"BM", "BA", "CI", "CP", "IC", "PT"};
-
 // Program constant strings
-const char* const usageMessage = "Options: ./bmp [-h] [-d] [-i] <file>\n";
-const char* const fileTypeMessage = "Input file must be \".bmp\"\n";
-const char* const fileOpeningErrorMessage
-        = "The provided file \"%s\" cannot be opened for reading\n";
-const char* const invalidArgsMessage = "Invalid arguments supplied\n";
-const char* const invalidColourPlanesMessage
-        = "The number of colour planes must be 1, got \"%d\"\n";
-const char* const bitMap = "BM";
-const char* const lineSeparator
-        = "--------------------------------------------------\n";
-const char* const suXFormat = "%-25s %-15u %X\n";
-const char* const sdXFormat = "%-25s %-15d %X\n";
-const char* const sssFormat = "%-25s %-15s %s\n";
-const char* const ssdFormat = "%-25s %-15s %d\n";
-const char* const sudFormat = "%-25s %-15u %d\n";
-const char* const newlineStr = "\n";
-const char* const eofAddrMessage = "End of File Addr: %lu\n";
-const char* const gradient = " .:-=+#%@";
-const char* const fileType = ".bmp";
-const char* const colouredBlockFormatter = "\033[38;2;%d;%d;%dm██\033[0m";
+extern const char* const invalidColourPlanesMessage;
+extern const char* const bitMap;
+extern const char* const newlineStr;
+extern const char* const eofAddrMessage;
+extern const char* const gradient;
+extern const char* const colouredBlockFormatter;
 
 // Assorted constant chars
-const char* const readMode = "r";
+extern const char newlineChar;
 #define EOS '\0'
-
-const char* const optstring = "hdi"; // Defined program flags
-
-typedef enum {
-    INVALID = -1,
-    HELP = 'h',
-    HEADER_DUMP = 'd',
-    DISPLAY_IMAGE = 'i',
-} Flag;
 
 typedef struct { // 14 bytes
     uint16_t id;
@@ -88,6 +60,18 @@ typedef struct { // 40 bytes
     uint32_t coloursInPalette;
     uint32_t importantColours;
 } BmpInfoHeader;
+
+typedef struct {
+    uint8_t blue;
+    uint8_t green;
+    uint8_t red;
+} Pixel;
+
+typedef struct {
+    uint16_t width;
+    uint16_t height;
+    Pixel** pixels;
+} Image;
 
 /* parse_bmp_header()
  * ------------------
@@ -132,18 +116,6 @@ void print_bmp_header(const BmpHeader* bmp);
  */
 void print_bmp_info_header(const BmpInfoHeader* bmp);
 
-/* display_image() // FIX
- * ---------------
- * Reads pixel data from the input .bmp file, and prints each row of pixels to
- * the terminal, converting RGB values to ASCII.
- *
- * header:
- * bmp:
- * file:
- */
-void display_image(const BmpHeader* restrict header,
-        const BmpInfoHeader* restrict bmp, FILE* file);
-
 /* brightness_gradient_mapping()
  * -----------------------------
  * Maps the input brightness to a char, and prints the char to stdout.
@@ -152,16 +124,19 @@ void display_image(const BmpHeader* restrict header,
  */
 void brightness_gradient_mapping(const int brightness);
 
-void check_file_opened(FILE* file, const char* const filePath);
 void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader);
-void early_argument_checks(const int argc, char** argv);
 void read_headers(BmpHeader* restrict bmp, BmpInfoHeader* restrict infoHeader,
         FILE* file);
-void check_for_empty_args(const int argc, char** argv);
-void check_argument_validity(const int argc, char** argv);
-Flag command_mapping(const char* command);
-int ends_with(const char* const target, const char* arg);
 void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
 void get_pixel(const int x, const int y, const BmpHeader* restrict header,
         const BmpInfoHeader* restrict bmp, FILE* file);
 uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth);
+void read_pixel_row(
+        FILE* file, Image* image, int rowNumber, uint32_t byteOffset);
+Image* create_image(uint32_t width, uint32_t height);
+Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
+        const BmpInfoHeader* restrict bmp);
+void free_image(Image* image);
+void print_image_to_terminal(const Image* image);
+
+#endif
