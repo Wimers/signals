@@ -24,11 +24,12 @@
 #define BI_RGB 0 // compression method
 #define HALFTONING_ALGORITHM 0 // None
 
-#define MAX_TERMINAL_ASCII_WIDTH 200 // 402
 #define RGB_PIXEL_BYTE_SIZE 3
 #define SIZE_BYTE 8
 #define BMP_ROW_DWORD_LEN 32
 #define VERT_TERMINAL_RESOLUTION 1
+#define MAX_ANSI_PIXEL_LEN 32
+#define OUTPUT_BUFFER_CAPACITY 8192
 
 // static const char test[6][3] = {"BM", "BA", "CI", "CP", "IC", "PT"};
 
@@ -52,6 +53,7 @@ const char* const newlineStr = "\n";
 const char* const eofAddrMessage = "End of File Addr: %lu\n";
 const char* const gradient = " .:-=+#%@";
 const char* const fileType = ".bmp";
+const char* const colouredBlockFormatter = "\033[38;2;%d;%d;%dm██\033[0m";
 
 // Assorted constant chars
 const char* const readMode = "r";
@@ -158,7 +160,7 @@ void read_headers(BmpHeader* restrict bmp, BmpInfoHeader* restrict infoHeader,
 void check_for_empty_args(const int argc, char** argv);
 void check_argument_validity(const int argc, char** argv);
 Flag command_mapping(const char* command);
-int endswith(const char* const target, const char* arg);
+int ends_with(const char* const target, const char* arg);
 void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
 void get_pixel(const int x, const int y, const BmpHeader* restrict header,
         const BmpInfoHeader* restrict bmp, FILE* file);

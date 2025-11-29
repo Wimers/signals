@@ -39,7 +39,7 @@ int main(const int argc, char** argv)
 
     const char* filePath = argv[optind];
 
-    if (!endswith(fileType, filePath)) {
+    if (!ends_with(fileType, filePath)) {
         fputs(fileTypeMessage, stderr);
         exit(EXIT_INVALID_ARG);
     }
@@ -52,7 +52,7 @@ int main(const int argc, char** argv)
     read_headers(&bmp, &infoHeader, file);
 
     if (help) {
-        printf(usageMessage);
+        fputs(usageMessage, stdout);
     }
     if (header) {
         dump_headers(&bmp, &infoHeader);
@@ -218,6 +218,59 @@ void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
     }
 }
 
+void print_pixel_row_to_terminal(
+        int bitWidth, uint8_t (*pixels)[bitWidth * RGB_PIXEL_BYTE_SIZE])
+{
+    // Initialise
+    char buffer[OUTPUT_BUFFER_CAPACITY];
+    int bufferPosition = 0;
+    int pixArrIndex = 0;
+
+    // For each pixel (RGB)
+    for (int width = 0; width < bitWidth; width++) {
+
+        // If buffer does not have room for pixel, write buffer to terminal
+        // and reset buffer position.
+        if ((bufferPosition + MAX_ANSI_PIXEL_LEN) >= OUTPUT_BUFFER_CAPACITY) {
+            fwrite(buffer, 1, bufferPosition, stdout);
+            bufferPosition = 0;
+        }
+
+        // Set pixel colours
+        uint8_t blue = (*pixels)[pixArrIndex++];
+        uint8_t green = (*pixels)[pixArrIndex++];
+        uint8_t red = (*pixels)[pixArrIndex++];
+
+        // Append pixel information to buffer
+        bufferPosition += sprintf(&buffer[bufferPosition],
+                colouredBlockFormatter, red, green, blue);
+    };
+
+    // If buffer full, write to terminal, and new line terminate
+    if (bufferPosition == OUTPUT_BUFFER_CAPACITY) {
+        fwrite(buffer, 1, bufferPosition, stdout);
+        fputs(newlineStr, stdout);
+        return;
+    }
+
+    // Add new line to buffer and write to terminal
+    if (bufferPosition > 0) {
+        buffer[bufferPosition++] = '\n';
+        fwrite(buffer, 1, bufferPosition, stdout);
+    }
+}
+
+void read_pixel_row(FILE* file, int bitWidth,
+        uint8_t (*pixels)[bitWidth * RGB_PIXEL_BYTE_SIZE], uint32_t byteOffset)
+{
+    // Read row of pixels
+    fread(*pixels, bitWidth * RGB_PIXEL_BYTE_SIZE, 1, file);
+
+    if (byteOffset) { // If offset non-zero update file pointer
+        fseek(file, byteOffset, SEEK_CUR);
+    }
+}
+
 uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth)
 {
     // Calculate offset required due to row padding (32-bit DWORD len)
@@ -229,52 +282,28 @@ uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth)
 void display_image(const BmpHeader* restrict header,
         const BmpInfoHeader* restrict bmp, FILE* file)
 {
-    // Initialise parameters
-    uint8_t pixel[RGB_PIXEL_BYTE_SIZE];
-    int width;
-    int height = 0;
-    uint32_t byteOffset;
+    // Initialise pixel array
+    int arrSize = bmp->bitmapWidth * RGB_PIXEL_BYTE_SIZE;
+    uint8_t pixels[arrSize];
+
+    // Calculate offset required due to row padding (32-bit DWORD len)
+    uint32_t byteOffset
+            = calc_row_byte_offset(bmp->bitsPerPixel, bmp->bitmapWidth);
 
     // Seek to start of pixel data
     fseek(file, header->offset, SEEK_SET);
 
     // For each row of pixels
-    for (; height < bmp->bitmapHeight; height++) {
-        width = 0;
-
-        // For each pixel in row
-        for (; width < bmp->bitmapWidth; width++) {
-            byteOffset = 0;
-
-            read_pixel(&pixel, file);
-
-            // Skip pixels out of range, or out of resolution context
-            if (!(width > MAX_TERMINAL_ASCII_WIDTH)
-                    && !(height % VERT_TERMINAL_RESOLUTION)) {
-                // Printf block character to terminal with the colour of the
-                // pixel read
-                printf("\033[38;2;%d;%d;%dm██\033[0m", pixel[0], pixel[1],
-                        pixel[2]);
-            }
-        }
-
-        // Calculate offset required due to row padding (32-bit DWORD len)
-        byteOffset = calc_row_byte_offset(bmp->bitsPerPixel, bmp->bitmapWidth);
-
-        if (byteOffset) { // If offset non-zero update file pointer
-            fseek(file, byteOffset, SEEK_CUR);
-        }
-
-        if (!(height % VERT_TERMINAL_RESOLUTION)) {
-            printf(newlineStr); // Newline terminates each row of pixels
-        }
+    for (int height = 0; height < bmp->bitmapHeight; height++) {
+        read_pixel_row(file, bmp->bitmapWidth, &pixels, byteOffset);
+        print_pixel_row_to_terminal(bmp->bitmapWidth, &pixels);
     }
 
     // Prints offset of file pointer after iterating all pixels
     printf(eofAddrMessage, ftell(file));
 }
 
-int endswith(const char* const target, const char* arg)
+int ends_with(const char* const target, const char* arg)
 {
     int lenArg;
     int lenTarget;
