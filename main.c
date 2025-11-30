@@ -22,6 +22,7 @@ int main(const int argc, char** argv)
     int filter = 0;
     int grayscale = 0;
     int invert = 0;
+    int flip = 0;
 
     UserInput userInput;
     memset(&userInput, 0, sizeof(userInput));
@@ -55,6 +56,9 @@ int main(const int argc, char** argv)
             break;
         case INVERT:
             invert = 1;
+            break;
+        case FLIP:
+            flip = 1;
             break;
         default:
             exit(EXIT_NO_COMMAND);
@@ -92,6 +96,11 @@ int main(const int argc, char** argv)
             exit(EXIT_FILE_INTEGRITY);
         }
     }
+
+    if (!flip) {
+        image = flip_image(image);
+    }
+
     if (filter) {
         filter_red(image);
     }

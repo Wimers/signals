@@ -213,4 +213,5 @@ Image* create_image(uint32_t width, uint32_t height);
  */
 void free_image(Image* image);
 
+Image* flip_image(Image* image);
 #endif

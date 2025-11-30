@@ -185,3 +185,17 @@ void free_image(Image* image)
     free((void*)image->pixels);
     free(image);
 }
+
+Image* flip_image(Image* image)
+{
+    Image* rotatedImage = create_image(image->width, image->height);
+
+    for (int row = 0; row < image->height; row++) {
+        int sourceRow = image->height - 1 - row;
+        memcpy(rotatedImage->pixels[row], image->pixels[sourceRow],
+                image->width * sizeof(Pixel));
+    }
+
+    free_image(image);
+    return rotatedImage;
+}
