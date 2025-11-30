@@ -48,6 +48,7 @@ typedef enum {
     GRAY_SCALE = 'g',
     INVERT = 'v',
     FLIP = 'u',
+    BRIGHTNESS_CAP = 'b',
 } Flag;
 
 static struct option long_options[] = {
@@ -60,6 +61,7 @@ static struct option long_options[] = {
         {"grayscale", no_argument, NULL, GRAY_SCALE},
         {"invert", no_argument, NULL, INVERT},
         {"flip", no_argument, NULL, FLIP},
+        {"brightness-cap", required_argument, NULL, BRIGHTNESS_CAP},
         {NULL, 0, NULL, 0},
 };
 
@@ -67,6 +69,7 @@ typedef struct {
     char* inputFilePath;
     char* outputFilePath;
     char* filters;
+    uint8_t maxBrightness;
 } UserInput;
 
 /* print_bmp_header()

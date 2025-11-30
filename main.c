@@ -23,6 +23,7 @@ int main(const int argc, char** argv)
     int grayscale = 0;
     int invert = 0;
     int flip = 0;
+    int brightnessCap = 0;
 
     UserInput userInput;
     memset(&userInput, 0, sizeof(userInput));
@@ -59,6 +60,10 @@ int main(const int argc, char** argv)
             break;
         case FLIP:
             flip = 1;
+            break;
+        case BRIGHTNESS_CAP:
+            userInput.maxBrightness = (uint8_t)atoi(optarg);
+            brightnessCap = 1;
             break;
         default:
             exit(EXIT_NO_COMMAND);
@@ -105,6 +110,10 @@ int main(const int argc, char** argv)
         filter_red(image);
     }
 
+    if (brightnessCap) {
+        brightness_cap_filter(image, userInput.maxBrightness);
+    }
+
     if (grayscale) {
         gray_filter(image);
     }
@@ -116,6 +125,7 @@ int main(const int argc, char** argv)
     if (print) {
         print_image_to_terminal(image);
     }
+
     if (image != NULL) {
         free_image(image);
     }
