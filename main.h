@@ -35,7 +35,7 @@ const char* const fileType = ".bmp";
 const char* const readMode = "r";
 #define EOS '\0'
 
-const char* const optstring = "iodphf"; // Defined program flags
+const char* const optstring = "i:o:dphfgv"; // Defined program flags
 
 typedef enum {
     INVALID = -1,
@@ -45,6 +45,8 @@ typedef enum {
     INPUT_FILE = 'i',
     OUTPUT_FILE = 'o',
     FILTERS = 'f',
+    GRAY_SCALE = 'g',
+    INVERT = 'v',
 } Flag;
 
 static struct option long_options[] = {
@@ -54,6 +56,8 @@ static struct option long_options[] = {
         {"print", no_argument, NULL, PRINT_IMAGE},
         {"help", no_argument, NULL, HELP},
         {"filter", required_argument, NULL, FILTERS},
+        {"grayscale", no_argument, NULL, GRAY_SCALE},
+        {"invert", no_argument, NULL, INVERT},
         {NULL, 0, NULL, 0},
 };
 

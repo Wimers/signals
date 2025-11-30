@@ -31,10 +31,9 @@
 // Program constant strings
 extern const char* const invalidColourPlanesMessage;
 extern const char* const bitMap;
-extern const char* const newlineStr;
 extern const char* const eofAddrMessage;
-extern const char* const gradient;
 extern const char* const colouredBlockFormatter;
+extern const char* const newlineStr;
 
 // Assorted constant chars
 extern const char newlineChar;
@@ -73,6 +72,28 @@ typedef struct {
     Pixel** pixels;
 } Image;
 
+/* read_headers()
+ * --------------
+ * Reads and parses both the File Header and Info Header of a BMP file.
+ * Clears the destination structs and populates them by reading from the
+ * provided file.
+ *
+ * bmp: Pointer to the BmpHeader struct to store metadata.
+ * infoHeader: Pointer to the BmpInfoHeader struct to store metadata.
+ * file: File stream to the open bmp file.
+ */
+void read_headers(BmpHeader* restrict bmp, BmpInfoHeader* restrict infoHeader,
+        FILE* file);
+
+/* dump_headers()
+ * --------------
+ * Prints the contents of the BMP headers to the console.
+ *
+ * bmp: Pointer to the BmpHeader struct to populate.
+ * infoHeader: Pointer to the BmpInfoHeader struct to populate.
+ */
+void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader);
+
 /* parse_bmp_header()
  * ------------------
  * Parses the provided file, and stores the associated bmp metadata,
@@ -81,19 +102,19 @@ typedef struct {
  * It is assumed the input file is a .BMP file.
  *
  * bmp: Pointer to struct to store BMP Header metadata.
- * file: BMP file to parse.
+ * file: File stream to the open bmp file.
  */
 void parse_bmp_header(BmpHeader* bmp, FILE* file);
 
 /* parse_bmp_info_header()
  * -----------------------
- * Parses the provided file, and stores the associated bmp metadata,
- * into the BMP info header struct.
+ * Parses the BMP file header from the provided file, and stores the associated
+ * bmp metadata into the BMP info header struct.
  *
  * It is assumed the input file is .BMP file.
  *
  * bmp: Pointer to struct to store BMP Info Header metadata.
- * file: BMP file to parse.
+ * file: File stream to the open bmp file.
  *
  * Errors: Exits with EXIT_FILE_INTEGRITY if the number of colour planes of file
  *         is not one.
@@ -116,27 +137,80 @@ void print_bmp_header(const BmpHeader* bmp);
  */
 void print_bmp_info_header(const BmpInfoHeader* bmp);
 
-/* brightness_gradient_mapping()
- * -----------------------------
- * Maps the input brightness to a char, and prints the char to stdout.
- * It is assumed the brightness is between 0 and 255 (inclusive).
- * Lower brightness values map to chars with a greater proportion of whitespace.
+/* read_pixel_row()
+ * ----------------
+ * Reads a single row of pixels from the file into the Image struct.
+ *
+ * file: File stream to the open file.
+ * image: The Image struct containing the pixel data.
+ * rowNumber: The current row index (height) being read.
+ * byteOffset: The number of padding bytes to skip after reading the row.
  */
-void brightness_gradient_mapping(const int brightness);
-
-void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader);
-void read_headers(BmpHeader* restrict bmp, BmpInfoHeader* restrict infoHeader,
-        FILE* file);
-void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
-void get_pixel(const int x, const int y, const BmpHeader* restrict header,
-        const BmpInfoHeader* restrict bmp, FILE* file);
-uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth);
 void read_pixel_row(
         FILE* file, Image* image, int rowNumber, uint32_t byteOffset);
-Image* create_image(uint32_t width, uint32_t height);
+
+/* load_bmp_2d()
+ * -------------
+ * Loads the entire 2D pixel array from the BMP file.
+ *
+ * file: File stream to the open file.
+ * header: Struct containing all parsed BMP Header metadata.
+ * bmp: Pointer to struct containing all parsed BMP Info Header metadata.
+ *
+ * Returns: Pointer to the image struct containing the images pixel data.
+ */
 Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
         const BmpInfoHeader* restrict bmp);
-void free_image(Image* image);
+
+/* print_image_to_terminal()
+ * -------------------------
+ * Renders the image to the terminal, using block characters and ANSI escape
+ * codes to render to print each pixel in colour.
+ *
+ * image: The image struct containing the pixel data.
+ */
 void print_image_to_terminal(const Image* image);
+
+/* read_pixel()
+ * ------------
+ * Reads a single pixels RGB data from the provided file, and stores it in the
+ * pixel array.
+ *
+ * pixel: Pointer to a buffer capable of holding RGB_PIXEL_BYTE_SIZE bytes.
+ * file: File stream to the open file.
+ *
+ */
+void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
+
+/* calc_row_byte_offset()
+ * ----------------------
+ * Calculates the number of padding bytes required for BMP allignment.
+ * BMP rows must be alligned to the 32bit DWORD length.
+ *
+ * bitsPerPixel: Image colour depth.
+ * bitmapWidth: Width of the image in pixel.
+ *
+ * Returns: The number of padding bytes per row.
+ */
+uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth);
+
+/* create_image()
+ * --------------
+ * Allocates memory for an Image struct and its pixel data.
+ *
+ * width: Image width in pixels.
+ * height: Image height in pixels.
+ *
+ * Returns: Pointer to the newly allocated Image structure.
+ */
+Image* create_image(uint32_t width, uint32_t height);
+
+/* free_image()
+ * ------------
+ * Frees all memory associated with the provided image struct.
+ *
+ * image: Pointer to the image struct to free.
+ */
+void free_image(Image* image);
 
 #endif

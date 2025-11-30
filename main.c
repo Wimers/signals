@@ -20,6 +20,8 @@ int main(const int argc, char** argv)
     int print = 0;
     int input = 0;
     int filter = 0;
+    int grayscale = 0;
+    int invert = 0;
 
     UserInput userInput;
     memset(&userInput, 0, sizeof(userInput));
@@ -47,6 +49,12 @@ int main(const int argc, char** argv)
         case FILTERS:
             filter = 1;
             userInput.filters = optarg;
+            break;
+        case GRAY_SCALE:
+            grayscale = 1;
+            break;
+        case INVERT:
+            invert = 1;
             break;
         default:
             exit(EXIT_NO_COMMAND);
@@ -87,6 +95,15 @@ int main(const int argc, char** argv)
     if (filter) {
         filter_red(image);
     }
+
+    if (grayscale) {
+        gray_filter(image);
+    }
+
+    if (invert) {
+        filter_invert_colours(image);
+    }
+
     if (print) {
         print_image_to_terminal(image);
     }

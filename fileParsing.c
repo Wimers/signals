@@ -8,10 +8,9 @@
 const char* const invalidColourPlanesMessage
         = "The number of colour planes must be 1, got \"%d\"\n";
 const char* const bitMap = "BM";
-const char* const newlineStr = "\n";
 const char* const eofAddrMessage = "End of File Addr: %lu\n";
-const char* const gradient = " .:-=+#%@";
 const char* const colouredBlockFormatter = "\033[38;2;%d;%d;%dm██\033[0m";
+const char* const newlineStr = "\n";
 
 // Assorted constant chars
 const char newlineChar = '\n';
@@ -87,7 +86,7 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     // Initialise pixel array
     Image* image = create_image(bmp->bitmapWidth, bmp->bitmapHeight);
 
-    // Calculate offset required due to row padding (32-bit DWORD len)
+    // Calculate offset required due to row padding (32-bit DWORD length)
     uint32_t byteOffset
             = calc_row_byte_offset(bmp->bitsPerPixel, bmp->bitmapWidth);
 
@@ -101,12 +100,6 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
 
     // Print offset of file pointer after iterating all pixels
     printf(eofAddrMessage, ftell(file));
-
-    if (ftell(file) != header->bmpSize) {
-        free_image(image);
-        return NULL;
-    }
-
     return image;
 }
 
@@ -127,7 +120,6 @@ void print_image_to_terminal(const Image* image)
                 fwrite(buffer, 1, bufferPosition, stdout);
                 bufferPosition = 0;
             }
-
             Pixel p = (image->pixels)[height][width];
 
             // Append pixel to buffer
@@ -140,42 +132,13 @@ void print_image_to_terminal(const Image* image)
             fwrite(buffer, 1, bufferPosition, stdout);
             bufferPosition = 0;
         }
+        // Add newline
         buffer[bufferPosition++] = newlineChar;
     }
 
-    if (bufferPosition) { // If remaining chars
+    if (bufferPosition) { // Output any remaining characters
         fwrite(buffer, 1, bufferPosition, stdout);
     }
-}
-
-void get_pixel(const int x, const int y, const BmpHeader* restrict header,
-        const BmpInfoHeader* restrict bmp,
-        FILE* file) // Highly inefficient
-{
-    if ((x - 1 > bmp->bitmapWidth) || (x <= 0)) {
-        exit(EXIT_OUT_OF_BOUNDS);
-    }
-
-    if ((y - 1 > bmp->bitmapHeight) || (y <= 0)) {
-        exit(EXIT_OUT_OF_BOUNDS);
-    }
-
-    // Initialise parameters
-    uint8_t pixel[RGB_PIXEL_BYTE_SIZE];
-
-    // Calculate offset required due to row padding (32-bit DWORD len)
-    const uint32_t byteOffset
-            = calc_row_byte_offset(bmp->bitsPerPixel, bmp->bitmapWidth);
-    const uint32_t pixelOffset = header->offset + ((y * x) - 1) * sizeof(pixel)
-            + (y - 1) * byteOffset;
-
-    if (pixelOffset) { // If offset non-zero seek to pixel
-        fseek(file, pixelOffset, SEEK_SET);
-    }
-
-    read_pixel(&pixel, file);
-    fprintf(stdout, "%dx%d -> RGB: (%d, %d, %d)\n", x, y, pixel[0], pixel[1],
-            pixel[2]);
 }
 
 void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
@@ -221,17 +184,4 @@ void free_image(Image* image)
     free((image->pixels)[0]);
     free((void*)image->pixels);
     free(image);
-}
-
-void brightness_gradient_mapping(const int brightness)
-{
-    const int index = brightness / BMP_ROW_DWORD_LEN;
-
-    if ((0 <= index) && (index < (int)(strlen(gradient)))) {
-        const char symbol = gradient[index];
-        fputc(symbol, stdout);
-        return;
-    }
-
-    exit(EXIT_FILE_PARSING_ERROR);
 }
