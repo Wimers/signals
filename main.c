@@ -10,23 +10,6 @@
 #include <unistd.h>
 #include <getopt.h>
 
-/*
-static struct option long_options[] = {
-        {"input", required_argument, NULL, 'i'},
-        {"output", required_argument, NULL, 'o'},
-        {"dump", no_argument, NULL, 'd'},
-        {"print", no_argument, NULL, 'p'},
-        {"help", no_argument, NULL, 'h'},
-        {"filter", required_argument, NULL, 'f'},
-        {NULL, 0, NULL, 0},
-};
-
-typedef struct {
-    char* inputFilePath;
-    char* outputFilePath;
-    char* filters;
-} UserInput;
-*/
 int main(const int argc, char** argv)
 {
     early_argument_checks(argc, argv);
