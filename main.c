@@ -8,7 +8,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <getopt.h>
 
+/*
+static struct option long_options[] = {
+        {"input", required_argument, NULL, 'i'},
+        {"output", required_argument, NULL, 'o'},
+        {"dump", no_argument, NULL, 'd'},
+        {"print", no_argument, NULL, 'p'},
+        {"help", no_argument, NULL, 'h'},
+        {"filter", required_argument, NULL, 'f'},
+        {NULL, 0, NULL, 0},
+};
+
+typedef struct {
+    char* inputFilePath;
+    char* outputFilePath;
+    char* filters;
+} UserInput;
+*/
 int main(const int argc, char** argv)
 {
     early_argument_checks(argc, argv);
@@ -16,30 +34,43 @@ int main(const int argc, char** argv)
     Flag opt;
     int help = 0;
     int header = 0;
-    int display = 0;
+    int print = 0;
+    int input = 0;
+    int filter = 0;
 
-    while ((opt = getopt(argc, argv, optstring)) != -1) {
+    UserInput userInput;
+    memset(&userInput, 0, sizeof(userInput));
+
+    // loop over all of the options
+    while ((opt = getopt_long(argc, argv, optstring, long_options, NULL))
+            != -1) {
         switch (opt) {
         case HELP:
             help = 1;
             break;
-        case HEADER_DUMP:
+        case DUMP_HEADER:
             header = 1;
             break;
-        case DISPLAY_IMAGE:
-            display = 1;
+        case PRINT_IMAGE:
+            print = 1;
+            break;
+        case INPUT_FILE:
+            input = 1;
+            userInput.inputFilePath = optarg;
+            break;
+        case OUTPUT_FILE:
+            userInput.outputFilePath = optarg;
+            break;
+        case FILTERS:
+            filter = 1;
+            userInput.filters = optarg;
             break;
         default:
             exit(EXIT_NO_COMMAND);
         }
     }
 
-    if (optind >= argc) {
-        fputs(invalidArgsMessage, stderr);
-        exit(EXIT_INVALID_ARG);
-    }
-
-    const char* filePath = argv[optind];
+    const char* filePath = userInput.inputFilePath;
 
     if (!ends_with(fileType, filePath)) {
         fputs(fileTypeMessage, stderr);
@@ -53,23 +84,30 @@ int main(const int argc, char** argv)
     BmpInfoHeader infoHeader;
     read_headers(&bmp, &infoHeader, file);
 
+    Image* image = NULL;
+
     if (help) {
         fputs(usageMessage, stdout);
     }
     if (header) {
         dump_headers(&bmp, &infoHeader);
     }
-    if (display) {
-        Image* image = load_bmp_2d(file, &bmp, &infoHeader);
+    if (input) {
+        image = load_bmp_2d(file, &bmp, &infoHeader);
 
         if (image == NULL) {
             fputs(fileOpeningErrorMessage, stderr);
             fclose(file);
             exit(EXIT_FILE_INTEGRITY);
         }
-
+    }
+    if (filter) {
         filter_red(image);
+    }
+    if (print) {
         print_image_to_terminal(image);
+    }
+    if (image != NULL) {
         free_image(image);
     }
 

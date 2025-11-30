@@ -5,6 +5,7 @@
 #include "fileParsing.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <getopt.h>
 
 // Exit codes
 #define EXIT_OK 0
@@ -34,14 +35,33 @@ const char* const fileType = ".bmp";
 const char* const readMode = "r";
 #define EOS '\0'
 
-const char* const optstring = "hdi"; // Defined program flags
+const char* const optstring = "iodphf"; // Defined program flags
 
 typedef enum {
     INVALID = -1,
     HELP = 'h',
-    HEADER_DUMP = 'd',
-    DISPLAY_IMAGE = 'i',
+    DUMP_HEADER = 'd',
+    PRINT_IMAGE = 'p',
+    INPUT_FILE = 'i',
+    OUTPUT_FILE = 'o',
+    FILTERS = 'f',
 } Flag;
+
+static struct option long_options[] = {
+        {"input", required_argument, NULL, INPUT_FILE},
+        {"output", required_argument, NULL, OUTPUT_FILE},
+        {"dump", no_argument, NULL, DUMP_HEADER},
+        {"print", no_argument, NULL, PRINT_IMAGE},
+        {"help", no_argument, NULL, HELP},
+        {"filter", required_argument, NULL, FILTERS},
+        {NULL, 0, NULL, 0},
+};
+
+typedef struct {
+    char* inputFilePath;
+    char* outputFilePath;
+    char* filters;
+} UserInput;
 
 /* print_bmp_header()
  * ------------------
