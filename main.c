@@ -15,16 +15,6 @@ int main(const int argc, char** argv)
     early_argument_checks(argc, argv);
 
     Flag opt;
-    int help = 0;
-    int header = 0;
-    int print = 0;
-    int input = 0;
-    int filter = 0;
-    int grayscale = 0;
-    int invert = 0;
-    int flip = 0;
-    int brightnessCap = 0;
-
     UserInput userInput;
     memset(&userInput, 0, sizeof(userInput));
 
@@ -33,37 +23,36 @@ int main(const int argc, char** argv)
             != -1) {
         switch (opt) {
         case HELP:
-            help = 1;
+            userInput.help = 1;
             break;
         case DUMP_HEADER:
-            header = 1;
+            userInput.header = 1;
             break;
         case PRINT_IMAGE:
-            print = 1;
+            userInput.print = 1;
             break;
         case INPUT_FILE:
-            input = 1;
+            userInput.input = 1;
             userInput.inputFilePath = optarg;
             break;
         case OUTPUT_FILE:
             userInput.outputFilePath = optarg;
             break;
         case FILTERS:
-            filter = 1;
+            userInput.filter = 1;
             userInput.filters = optarg;
             break;
         case GRAY_SCALE:
-            grayscale = 1;
+            userInput.grayscale = 1;
             break;
         case INVERT:
-            invert = 1;
+            userInput.invert = 1;
             break;
         case FLIP:
-            flip = 1;
+            userInput.flip = 1;
             break;
         case BRIGHTNESS_CAP:
             userInput.maxBrightness = (uint8_t)atoi(optarg);
-            brightnessCap = 1;
             break;
         default:
             exit(EXIT_NO_COMMAND);
@@ -86,13 +75,13 @@ int main(const int argc, char** argv)
 
     Image* image = NULL;
 
-    if (help) {
+    if (userInput.help) {
         fputs(usageMessage, stdout);
     }
-    if (header) {
+    if (userInput.header) {
         dump_headers(&bmp, &infoHeader);
     }
-    if (input) {
+    if (userInput.input) {
         image = load_bmp_2d(file, &bmp, &infoHeader);
 
         if (image == NULL) {
@@ -102,27 +91,27 @@ int main(const int argc, char** argv)
         }
     }
 
-    if (!flip) {
+    if (!userInput.flip) {
         image = flip_image(image);
     }
 
-    if (filter) {
+    if (userInput.filter) {
         filter_red(image);
     }
 
-    if (brightnessCap) {
+    if (userInput.maxBrightness) {
         brightness_cap_filter(image, userInput.maxBrightness);
     }
 
-    if (grayscale) {
+    if (userInput.grayscale) {
         gray_filter(image);
     }
 
-    if (invert) {
+    if (userInput.invert) {
         filter_invert_colours(image);
     }
 
-    if (print) {
+    if (userInput.print) {
         print_image_to_terminal(image);
     }
 

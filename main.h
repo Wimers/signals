@@ -69,6 +69,14 @@ typedef struct {
     char* inputFilePath;
     char* outputFilePath;
     char* filters;
+    uint8_t help;
+    uint8_t header;
+    uint8_t print;
+    uint8_t input;
+    uint8_t invert;
+    uint8_t filter;
+    uint8_t grayscale;
+    uint8_t flip;
     uint8_t maxBrightness;
 } UserInput;
 
