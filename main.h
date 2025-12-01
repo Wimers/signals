@@ -32,10 +32,10 @@ const char* const sudFormat = "%-25s %-15u %d\n";
 const char* const fileType = ".bmp";
 
 // Assorted constant chars
-const char* const readMode = "r";
+const char* const readMode = "rb";
 #define EOS '\0'
 
-const char* const optstring = "i:o:dphfgvu"; // Defined program flags
+const char* const optstring = "i:o:dphfb:c:l:gvu"; // Defined program flags
 
 typedef enum {
     INVALID = -1,
@@ -59,7 +59,7 @@ static struct option long_options[] = {
         {"dump", no_argument, NULL, DUMP_HEADER},
         {"print", no_argument, NULL, PRINT_IMAGE},
         {"help", no_argument, NULL, HELP},
-        {"filter", required_argument, NULL, FILTERS},
+        {"filter", no_argument, NULL, FILTERS},
         {"grayscale", no_argument, NULL, GRAY_SCALE},
         {"invert", no_argument, NULL, INVERT},
         {"flip", no_argument, NULL, FLIP},
@@ -71,6 +71,7 @@ static struct option long_options[] = {
 
 typedef struct {
     char* inputFilePath;
+    uint8_t output;
     char* outputFilePath;
     char* filters;
     uint8_t help;

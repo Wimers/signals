@@ -99,6 +99,11 @@ int main(const int argc, char** argv)
         filter_invert_colours(image);
     }
 
+    if (userInput.output) {
+        write_bmp_with_header_provided(
+                &bmp, &infoHeader, image, userInput.outputFilePath);
+    }
+
     if (userInput.print) {
         print_image_to_terminal(image);
     }
@@ -159,6 +164,7 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->inputFilePath = optarg;
             break;
         case OUTPUT_FILE:
+            userInput->output = 1;
             userInput->outputFilePath = optarg;
             break;
         case FILTERS:

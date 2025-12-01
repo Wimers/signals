@@ -69,8 +69,8 @@ void parse_bmp_info_header(BmpInfoHeader* bmp, FILE* file)
     fread(&bmp->importantColours, 4, 1, file); // 0 if all colours important
 }
 
-void read_pixel_row(
-        FILE* file, Image* image, int rowNumber, uint32_t byteOffset)
+void read_pixel_row(FILE* file, Image* image, const int rowNumber,
+        const uint32_t byteOffset)
 {
     // Read row of pixels
     fread((image->pixels)[rowNumber], sizeof(Pixel), image->width, file);
@@ -87,7 +87,7 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     Image* image = create_image(bmp->bitmapWidth, bmp->bitmapHeight);
 
     // Calculate offset required due to row padding (32-bit DWORD length)
-    uint32_t byteOffset
+    const uint32_t byteOffset
             = calc_row_byte_offset(bmp->bitsPerPixel, bmp->bitmapWidth);
 
     // Seek to start of pixel data
@@ -151,15 +151,15 @@ void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
     }
 }
 
-uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth)
+uint32_t calc_row_byte_offset(const int bitsPerPixel, const int32_t bitmapWidth)
 {
     // Calculate offset required due to row padding (32-bit DWORD len)
-    uint32_t byteOffset
+    const uint32_t byteOffset
             = (((bitsPerPixel * bitmapWidth) % BMP_ROW_DWORD_LEN) / SIZE_BYTE);
     return byteOffset;
 }
 
-Image* create_image(uint32_t width, uint32_t height)
+Image* create_image(const int32_t width, const int32_t height)
 {
     Image* img = malloc(sizeof(Image));
     img->width = width;
@@ -198,4 +198,48 @@ Image* flip_image(Image* image)
 
     free_image(image);
     return rotatedImage;
+}
+
+void write_bmp_with_header_provided(BmpHeader* bmp, BmpInfoHeader* infoHeader,
+        Image* image, const char* filename)
+{
+    FILE* output = fopen(filename, "wb");
+
+    // Write BmpHeader
+    fwrite(&bmp->id, 2, 1, output); // 2 bytes
+    fwrite(&bmp->bmpSize, 4, 1, output); // 4 bytes
+    fwrite(&bmp->junk, 4, 1, output); // 4 bytes
+    fwrite(&bmp->offset, 4, 1, output); // 4 bytes
+
+    // Write BmpInfoHeader
+    fwrite(&infoHeader->headerSize, 4, 1, output);
+    fwrite(&infoHeader->bitmapWidth, 4, 1, output);
+    fwrite(&infoHeader->bitmapHeight, 4, 1, output);
+    fwrite(&infoHeader->colourPlanes, 2, 1, output);
+    fwrite(&infoHeader->bitsPerPixel, 2, 1, output);
+    fwrite(&infoHeader->compression, 4, 1, output);
+    fwrite(&infoHeader->imageSize, 4, 1, output);
+    fwrite(&infoHeader->horzResolution, 4, 1, output);
+    fwrite(&infoHeader->vertResolution, 4, 1, output);
+    fwrite(&infoHeader->coloursInPalette, 4, 1, output);
+    fwrite(&infoHeader->importantColours, 4, 1, output);
+
+    const uint32_t currentPosition = ftell(output);
+    const uint32_t gapSize = bmp->offset - currentPosition;
+    const uint8_t zero = 0;
+    fwrite(&zero, sizeof(zero), gapSize, output);
+
+    const uint32_t byteOffset = calc_row_byte_offset(
+            infoHeader->bitsPerPixel, infoHeader->bitmapWidth);
+
+    for (int row = 0; row < infoHeader->bitmapHeight; row++) {
+        fwrite(image->pixels[row], infoHeader->bitmapWidth * sizeof(Pixel), 1,
+                output);
+
+        if (byteOffset) {
+            fwrite(&zero, sizeof(zero), byteOffset, output);
+        }
+    }
+
+    fclose(output);
 }

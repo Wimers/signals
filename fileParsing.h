@@ -42,14 +42,15 @@ extern const char newlineChar;
 typedef struct { // 14 bytes
     uint16_t id;
     uint32_t bmpSize;
+    uint32_t junk;
     uint32_t offset;
 } BmpHeader;
 
 // DIB header (bitmap information header)
 typedef struct { // 40 bytes
     uint32_t headerSize;
-    int16_t bitmapWidth;
-    int16_t bitmapHeight;
+    int32_t bitmapWidth;
+    int32_t bitmapHeight;
     uint16_t colourPlanes;
     uint16_t bitsPerPixel;
     uint32_t compression;
@@ -60,7 +61,7 @@ typedef struct { // 40 bytes
     uint32_t importantColours;
 } BmpInfoHeader;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
     uint8_t blue;
     uint8_t green;
     uint8_t red;
@@ -147,7 +148,7 @@ void print_bmp_info_header(const BmpInfoHeader* bmp);
  * byteOffset: The number of padding bytes to skip after reading the row.
  */
 void read_pixel_row(
-        FILE* file, Image* image, int rowNumber, uint32_t byteOffset);
+        FILE* file, Image* image, const int rowNumber, const uint32_t byteOffset);
 
 /* load_bmp_2d()
  * -------------
@@ -192,7 +193,7 @@ void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
  *
  * Returns: The number of padding bytes per row.
  */
-uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth);
+uint32_t calc_row_byte_offset(const int bitsPerPixel, const int32_t bitmapWidth);
 
 /* create_image()
  * --------------
@@ -203,7 +204,7 @@ uint32_t calc_row_byte_offset(const int bitsPerPixel, const int bitmapWidth);
  *
  * Returns: Pointer to the newly allocated Image structure.
  */
-Image* create_image(uint32_t width, uint32_t height);
+Image* create_image(const int32_t width, const int32_t height);
 
 /* free_image()
  * ------------
@@ -214,4 +215,6 @@ Image* create_image(uint32_t width, uint32_t height);
 void free_image(Image* image);
 
 Image* flip_image(Image* image);
+void write_bmp_with_header_provided(BmpHeader* bmp, BmpInfoHeader* infoHeader,
+        Image* image, const char* filename);
 #endif
