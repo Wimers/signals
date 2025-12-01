@@ -49,6 +49,7 @@ typedef enum {
     INVERT = 'v',
     FLIP = 'u',
     BRIGHTNESS_CAP = 'b',
+    COMBINE = 'c',
 } Flag;
 
 static struct option long_options[] = {
@@ -62,6 +63,7 @@ static struct option long_options[] = {
         {"invert", no_argument, NULL, INVERT},
         {"flip", no_argument, NULL, FLIP},
         {"brightness-cap", required_argument, NULL, BRIGHTNESS_CAP},
+        {"combine", required_argument, NULL, COMBINE},
         {NULL, 0, NULL, 0},
 };
 
@@ -78,6 +80,8 @@ typedef struct {
     uint8_t grayscale;
     uint8_t flip;
     uint8_t maxBrightness;
+    uint8_t combine;
+    char* combineFilePath;
 } UserInput;
 
 /* print_bmp_header()

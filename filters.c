@@ -1,4 +1,7 @@
+// Included Libraries
+#include <stdlib.h>
 #include "fileParsing.h"
+#include "filters.h"
 
 void filter_invert_colours(Image* image)
 {
@@ -85,6 +88,32 @@ void brightness_cap_filter(Image* image, uint8_t maxBrightness)
             if (image->pixels[y][x].red > maxBrightness) {
                 image->pixels[y][x].red = 0;
             }
+        }
+    }
+}
+
+void combine_images(Image* primary, Image* secondary)
+{
+    uint16_t height = primary->height;
+    uint16_t width = primary->width;
+
+    if ((secondary->height != height) || (secondary->width != width)) {
+        exit(EXIT_OUT_OF_BOUNDS);
+    }
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            uint8_t newRed = (primary->pixels[y][x].red) / 2
+                    + (secondary->pixels[y][x].red / 2);
+            primary->pixels[y][x].red = newRed;
+
+            uint8_t newGreen = (primary->pixels[y][x].green) / 2
+                    + (secondary->pixels[y][x].green / 2);
+            primary->pixels[y][x].green = newGreen;
+
+            uint8_t newBlue = (primary->pixels[y][x].blue) / 2
+                    + (secondary->pixels[y][x].blue / 2);
+            primary->pixels[y][x].blue = newBlue;
         }
     }
 }

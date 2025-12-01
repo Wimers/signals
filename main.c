@@ -10,54 +10,16 @@
 #include <unistd.h>
 #include <getopt.h>
 
+void parse_user_commands(const int argc, char** argv, UserInput* userInput);
+
 int main(const int argc, char** argv)
 {
     early_argument_checks(argc, argv);
 
-    Flag opt;
     UserInput userInput;
     memset(&userInput, 0, sizeof(userInput));
 
-    // loop over all of the options
-    while ((opt = getopt_long(argc, argv, optstring, long_options, NULL))
-            != -1) {
-        switch (opt) {
-        case HELP:
-            userInput.help = 1;
-            break;
-        case DUMP_HEADER:
-            userInput.header = 1;
-            break;
-        case PRINT_IMAGE:
-            userInput.print = 1;
-            break;
-        case INPUT_FILE:
-            userInput.input = 1;
-            userInput.inputFilePath = optarg;
-            break;
-        case OUTPUT_FILE:
-            userInput.outputFilePath = optarg;
-            break;
-        case FILTERS:
-            userInput.filter = 1;
-            userInput.filters = optarg;
-            break;
-        case GRAY_SCALE:
-            userInput.grayscale = 1;
-            break;
-        case INVERT:
-            userInput.invert = 1;
-            break;
-        case FLIP:
-            userInput.flip = 1;
-            break;
-        case BRIGHTNESS_CAP:
-            userInput.maxBrightness = (uint8_t)atoi(optarg);
-            break;
-        default:
-            exit(EXIT_NO_COMMAND);
-        }
-    }
+    parse_user_commands(argc, argv, &userInput);
 
     const char* filePath = userInput.inputFilePath;
 
@@ -107,6 +69,28 @@ int main(const int argc, char** argv)
         gray_filter(image);
     }
 
+    if (userInput.combine) {
+        FILE* newImageFile = fopen(userInput.combineFilePath, readMode);
+        check_file_opened(newImageFile, userInput.combineFilePath);
+
+        BmpHeader bmp2;
+        BmpInfoHeader infoHeader2;
+        read_headers(&bmp2, &infoHeader2, newImageFile);
+
+        Image* image2 = load_bmp_2d(newImageFile, &bmp2, &infoHeader2);
+
+        if (image2 == NULL) {
+            fputs(fileOpeningErrorMessage, stderr);
+            fclose(newImageFile);
+            exit(EXIT_FILE_INTEGRITY);
+        }
+        image2 = flip_image(image2);
+
+        combine_images(image, image2);
+        free_image(image2);
+        fclose(newImageFile);
+    }
+
     if (userInput.invert) {
         filter_invert_colours(image);
     }
@@ -148,6 +132,55 @@ void early_argument_checks(const int argc, char** argv)
     }
 
     check_for_empty_args(argc, argv);
+}
+
+void parse_user_commands(const int argc, char** argv, UserInput* userInput)
+{
+    Flag opt;
+    // loop over all of the options
+    while ((opt = getopt_long(argc, argv, optstring, long_options, NULL))
+            != -1) {
+        switch (opt) {
+        case HELP:
+            userInput->help = 1;
+            break;
+        case DUMP_HEADER:
+            userInput->header = 1;
+            break;
+        case PRINT_IMAGE:
+            userInput->print = 1;
+            break;
+        case INPUT_FILE:
+            userInput->input = 1;
+            userInput->inputFilePath = optarg;
+            break;
+        case OUTPUT_FILE:
+            userInput->outputFilePath = optarg;
+            break;
+        case FILTERS:
+            userInput->filter = 1;
+            userInput->filters = optarg;
+            break;
+        case GRAY_SCALE:
+            userInput->grayscale = 1;
+            break;
+        case INVERT:
+            userInput->invert = 1;
+            break;
+        case FLIP:
+            userInput->flip = 1;
+            break;
+        case BRIGHTNESS_CAP:
+            userInput->maxBrightness = (uint8_t)atoi(optarg);
+            break;
+        case COMBINE:
+            userInput->combine = 1;
+            userInput->combineFilePath = optarg;
+            break;
+        default:
+            exit(EXIT_NO_COMMAND);
+        }
+    }
 }
 
 void print_bmp_header(const BmpHeader* bmp)
