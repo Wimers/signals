@@ -1,5 +1,6 @@
 // Included Libraries
 #include <stdlib.h>
+#include <string.h>
 #include "fileParsing.h"
 #include "filters.h"
 
@@ -94,8 +95,8 @@ void brightness_cap_filter(Image* image, uint8_t maxBrightness)
 
 void combine_images(Image* primary, Image* secondary)
 {
-    uint16_t height = primary->height;
-    uint16_t width = primary->width;
+    int16_t height = primary->height;
+    int16_t width = primary->width;
 
     if ((secondary->height != height) || (secondary->width != width)) {
         exit(EXIT_OUT_OF_BOUNDS);
@@ -116,4 +117,35 @@ void combine_images(Image* primary, Image* secondary)
             primary->pixels[y][x].blue = newBlue;
         }
     }
+}
+
+void glitch_effect(Image* image, int16_t glitchOffset)
+{
+    Image* imageCopy = create_image(image->width, image->height);
+
+    for (int y = 0; y < image->height; y++) {
+        memcpy(imageCopy->pixels[y], image->pixels[y],
+                image->width * sizeof(Pixel));
+
+        for (int x = 0; x < image->width; x++) {
+            int accessRedRegion = x + glitchOffset;
+            if ((accessRedRegion < 0) || (accessRedRegion > image->width)) {
+                ;
+            } else {
+                image->pixels[y][x].red
+                        = imageCopy->pixels[y][accessRedRegion].red;
+            }
+
+            int accessBlueRegion = x - glitchOffset;
+
+            if ((accessBlueRegion < 0) || (accessBlueRegion > image->width)) {
+                ;
+            } else {
+                image->pixels[y][x].red
+                        = imageCopy->pixels[y][accessBlueRegion].red;
+            }
+        }
+    }
+
+    free_image(imageCopy);
 }

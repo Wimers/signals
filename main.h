@@ -50,6 +50,7 @@ typedef enum {
     FLIP = 'u',
     BRIGHTNESS_CAP = 'b',
     COMBINE = 'c',
+    GLITCH = 'l',
 } Flag;
 
 static struct option long_options[] = {
@@ -64,6 +65,7 @@ static struct option long_options[] = {
         {"flip", no_argument, NULL, FLIP},
         {"brightness-cap", required_argument, NULL, BRIGHTNESS_CAP},
         {"combine", required_argument, NULL, COMBINE},
+        {"glitch", required_argument, NULL, GLITCH},
         {NULL, 0, NULL, 0},
 };
 
@@ -82,6 +84,7 @@ typedef struct {
     uint8_t maxBrightness;
     uint8_t combine;
     char* combineFilePath;
+    int16_t glitch;
 } UserInput;
 
 /* print_bmp_header()

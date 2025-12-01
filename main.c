@@ -69,6 +69,10 @@ int main(const int argc, char** argv)
         gray_filter(image);
     }
 
+    if (userInput.glitch) {
+        glitch_effect(image, userInput.glitch);
+    }
+
     if (userInput.combine) {
         FILE* newImageFile = fopen(userInput.combineFilePath, readMode);
         check_file_opened(newImageFile, userInput.combineFilePath);
@@ -176,6 +180,9 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case COMBINE:
             userInput->combine = 1;
             userInput->combineFilePath = optarg;
+            break;
+        case GLITCH:
+            userInput->glitch = (int16_t)atoi(optarg);
             break;
         default:
             exit(EXIT_NO_COMMAND);
