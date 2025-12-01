@@ -70,6 +70,7 @@ static struct option long_options[] = {
 };
 
 typedef struct {
+    FILE* inputFile;
     char* inputFilePath;
     uint8_t output;
     char* outputFilePath;
@@ -113,5 +114,7 @@ void check_argument_validity(const int argc, char** argv);
 Flag command_mapping(const char* command);
 int ends_with(const char* const target, const char* arg);
 void early_argument_checks(const int argc, char** argv);
+void handle_commands(UserInput* userInput);
+void parse_user_commands(const int argc, char** argv, UserInput* userInput);
 
 #endif

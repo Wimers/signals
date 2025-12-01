@@ -10,8 +10,6 @@
 #include <unistd.h>
 #include <getopt.h>
 
-void parse_user_commands(const int argc, char** argv, UserInput* userInput);
-
 int main(const int argc, char** argv)
 {
     early_argument_checks(argc, argv);
@@ -20,99 +18,8 @@ int main(const int argc, char** argv)
     memset(&userInput, 0, sizeof(userInput));
 
     parse_user_commands(argc, argv, &userInput);
+    handle_commands(&userInput);
 
-    const char* filePath = userInput.inputFilePath;
-
-    if (!ends_with(fileType, filePath)) {
-        fputs(fileTypeMessage, stderr);
-        exit(EXIT_INVALID_ARG);
-    }
-
-    FILE* file = fopen(filePath, readMode);
-    check_file_opened(file, filePath);
-
-    BmpHeader bmp;
-    BmpInfoHeader infoHeader;
-    read_headers(&bmp, &infoHeader, file);
-
-    Image* image = NULL;
-
-    if (userInput.help) {
-        fputs(usageMessage, stdout);
-    }
-    if (userInput.header) {
-        dump_headers(&bmp, &infoHeader);
-    }
-    if (userInput.input) {
-        image = load_bmp_2d(file, &bmp, &infoHeader);
-
-        if (image == NULL) {
-            fputs(fileOpeningErrorMessage, stderr);
-            fclose(file);
-            exit(EXIT_FILE_INTEGRITY);
-        }
-    }
-
-    if (!userInput.flip) {
-        image = flip_image(image);
-    }
-
-    if (userInput.filter) {
-        filter_red(image);
-    }
-
-    if (userInput.maxBrightness) {
-        brightness_cap_filter(image, userInput.maxBrightness);
-    }
-
-    if (userInput.grayscale) {
-        gray_filter(image);
-    }
-
-    if (userInput.glitch) {
-        glitch_effect(image, userInput.glitch);
-    }
-
-    if (userInput.combine) {
-        FILE* newImageFile = fopen(userInput.combineFilePath, readMode);
-        check_file_opened(newImageFile, userInput.combineFilePath);
-
-        BmpHeader bmp2;
-        BmpInfoHeader infoHeader2;
-        read_headers(&bmp2, &infoHeader2, newImageFile);
-
-        Image* image2 = load_bmp_2d(newImageFile, &bmp2, &infoHeader2);
-
-        if (image2 == NULL) {
-            fputs(fileOpeningErrorMessage, stderr);
-            fclose(newImageFile);
-            exit(EXIT_FILE_INTEGRITY);
-        }
-        image2 = flip_image(image2);
-
-        combine_images(image, image2);
-        free_image(image2);
-        fclose(newImageFile);
-    }
-
-    if (userInput.invert) {
-        filter_invert_colours(image);
-    }
-
-    if (userInput.output) {
-        write_bmp_with_header_provided(
-                &bmp, &infoHeader, image, userInput.outputFilePath);
-    }
-
-    if (userInput.print) {
-        print_image_to_terminal(image);
-    }
-
-    if (image != NULL) {
-        free_image(image);
-    }
-
-    fclose(file);
     exit(EXIT_OK);
 }
 
@@ -194,6 +101,100 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
             exit(EXIT_NO_COMMAND);
         }
     }
+}
+
+void handle_commands(UserInput* userInput)
+{
+    if (!ends_with(fileType, userInput->inputFilePath)) {
+        fputs(fileTypeMessage, stderr);
+        exit(EXIT_INVALID_ARG);
+    }
+
+    userInput->inputFile = fopen(userInput->inputFilePath, readMode);
+    check_file_opened(userInput->inputFile, userInput->inputFilePath);
+
+    BmpHeader bmp;
+    BmpInfoHeader infoHeader;
+    read_headers(&bmp, &infoHeader, userInput->inputFile);
+
+    Image* image = NULL;
+
+    if (userInput->help) {
+        fputs(usageMessage, stdout);
+    }
+    if (userInput->header) {
+        dump_headers(&bmp, &infoHeader);
+    }
+    if (userInput->input) {
+        image = load_bmp_2d(userInput->inputFile, &bmp, &infoHeader);
+
+        if (image == NULL) {
+            fputs(fileOpeningErrorMessage, stderr);
+            fclose(userInput->inputFile);
+            exit(EXIT_FILE_INTEGRITY);
+        }
+    }
+
+    if (!userInput->flip) {
+        image = flip_image(image);
+    }
+
+    if (userInput->filter) {
+        filter_red(image);
+    }
+
+    if (userInput->maxBrightness) {
+        brightness_cap_filter(image, userInput->maxBrightness);
+    }
+
+    if (userInput->grayscale) {
+        gray_filter(image);
+    }
+
+    if (userInput->glitch) {
+        glitch_effect(image, userInput->glitch);
+    }
+
+    if (userInput->combine) {
+        FILE* newImageFile = fopen(userInput->combineFilePath, readMode);
+        check_file_opened(newImageFile, userInput->combineFilePath);
+
+        BmpHeader bmp2;
+        BmpInfoHeader infoHeader2;
+        read_headers(&bmp2, &infoHeader2, newImageFile);
+
+        Image* image2 = load_bmp_2d(newImageFile, &bmp2, &infoHeader2);
+
+        if (image2 == NULL) {
+            fputs(fileOpeningErrorMessage, stderr);
+            fclose(newImageFile);
+            exit(EXIT_FILE_INTEGRITY);
+        }
+        image2 = flip_image(image2);
+
+        combine_images(image, image2);
+        free_image(image2);
+        fclose(newImageFile);
+    }
+
+    if (userInput->invert) {
+        filter_invert_colours(image);
+    }
+
+    if (userInput->output) {
+        write_bmp_with_header_provided(
+                &bmp, &infoHeader, image, userInput->outputFilePath);
+    }
+
+    if (userInput->print) {
+        print_image_to_terminal(image);
+    }
+
+    if (image != NULL) {
+        free_image(image);
+    }
+
+    fclose(userInput->inputFile);
 }
 
 void print_bmp_header(const BmpHeader* bmp)
