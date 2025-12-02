@@ -50,6 +50,7 @@ void open_bmp(BMP* bmpImage, const char* filePath)
     if (bmpImage->image == NULL) {
         fputs(fileOpeningErrorMessage, stderr);
         fclose(bmpImage->file);
+        bmpImage->file = NULL;
         exit(EXIT_FILE_INTEGRITY);
     }
 }

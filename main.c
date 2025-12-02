@@ -263,7 +263,22 @@ void handle_commands(UserInput* userInput)
     }
 
     if (userInput->combine) {
-        check_valid_file_type(userInput->inputFilePath);
+        check_valid_file_type(userInput->combineFilePath);
+
+        // Exit if input and combine file paths match
+        if (!strcmp(userInput->inputFilePath, userInput->combineFilePath)) {
+            if (bmpImage.image != NULL) {
+                free_image(bmpImage.image);
+            }
+
+            if (bmpImage.file != NULL) {
+                fclose(bmpImage.file);
+                bmpImage.file = NULL;
+            }
+
+            fprintf(stderr, "Input and combine file paths must be unique!\n");
+            exit(EXIT_INVALID_ARG); // FIX
+        }
 
         BMP combinedImage;
         initialise_bmp(&combinedImage);
@@ -277,6 +292,7 @@ void handle_commands(UserInput* userInput)
             free_image(combinedImage.image);
         }
         fclose(combinedImage.file);
+        combinedImage.file = NULL;
     }
 
     if (userInput->invert) {
@@ -299,7 +315,9 @@ void handle_commands(UserInput* userInput)
         free_image(bmpImage.image);
     }
 
-    fclose(bmpImage.file);
+    if (bmpImage.file != NULL) {
+        fclose(bmpImage.file);
+    }
 }
 
 void print_bmp_header(const BmpHeader* bmp)
