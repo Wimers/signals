@@ -275,23 +275,23 @@ void write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     FILE* output = fopen(filename, "wb");
 
     // Write BmpHeader
-    fwrite(&bmpHeader->id, 2, 1, output); // 2 bytes
-    fwrite(&bmpHeader->bmpSize, 4, 1, output); // 4 bytes
-    fwrite(&bmpHeader->junk, 4, 1, output); // 4 bytes
-    fwrite(&bmpHeader->offset, 4, 1, output); // 4 bytes
+    fwrite(&bmpHeader->id, sizeof(uint16_t), 1, output);
+    fwrite(&bmpHeader->bmpSize, sizeof(uint32_t), 1, output);
+    fwrite(&bmpHeader->junk, sizeof(uint32_t), 1, output);
+    fwrite(&bmpHeader->offset, sizeof(uint32_t), 1, output);
 
     // Write BmpInfoHeader
-    fwrite(&infoHeader->headerSize, 4, 1, output);
-    fwrite(&infoHeader->bitmapWidth, 4, 1, output);
-    fwrite(&infoHeader->bitmapHeight, 4, 1, output);
-    fwrite(&infoHeader->colourPlanes, 2, 1, output);
-    fwrite(&infoHeader->bitsPerPixel, 2, 1, output);
-    fwrite(&infoHeader->compression, 4, 1, output);
-    fwrite(&infoHeader->imageSize, 4, 1, output);
-    fwrite(&infoHeader->horzResolution, 4, 1, output);
-    fwrite(&infoHeader->vertResolution, 4, 1, output);
-    fwrite(&infoHeader->coloursInPalette, 4, 1, output);
-    fwrite(&infoHeader->importantColours, 4, 1, output);
+    fwrite(&infoHeader->headerSize, sizeof(uint32_t), 1, output);
+    fwrite(&infoHeader->bitmapWidth, sizeof(int32_t), 1, output);
+    fwrite(&infoHeader->bitmapHeight, sizeof(int32_t), 1, output);
+    fwrite(&infoHeader->colourPlanes, sizeof(uint16_t), 1, output);
+    fwrite(&infoHeader->bitsPerPixel, sizeof(uint16_t), 1, output);
+    fwrite(&infoHeader->compression, sizeof(uint32_t), 1, output);
+    fwrite(&infoHeader->imageSize, sizeof(uint32_t), 1, output);
+    fwrite(&infoHeader->horzResolution, sizeof(uint32_t), 1, output);
+    fwrite(&infoHeader->vertResolution, sizeof(uint32_t), 1, output);
+    fwrite(&infoHeader->coloursInPalette, sizeof(uint32_t), 1, output);
+    fwrite(&infoHeader->importantColours, sizeof(uint32_t), 1, output);
 
     const uint32_t currentPosition = ftell(output);
     const uint32_t gapSize = bmpHeader->offset - currentPosition;
