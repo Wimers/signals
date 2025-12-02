@@ -18,6 +18,7 @@
 
 // Program constant strings
 extern const char* const usageMessage;
+extern const char* const commandHelpMessage;
 extern const char* const fileTypeMessage;
 extern const char* const fileOpeningErrorMessage;
 extern const char* const invalidArgsMessage;

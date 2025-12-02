@@ -19,7 +19,32 @@ const char* const fileOpeningErrorMessage
 const char* const invalidArgsMessage = "Invalid arguments supplied\n";
 
 // Program constant strings
-const char* const usageMessage = "Options: ./bmp [-h] [-d] [-i] <file>\n";
+const char* const usageMessage = "Usage: ./bmp <option> [--input <file>] ...\n";
+const char* const helpMessage
+        = "Usage: ./bmp <option> [--input <file>] ...\n"
+          "\n"
+          "Help:\n"
+          "  -h, --help                  - Show this help message\n"
+          "\n"
+          "File I/O Options:\n"
+          "  -i, --input <file>          - Input BMP file to process\n"
+          "  -o, --output <file>         - Output file path to write result\n"
+          "  -d, --dump                  - Dump BMP header information to "
+          "terminal\n"
+          "  -p, --print                 - Render image to terminal (ANSI)\n"
+          "\n"
+          "Image Filters:\n"
+          "  -g, --grayscale             - Convert image to grayscale\n"
+          "  -v, --invert                - Invert image colours\n"
+          "  -f, --filter                - Apply red channel isolation\n"
+          "  -u, --flip                  - Flip image vertically\n"
+          "  -b, --brightness-cap <val>  - Cap pixel brightness (0-255)\n"
+          "\n"
+          "Advanced Effects:\n"
+          "  -l, --glitch <offset>       - Apply horizontal glitch effect\n"
+          "  -c, --combine <file>        - Overlay another BMP image onto "
+          "input\n";
+
 const char* const lineSeparator
         = "--------------------------------------------------\n";
 const char* const suXFormat = "%-25s %-15u %X\n";
@@ -82,7 +107,9 @@ void check_file_opened(FILE* file, const char* const filePath)
 void early_argument_checks(const int argc, char** argv)
 {
     if (!(argc >= MIN_CMD_ARGS)) {
-        fputs(invalidArgsMessage, stderr);
+        fputs("Warning: An argument must be supplied\n", stderr);
+        fputs(usageMessage, stderr);
+        fputs("\nEnter \"./bmp --help\" for available commands\n", stderr);
         exit(EXIT_INVALID_ARG);
     }
 
@@ -147,6 +174,14 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
 void handle_commands(UserInput* userInput)
 {
+    if (userInput->help) {
+        fputs(helpMessage, stdout);
+    }
+
+    if (!(userInput->input)) {
+        return;
+    }
+
     if (!ends_with(fileType, userInput->inputFilePath)) {
         fputs(fileTypeMessage, stderr);
         exit(EXIT_INVALID_ARG);
@@ -154,14 +189,7 @@ void handle_commands(UserInput* userInput)
 
     BMP bmpImage;
     initialise_bmp(&bmpImage);
-
-    if (userInput->help) {
-        fputs(usageMessage, stdout);
-    }
-
-    if (userInput->input) {
-        open_bmp(&bmpImage, userInput->inputFilePath);
-    }
+    open_bmp(&bmpImage, userInput->inputFilePath);
 
     if (userInput->header) {
         dump_headers(&bmpImage);
