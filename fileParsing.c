@@ -6,8 +6,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+// Error message
 const char* const invalidColourPlanesMessage
         = "The number of colour planes must be 1, got \"%d\"\n";
+
+// Constant program strings
 const char* const bitMap = "BM";
 const char* const eofAddrMessage = "End of File Addr: %lu\n";
 const char* const colouredBlockFormatter = "\033[38;2;%d;%d;%dm██\033[0m";
@@ -52,8 +55,8 @@ void open_bmp(BMP* bmpImage, const char* filePath)
 
 void read_headers(BMP* bmpImage)
 {
-    parse_bmp_header(&(bmpImage->bmpHeader), bmpImage->file);
-    parse_bmp_info_header(&(bmpImage->infoHeader), bmpImage->file);
+    parse_bmp_header(bmpImage);
+    parse_bmp_info_header(bmpImage);
 }
 
 void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader)
@@ -62,42 +65,48 @@ void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader)
     print_bmp_info_header(infoHeader);
 }
 
-void parse_bmp_header(BmpHeader* bmp, FILE* file)
+void parse_bmp_header(BMP* bmpImage)
 {
+    FILE* file = bmpImage->file;
+    BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
+
     // Store the value in the ID field
-    fread(&(bmp->id), 2, 1, file);
+    fread(&(bmpHeader->id), 2, 1, file);
 
     // Store the size of the BMP file
-    fread(&(bmp->bmpSize), 4, 1, file);
+    fread(&(bmpHeader->bmpSize), 4, 1, file);
 
     // Jump to pixle array offset, and store value
     fseek(file, 0x0A, SEEK_SET);
-    fread(&(bmp->offset), 4, 1, file);
+    fread(&(bmpHeader->offset), 4, 1, file);
 }
 
-void parse_bmp_info_header(BmpInfoHeader* bmp, FILE* file)
+void parse_bmp_info_header(BMP* bmpImage)
 {
+    FILE* file = bmpImage->file;
+    BmpInfoHeader* info = &(bmpImage->infoHeader);
+
     fseek(file, 14, SEEK_SET); // Seek to start of header
 
-    fread(&bmp->headerSize, 4, 1, file); // Header size in bytes
-    fread(&bmp->bitmapWidth, 4, 1, file); // Bitmap width in pixles
-    fread(&bmp->bitmapHeight, 4, 1, file); // Bitmap height in pixels
-    fread(&bmp->colourPlanes, 2, 1, file); // Number of colour planes
+    fread(&info->headerSize, 4, 1, file); // Header size in bytes
+    fread(&info->bitmapWidth, 4, 1, file); // Bitmap width in pixles
+    fread(&info->bitmapHeight, 4, 1, file); // Bitmap height in pixels
+    fread(&info->colourPlanes, 2, 1, file); // Number of colour planes
 
-    if ((int)(bmp->colourPlanes) != 1) { // Must be one
-        fprintf(stderr, invalidColourPlanesMessage, (int)(bmp->colourPlanes));
+    if ((int)(info->colourPlanes) != 1) { // Must be one
+        fprintf(stderr, invalidColourPlanesMessage, (int)(info->colourPlanes));
         exit(EXIT_FILE_INTEGRITY);
     }
 
-    fread(&bmp->bitsPerPixel, 2, 1,
+    fread(&info->bitsPerPixel, 2, 1,
             file); // Image colour depth (i.e. 16, 24)
-    fread(&bmp->compression, 4, 1,
+    fread(&info->compression, 4, 1,
             file); // BI_RGB (no compression) most common
-    fread(&bmp->imageSize, 4, 1, file); // Size of the raw bitmap data
-    fread(&bmp->horzResolution, 4, 1, file);
-    fread(&bmp->vertResolution, 4, 1, file);
-    fread(&bmp->coloursInPalette, 4, 1, file);
-    fread(&bmp->importantColours, 4, 1, file); // 0 if all colours important
+    fread(&info->imageSize, 4, 1, file); // Size of the raw bitmap data
+    fread(&info->horzResolution, 4, 1, file);
+    fread(&info->vertResolution, 4, 1, file);
+    fread(&info->coloursInPalette, 4, 1, file);
+    fread(&info->importantColours, 4, 1, file); // 0 if all colours important
 }
 
 void read_pixel_row(FILE* file, Image* image, const int rowNumber,

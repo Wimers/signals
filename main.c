@@ -10,12 +10,16 @@
 #include <unistd.h>
 #include <getopt.h>
 
-// Program constant strings
-const char* const usageMessage = "Options: ./bmp [-h] [-d] [-i] <file>\n";
+#define MIN_CMD_ARGS 2
+
+// Error messages
 const char* const fileTypeMessage = "Input file must be \".bmp\"\n";
 const char* const fileOpeningErrorMessage
         = "The provided file \"%s\" cannot be opened for reading\n";
 const char* const invalidArgsMessage = "Invalid arguments supplied\n";
+
+// Program constant strings
+const char* const usageMessage = "Options: ./bmp [-h] [-d] [-i] <file>\n";
 const char* const lineSeparator
         = "--------------------------------------------------\n";
 const char* const suXFormat = "%-25s %-15u %X\n";
@@ -54,7 +58,6 @@ int main(const int argc, char** argv)
 
     parse_user_commands(argc, argv, &userInput);
     handle_commands(&userInput);
-
     exit(EXIT_OK);
 }
 
@@ -77,7 +80,7 @@ void check_file_opened(FILE* file, const char* const filePath)
 
 void early_argument_checks(const int argc, char** argv)
 {
-    if (!(argc >= 2)) {
+    if (!(argc >= MIN_CMD_ARGS)) {
         fputs(invalidArgsMessage, stderr);
         exit(EXIT_INVALID_ARG);
     }

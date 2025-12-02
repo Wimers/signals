@@ -108,11 +108,8 @@ void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader);
  * into the BMP header struct.
  *
  * It is assumed the input file is a .BMP file.
- *
- * bmp: Pointer to struct to store BMP Header metadata.
- * file: File stream to the open bmp file.
  */
-void parse_bmp_header(BmpHeader* bmp, FILE* file);
+void parse_bmp_header(BMP* bmpImage);
 
 /* parse_bmp_info_header()
  * -----------------------
@@ -121,13 +118,10 @@ void parse_bmp_header(BmpHeader* bmp, FILE* file);
  *
  * It is assumed the input file is .BMP file.
  *
- * bmp: Pointer to struct to store BMP Info Header metadata.
- * file: File stream to the open bmp file.
- *
  * Errors: Exits with EXIT_FILE_INTEGRITY if the number of colour planes of file
  *         is not one.
  */
-void parse_bmp_info_header(BmpInfoHeader* bmp, FILE* file);
+void parse_bmp_info_header(BMP* bmpImage);
 
 /* print_bmp_header()
  * ------------------
