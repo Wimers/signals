@@ -86,6 +86,8 @@ static struct option const longOptions[] = {
         {NULL, 0, NULL, 0},
 };
 
+void handle_combine(const UserInput* userInput, BMP* bmpImage);
+
 int main(const int argc, char** argv)
 {
     early_argument_checks(argc, argv);
@@ -263,36 +265,7 @@ void handle_commands(UserInput* userInput)
     }
 
     if (userInput->combine) {
-        check_valid_file_type(userInput->combineFilePath);
-
-        // Exit if input and combine file paths match
-        if (!strcmp(userInput->inputFilePath, userInput->combineFilePath)) {
-            if (bmpImage.image != NULL) {
-                free_image(bmpImage.image);
-            }
-
-            if (bmpImage.file != NULL) {
-                fclose(bmpImage.file);
-                bmpImage.file = NULL;
-            }
-
-            fprintf(stderr, "Input and combine file paths must be unique!\n");
-            exit(EXIT_INVALID_ARG); // FIX
-        }
-
-        BMP combinedImage;
-        initialise_bmp(&combinedImage);
-        open_bmp(&combinedImage, userInput->combineFilePath);
-
-        combinedImage.image = flip_image(combinedImage.image);
-        combine_images(bmpImage.image, combinedImage.image);
-
-        // Free resources and memory
-        if (combinedImage.image != NULL) {
-            free_image(combinedImage.image);
-        }
-        fclose(combinedImage.file);
-        combinedImage.file = NULL;
+        handle_combine(userInput, &bmpImage);
     }
 
     if (userInput->invert) {
@@ -318,6 +291,40 @@ void handle_commands(UserInput* userInput)
     if (bmpImage.file != NULL) {
         fclose(bmpImage.file);
     }
+}
+
+void handle_combine(const UserInput* userInput, BMP* bmpImage)
+{
+    check_valid_file_type(userInput->combineFilePath);
+
+    // Exit if input and combine file paths match
+    if (!strcmp(userInput->inputFilePath, userInput->combineFilePath)) {
+        if (bmpImage->image != NULL) {
+            free_image(bmpImage->image);
+        }
+
+        if (bmpImage->file != NULL) {
+            fclose(bmpImage->file);
+            bmpImage->file = NULL;
+        }
+
+        fprintf(stderr, "Input and combine file paths must be unique!\n");
+        exit(EXIT_INVALID_ARG); // FIX
+    }
+
+    BMP combinedImage;
+    initialise_bmp(&combinedImage);
+    open_bmp(&combinedImage, userInput->combineFilePath);
+
+    combinedImage.image = flip_image(combinedImage.image);
+    combine_images(bmpImage->image, combinedImage.image);
+
+    // Free resources and memory
+    if (combinedImage.image != NULL) {
+        free_image(combinedImage.image);
+    }
+    fclose(combinedImage.file);
+    combinedImage.file = NULL;
 }
 
 void print_bmp_header(const BmpHeader* bmp)
