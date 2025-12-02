@@ -73,7 +73,7 @@ void brightness_filter(Image* image)
     }
 }
 
-void brightness_cap_filter(Image* image, uint8_t maxBrightness)
+void brightness_cap_filter(Image* image, const uint8_t maxBrightness)
 {
     for (int y = 0; y < image->height; y++) {
         for (int x = 0; x < image->width; x++) {
@@ -93,7 +93,7 @@ void brightness_cap_filter(Image* image, uint8_t maxBrightness)
     }
 }
 
-void combine_images(Image* restrict primary, Image* restrict secondary)
+void combine_images(Image* restrict primary, const Image* restrict secondary)
 {
     const int32_t height = primary->height;
     const int32_t width = primary->width;
@@ -119,7 +119,7 @@ void combine_images(Image* restrict primary, Image* restrict secondary)
     }
 }
 
-void glitch_effect(Image* image, int16_t glitchOffset)
+void glitch_effect(Image* image, const int32_t glitchOffset)
 {
     Image* imageCopy = create_image(image->width, image->height);
 

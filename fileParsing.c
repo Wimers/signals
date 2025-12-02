@@ -60,10 +60,10 @@ void read_headers(BMP* bmpImage)
     parse_bmp_info_header(bmpImage);
 }
 
-void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader)
+void dump_headers(const BMP* bmpImage)
 {
-    print_bmp_header(bmp);
-    print_bmp_info_header(infoHeader);
+    print_bmp_header(&(bmpImage->bmpHeader));
+    print_bmp_info_header(&(bmpImage->infoHeader));
 }
 
 void parse_bmp_header(BMP* bmpImage)

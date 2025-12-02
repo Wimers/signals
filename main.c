@@ -160,7 +160,7 @@ void handle_commands(UserInput* userInput)
     }
 
     if (userInput->header) {
-        dump_headers(&(bmpImage.bmpHeader), &(bmpImage.infoHeader));
+        dump_headers(&bmpImage);
     }
 
     if (!userInput->flip) {

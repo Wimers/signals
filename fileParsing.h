@@ -96,11 +96,8 @@ void read_headers(BMP* bmpImage);
 /* dump_headers()
  * --------------
  * Prints the contents of the BMP headers to the console.
- *
- * bmp: Pointer to the BmpHeader struct to populate.
- * infoHeader: Pointer to the BmpInfoHeader struct to populate.
  */
-void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader);
+void dump_headers(const BMP* bmpImage);
 
 /* parse_bmp_header()
  * ------------------
