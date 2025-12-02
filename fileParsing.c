@@ -1,5 +1,6 @@
 // Included Libraries
 #include "fileParsing.h"
+#include "main.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,14 +16,44 @@ const char* const newlineStr = "\n";
 // Assorted constant chars
 const char newlineChar = '\n';
 
-void read_headers(
-        BmpHeader* restrict bmp, BmpInfoHeader* restrict infoHeader, FILE* file)
+void initialise_bmp(BMP* bmpImage)
 {
-    memset(bmp, 0, sizeof(*bmp));
-    parse_bmp_header(bmp, file);
+    BmpHeader header;
+    BmpInfoHeader infoHeader;
 
-    memset(infoHeader, 0, sizeof(*infoHeader));
-    parse_bmp_info_header(infoHeader, file);
+    // Initialise memory to zero's
+    memset(bmpImage, 0, sizeof(*bmpImage));
+    memset(&header, 0, sizeof(header));
+    memset(&infoHeader, 0, sizeof(infoHeader));
+
+    // Assign to the bmpImage
+    bmpImage->bmpHeader = header;
+    bmpImage->infoHeader = infoHeader;
+}
+
+void open_bmp(BMP* bmpImage, const char* filePath)
+{
+    bmpImage->file = fopen(filePath, readMode);
+    if (bmpImage->file == NULL) {
+        exit(100);
+    }
+    check_file_opened(bmpImage->file, filePath);
+    read_headers(bmpImage);
+
+    bmpImage->image = load_bmp_2d(
+            bmpImage->file, &(bmpImage->bmpHeader), &(bmpImage->infoHeader));
+
+    if (bmpImage->image == NULL) {
+        fputs(fileOpeningErrorMessage, stderr);
+        fclose(bmpImage->file);
+        exit(EXIT_FILE_INTEGRITY);
+    }
+}
+
+void read_headers(BMP* bmpImage)
+{
+    parse_bmp_header(&(bmpImage->bmpHeader), bmpImage->file);
+    parse_bmp_info_header(&(bmpImage->infoHeader), bmpImage->file);
 }
 
 void dump_headers(const BmpHeader* bmp, const BmpInfoHeader* infoHeader)
@@ -184,6 +215,7 @@ void free_image(Image* image)
     free((image->pixels)[0]);
     free((void*)image->pixels);
     free(image);
+    image = NULL;
 }
 
 Image* flip_image(Image* image)

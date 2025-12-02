@@ -75,10 +75,13 @@ typedef struct {
 
 typedef struct {
     FILE* file;
-    BmpHeader* bmp;
-    BmpInfoHeader* infoHeader;
+    BmpHeader bmpHeader;
+    BmpInfoHeader infoHeader;
     Image* image;
 } BMP;
+
+void initialise_bmp(BMP* bmpImage);
+void open_bmp(BMP* bmpImage, const char* filePath);
 
 /* read_headers()
  * --------------
@@ -86,12 +89,9 @@ typedef struct {
  * Clears the destination structs and populates them by reading from the
  * provided file.
  *
- * bmp: Pointer to the BmpHeader struct to store metadata.
- * infoHeader: Pointer to the BmpInfoHeader struct to store metadata.
- * file: File stream to the open bmp file.
+ * bmpImage:
  */
-void read_headers(BmpHeader* restrict bmp, BmpInfoHeader* restrict infoHeader,
-        FILE* file);
+void read_headers(BMP* bmpImage);
 
 /* dump_headers()
  * --------------

@@ -17,25 +17,22 @@
 #define FILE_PATH_IX 2
 
 // Program constant strings
-const char* const usageMessage = "Options: ./bmp [-h] [-d] [-i] <file>\n";
-const char* const fileTypeMessage = "Input file must be \".bmp\"\n";
-const char* const fileOpeningErrorMessage
-        = "The provided file \"%s\" cannot be opened for reading\n";
-const char* const invalidArgsMessage = "Invalid arguments supplied\n";
-const char* const lineSeparator
-        = "--------------------------------------------------\n";
-const char* const suXFormat = "%-25s %-15u %X\n";
-const char* const sdXFormat = "%-25s %-15d %X\n";
-const char* const sssFormat = "%-25s %-15s %s\n";
-const char* const ssdFormat = "%-25s %-15s %d\n";
-const char* const sudFormat = "%-25s %-15u %d\n";
-const char* const fileType = ".bmp";
+extern const char* const usageMessage;
+extern const char* const fileTypeMessage;
+extern const char* const fileOpeningErrorMessage;
+extern const char* const invalidArgsMessage;
+extern const char* const lineSeparator;
+extern const char* const suXFormat;
+extern const char* const sdXFormat;
+extern const char* const sssFormat;
+extern const char* const ssdFormat;
+extern const char* const sudFormat;
+extern const char* const fileType;
+extern const char* const optstring;
 
 // Assorted constant chars
-const char* const readMode = "rb";
+extern const char* const readMode;
 #define EOS '\0'
-
-const char* const optstring = "i:o:dphfb:c:l:gvu"; // Defined program flags
 
 typedef enum {
     INVALID = -1,
@@ -53,24 +50,8 @@ typedef enum {
     GLITCH = 'l',
 } Flag;
 
-static struct option long_options[] = {
-        {"input", required_argument, NULL, INPUT_FILE},
-        {"output", required_argument, NULL, OUTPUT_FILE},
-        {"dump", no_argument, NULL, DUMP_HEADER},
-        {"print", no_argument, NULL, PRINT_IMAGE},
-        {"help", no_argument, NULL, HELP},
-        {"filter", no_argument, NULL, FILTERS},
-        {"grayscale", no_argument, NULL, GRAY_SCALE},
-        {"invert", no_argument, NULL, INVERT},
-        {"flip", no_argument, NULL, FLIP},
-        {"brightness-cap", required_argument, NULL, BRIGHTNESS_CAP},
-        {"combine", required_argument, NULL, COMBINE},
-        {"glitch", required_argument, NULL, GLITCH},
-        {NULL, 0, NULL, 0},
-};
-
 typedef struct {
-    FILE* inputFile;
+    uint8_t input;
     char* inputFilePath;
     uint8_t output;
     char* outputFilePath;
@@ -78,7 +59,6 @@ typedef struct {
     uint8_t help;
     uint8_t header;
     uint8_t print;
-    uint8_t input;
     uint8_t invert;
     uint8_t filter;
     uint8_t grayscale;
@@ -107,8 +87,6 @@ void print_bmp_info_header(const BmpInfoHeader* bmp);
 
 void check_file_opened(FILE* file, const char* const filePath);
 void early_argument_checks(const int argc, char** argv);
-void read_headers(BmpHeader* restrict bmp, BmpInfoHeader* restrict infoHeader,
-        FILE* file);
 void check_for_empty_args(const int argc, char** argv);
 void check_argument_validity(const int argc, char** argv);
 Flag command_mapping(const char* command);

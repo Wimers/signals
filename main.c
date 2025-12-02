@@ -10,6 +10,41 @@
 #include <unistd.h>
 #include <getopt.h>
 
+// Program constant strings
+const char* const usageMessage = "Options: ./bmp [-h] [-d] [-i] <file>\n";
+const char* const fileTypeMessage = "Input file must be \".bmp\"\n";
+const char* const fileOpeningErrorMessage
+        = "The provided file \"%s\" cannot be opened for reading\n";
+const char* const invalidArgsMessage = "Invalid arguments supplied\n";
+const char* const lineSeparator
+        = "--------------------------------------------------\n";
+const char* const suXFormat = "%-25s %-15u %X\n";
+const char* const sdXFormat = "%-25s %-15d %X\n";
+const char* const sssFormat = "%-25s %-15s %s\n";
+const char* const ssdFormat = "%-25s %-15s %d\n";
+const char* const sudFormat = "%-25s %-15u %d\n";
+const char* const fileType = ".bmp";
+const char* const optstring = "i:o:dphfb:c:l:gvu"; // Defined program flags
+
+// Assorted constant chars
+const char* const readMode = "rb";
+
+static struct option const longOptions[] = {
+        {"input", required_argument, NULL, INPUT_FILE},
+        {"output", required_argument, NULL, OUTPUT_FILE},
+        {"dump", no_argument, NULL, DUMP_HEADER},
+        {"print", no_argument, NULL, PRINT_IMAGE},
+        {"help", no_argument, NULL, HELP},
+        {"filter", no_argument, NULL, FILTERS},
+        {"grayscale", no_argument, NULL, GRAY_SCALE},
+        {"invert", no_argument, NULL, INVERT},
+        {"flip", no_argument, NULL, FLIP},
+        {"brightness-cap", required_argument, NULL, BRIGHTNESS_CAP},
+        {"combine", required_argument, NULL, COMBINE},
+        {"glitch", required_argument, NULL, GLITCH},
+        {NULL, 0, NULL, 0},
+};
+
 int main(const int argc, char** argv)
 {
     early_argument_checks(argc, argv);
@@ -54,7 +89,7 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
 {
     Flag opt;
     // loop over all of the options
-    while ((opt = getopt_long(argc, argv, optstring, long_options, NULL))
+    while ((opt = getopt_long(argc, argv, optstring, longOptions, NULL))
             != -1) {
         switch (opt) {
         case HELP:
@@ -110,91 +145,73 @@ void handle_commands(UserInput* userInput)
         exit(EXIT_INVALID_ARG);
     }
 
-    userInput->inputFile = fopen(userInput->inputFilePath, readMode);
-    check_file_opened(userInput->inputFile, userInput->inputFilePath);
-
-    BmpHeader bmp;
-    BmpInfoHeader infoHeader;
-    read_headers(&bmp, &infoHeader, userInput->inputFile);
-
-    Image* image = NULL;
+    BMP bmpImage;
+    initialise_bmp(&bmpImage);
 
     if (userInput->help) {
         fputs(usageMessage, stdout);
     }
-    if (userInput->header) {
-        dump_headers(&bmp, &infoHeader);
-    }
-    if (userInput->input) {
-        image = load_bmp_2d(userInput->inputFile, &bmp, &infoHeader);
 
-        if (image == NULL) {
-            fputs(fileOpeningErrorMessage, stderr);
-            fclose(userInput->inputFile);
-            exit(EXIT_FILE_INTEGRITY);
-        }
+    if (userInput->input) {
+        open_bmp(&bmpImage, userInput->inputFilePath);
+    }
+
+    if (userInput->header) {
+        dump_headers(&(bmpImage.bmpHeader), &(bmpImage.infoHeader));
     }
 
     if (!userInput->flip) {
-        image = flip_image(image);
+        bmpImage.image = flip_image(bmpImage.image);
     }
 
     if (userInput->filter) {
-        filter_red(image);
+        filter_red(bmpImage.image);
     }
 
     if (userInput->maxBrightness) {
-        brightness_cap_filter(image, userInput->maxBrightness);
+        brightness_cap_filter(bmpImage.image, userInput->maxBrightness);
     }
 
     if (userInput->grayscale) {
-        gray_filter(image);
+        gray_filter(bmpImage.image);
     }
 
     if (userInput->glitch) {
-        glitch_effect(image, userInput->glitch);
+        glitch_effect(bmpImage.image, userInput->glitch);
     }
 
     if (userInput->combine) {
-        FILE* newImageFile = fopen(userInput->combineFilePath, readMode);
-        check_file_opened(newImageFile, userInput->combineFilePath);
+        BMP combinedImage;
+        initialise_bmp(&combinedImage);
+        open_bmp(&combinedImage, userInput->combineFilePath);
 
-        BmpHeader bmp2;
-        BmpInfoHeader infoHeader2;
-        read_headers(&bmp2, &infoHeader2, newImageFile);
+        combinedImage.image = flip_image(combinedImage.image);
+        combine_images(bmpImage.image, combinedImage.image);
 
-        Image* image2 = load_bmp_2d(newImageFile, &bmp2, &infoHeader2);
-
-        if (image2 == NULL) {
-            fputs(fileOpeningErrorMessage, stderr);
-            fclose(newImageFile);
-            exit(EXIT_FILE_INTEGRITY);
-        }
-        image2 = flip_image(image2);
-
-        combine_images(image, image2);
-        free_image(image2);
-        fclose(newImageFile);
+        // Free resources and memory
+        free_image(combinedImage.image);
+        fclose(combinedImage.file);
     }
 
     if (userInput->invert) {
-        filter_invert_colours(image);
+        filter_invert_colours(bmpImage.image);
     }
 
     if (userInput->output) {
-        write_bmp_with_header_provided(
-                &bmp, &infoHeader, image, userInput->outputFilePath);
+        write_bmp_with_header_provided(&(bmpImage.bmpHeader),
+                &(bmpImage.infoHeader), bmpImage.image,
+                userInput->outputFilePath);
     }
 
     if (userInput->print) {
-        print_image_to_terminal(image);
+        print_image_to_terminal(bmpImage.image);
     }
 
-    if (image != NULL) {
-        free_image(image);
+    if (bmpImage.image != NULL) {
+        free_image(bmpImage.image);
     }
 
-    fclose(userInput->inputFile);
+    fclose(bmpImage.file);
 }
 
 void print_bmp_header(const BmpHeader* bmp)
