@@ -48,6 +48,7 @@ typedef enum {
     BRIGHTNESS_CAP = 'b',
     COMBINE = 'c',
     GLITCH = 'l',
+    AVE = 'a',
 } Flag;
 
 typedef struct {
@@ -66,7 +67,8 @@ typedef struct {
     uint8_t maxBrightness;
     uint8_t combine;
     char* combineFilePath;
-    int16_t glitch;
+    int32_t glitch;
+    uint8_t average;
 } UserInput;
 
 /* print_bmp_header()

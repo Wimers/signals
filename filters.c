@@ -47,9 +47,9 @@ void gray_filter(Image* image)
     for (int y = 0; y < image->height; y++) {
         for (int x = 0; x < image->width; x++) {
 
-            uint8_t grayScaled = (uint8_t)(0.299 * image->pixels[y][x].red
-                    + 0.587 * image->pixels[y][x].green
-                    + 0.114 * image->pixels[y][x].blue);
+            uint8_t grayScaled = (uint8_t)(GS_RED_MAP * image->pixels[y][x].red
+                    + GS_GREEN_MAP * image->pixels[y][x].green
+                    + GS_BLUE_MAP * image->pixels[y][x].blue);
             image->pixels[y][x].blue = grayScaled;
             image->pixels[y][x].green = grayScaled;
             image->pixels[y][x].red = grayScaled;
@@ -57,7 +57,7 @@ void gray_filter(Image* image)
     }
 }
 
-void brightness_filter(Image* image)
+void average_pixels(Image* image)
 {
     for (int y = 0; y < image->height; y++) {
         for (int x = 0; x < image->width; x++) {

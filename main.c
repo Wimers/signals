@@ -28,7 +28,7 @@ const char* const sssFormat = "%-25s %-15s %s\n";
 const char* const ssdFormat = "%-25s %-15s %d\n";
 const char* const sudFormat = "%-25s %-15u %d\n";
 const char* const fileType = ".bmp";
-const char* const optstring = "i:o:dphfb:c:l:gvu"; // Defined program flags
+const char* const optstring = "i:o:dphfb:c:l:gvua"; // Defined program flags
 
 // Assorted constant chars
 const char* const readMode = "rb";
@@ -46,6 +46,7 @@ static struct option const longOptions[] = {
         {"brightness-cap", required_argument, NULL, BRIGHTNESS_CAP},
         {"combine", required_argument, NULL, COMBINE},
         {"glitch", required_argument, NULL, GLITCH},
+        {"average", no_argument, NULL, AVE},
         {NULL, 0, NULL, 0},
 };
 
@@ -135,6 +136,9 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case GLITCH:
             userInput->glitch = (int32_t)atoi(optarg);
             break;
+        case AVE:
+            userInput->average = 1;
+            break;
         default:
             exit(EXIT_NO_COMMAND);
         }
@@ -198,6 +202,10 @@ void handle_commands(UserInput* userInput)
 
     if (userInput->invert) {
         filter_invert_colours(bmpImage.image);
+    }
+
+    if (userInput->average) {
+        average_pixels(bmpImage.image);
     }
 
     if (userInput->output) {
