@@ -73,6 +73,13 @@ typedef struct {
     Pixel** pixels;
 } Image;
 
+typedef struct {
+    FILE* file;
+    BmpHeader* bmp;
+    BmpInfoHeader* infoHeader;
+    Image* image;
+} BMP;
+
 /* read_headers()
  * --------------
  * Reads and parses both the File Header and Info Header of a BMP file.
@@ -147,8 +154,8 @@ void print_bmp_info_header(const BmpInfoHeader* bmp);
  * rowNumber: The current row index (height) being read.
  * byteOffset: The number of padding bytes to skip after reading the row.
  */
-void read_pixel_row(
-        FILE* file, Image* image, const int rowNumber, const uint32_t byteOffset);
+void read_pixel_row(FILE* file, Image* image, const int rowNumber,
+        const uint32_t byteOffset);
 
 /* load_bmp_2d()
  * -------------
@@ -186,14 +193,15 @@ void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
 /* calc_row_byte_offset()
  * ----------------------
  * Calculates the number of padding bytes required for BMP allignment.
- * BMP rows must be alligned to the 32bit DWORD length.
+ * BMP rows must be alligned to the 32-bit DWORD length.
  *
  * bitsPerPixel: Image colour depth.
  * bitmapWidth: Width of the image in pixel.
  *
  * Returns: The number of padding bytes per row.
  */
-uint32_t calc_row_byte_offset(const int bitsPerPixel, const int32_t bitmapWidth);
+uint32_t calc_row_byte_offset(
+        const int bitsPerPixel, const int32_t bitmapWidth);
 
 /* create_image()
  * --------------
@@ -214,7 +222,30 @@ Image* create_image(const int32_t width, const int32_t height);
  */
 void free_image(Image* image);
 
+/* flip_image()
+ * ------------
+ * Flips the input image upside down by replacing top pixel rows moving down,
+ * with their corresponding pixel row from the bottom moving up. This requires
+ * duplicating all data from the input image, creating a new image with the
+ * rows flipped, freeing the old image, and returning a pointer to the new
+ * image.
+ *
+ * image: Pointer to the image struct to be flipped.
+ *
+ * Returns: Pointer to the newly allocated flipped Image struct.
+ */
 Image* flip_image(Image* image);
+
+/* write_bmp_with_header_provided()
+ * --------------------------------
+ *
+ * bmp:
+ * infoHeader:
+ * image:
+ * filename:
+ *
+ */
 void write_bmp_with_header_provided(BmpHeader* bmp, BmpInfoHeader* infoHeader,
         Image* image, const char* filename);
+
 #endif

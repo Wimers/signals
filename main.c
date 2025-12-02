@@ -95,7 +95,7 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->combineFilePath = optarg;
             break;
         case GLITCH:
-            userInput->glitch = (int16_t)atoi(optarg);
+            userInput->glitch = (int32_t)atoi(optarg);
             break;
         default:
             exit(EXIT_NO_COMMAND);
