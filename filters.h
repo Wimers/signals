@@ -22,5 +22,9 @@ void average_pixels(Image* image);
 void brightness_cap_filter(Image* image, const uint8_t maxBrightness);
 void combine_images(Image* restrict primary, const Image* restrict secondary);
 void glitch_effect(Image* image, const int32_t glitchOffset);
+void contrast_effect(Image* image, const uint8_t contrastFactor,
+        const uint8_t min, const uint8_t max);
+void min_val(uint8_t* val, const uint8_t contrastFactor, const uint8_t min,
+        const uint8_t max);
 
 #endif

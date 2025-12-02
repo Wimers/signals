@@ -198,3 +198,51 @@ void glitch_effect(Image* image, const int32_t glitchOffset)
 
     free_image(imageCopy);
 }
+
+void contrast_effect(Image* image, const uint8_t contrastFactor,
+        const uint8_t min, const uint8_t max)
+{
+    // For each row
+    for (int y = 0; y < image->height; y++) {
+
+        // For each pixel
+        for (int x = 0; x < image->width; x++) {
+
+            // Apply contrast filter to each colour
+            min_val(&(image->pixels[y][x].blue), contrastFactor, min, max);
+            min_val(&(image->pixels[y][x].green), contrastFactor, min, max);
+            min_val(&(image->pixels[y][x].red), contrastFactor, min, max);
+        }
+    }
+}
+
+void min_val(uint8_t* val, const uint8_t contrastFactor, const uint8_t min,
+        const uint8_t max)
+{
+    if (*val >= max) {
+        const int sumMax = *val + contrastFactor;
+        if (sumMax <= UINT8_MAX) {
+            *val = (uint8_t)sumMax;
+            return;
+        }
+
+        *val = (uint8_t)UINT8_MAX;
+        return;
+    }
+
+    if (*val <= min) {
+        const int sumMin = *val - contrastFactor;
+        if (sumMin <= 0) {
+            *val = (uint8_t)0;
+            return;
+        }
+
+        if (sumMin >= UINT8_MAX) {
+            *val = (uint8_t)UINT8_MAX;
+            return;
+        }
+
+        *val = (uint8_t)sumMin;
+        return;
+    }
+}

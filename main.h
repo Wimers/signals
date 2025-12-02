@@ -58,6 +58,7 @@ typedef enum {
     COMBINE = 'c',
     GLITCH = 'l',
     AVE = 'a',
+    CONTRAST = 't',
 } Flag;
 
 typedef struct {
@@ -78,6 +79,7 @@ typedef struct {
     char* combineFilePath;
     int32_t glitch;
     uint8_t average;
+    uint8_t contrast;
 } UserInput;
 
 /* print_bmp_header()

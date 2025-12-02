@@ -64,7 +64,7 @@ const char* const sssFormat = "%-25s %-15s %s\n";
 const char* const ssdFormat = "%-25s %-15s %d\n";
 const char* const sudFormat = "%-25s %-15u %d\n";
 const char* const fileType = ".bmp";
-const char* const optstring = "i:o:dphfb:c:l:gvua"; // Defined program flags
+const char* const optstring = "i:o:dphfb:c:l:gvuat:"; // Defined program flags
 
 // Assorted constant chars
 const char* const readMode = "rb";
@@ -83,6 +83,7 @@ static struct option const longOptions[] = {
         {"combine", required_argument, NULL, COMBINE},
         {"glitch", required_argument, NULL, GLITCH},
         {"average", no_argument, NULL, AVE},
+        {"contrast", required_argument, NULL, CONTRAST},
         {NULL, 0, NULL, 0},
 };
 
@@ -169,7 +170,7 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->flip = 1;
             break;
         case BRIGHTNESS_CAP:
-            userInput->maxBrightness = (uint8_t)atoi(optarg);
+            userInput->maxBrightness = (uint8_t)atoi(optarg); // FIX
             break;
         case COMBINE:
             userInput->combine = 1;
@@ -180,6 +181,9 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
         case AVE:
             userInput->average = 1;
+            break;
+        case CONTRAST:
+            userInput->contrast = (uint8_t)atoi(optarg); // FIX
             break;
         default:
             exit(EXIT_NO_COMMAND);
@@ -249,7 +253,7 @@ void handle_commands(UserInput* userInput)
     }
 
     if (userInput->filter) {
-        filter_red(bmpImage.image);
+        filter_green(bmpImage.image);
     }
 
     if (userInput->maxBrightness) {
@@ -262,6 +266,10 @@ void handle_commands(UserInput* userInput)
 
     if (userInput->glitch) {
         glitch_effect(bmpImage.image, userInput->glitch);
+    }
+
+    if (userInput->contrast) {
+        contrast_effect(bmpImage.image, userInput->contrast, 100, 160);
     }
 
     if (userInput->combine) {
