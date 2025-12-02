@@ -239,7 +239,6 @@ Image* flip_image(Image* image);
  * filename:
  *
  */
-void write_bmp_with_header_provided(BmpHeader* bmp, BmpInfoHeader* infoHeader,
-        Image* image, const char* filename);
+void write_bmp_with_header_provided(BMP* bmpImage, const char* filename);
 
 #endif

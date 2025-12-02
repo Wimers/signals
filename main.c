@@ -201,9 +201,7 @@ void handle_commands(UserInput* userInput)
     }
 
     if (userInput->output) {
-        write_bmp_with_header_provided(&(bmpImage.bmpHeader),
-                &(bmpImage.infoHeader), bmpImage.image,
-                userInput->outputFilePath);
+        write_bmp_with_header_provided(&bmpImage, userInput->outputFilePath);
     }
 
     if (userInput->print) {

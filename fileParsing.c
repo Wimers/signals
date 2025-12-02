@@ -40,6 +40,7 @@ void open_bmp(BMP* bmpImage, const char* filePath)
     if (bmpImage->file == NULL) {
         exit(100);
     }
+
     check_file_opened(bmpImage->file, filePath);
     read_headers(bmpImage);
 
@@ -241,16 +242,19 @@ Image* flip_image(Image* image)
     return rotatedImage;
 }
 
-void write_bmp_with_header_provided(BmpHeader* bmp, BmpInfoHeader* infoHeader,
-        Image* image, const char* filename)
+void write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
 {
+    BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
+    BmpInfoHeader* infoHeader = &(bmpImage->infoHeader);
+    Image* image = bmpImage->image;
+
     FILE* output = fopen(filename, "wb");
 
     // Write BmpHeader
-    fwrite(&bmp->id, 2, 1, output); // 2 bytes
-    fwrite(&bmp->bmpSize, 4, 1, output); // 4 bytes
-    fwrite(&bmp->junk, 4, 1, output); // 4 bytes
-    fwrite(&bmp->offset, 4, 1, output); // 4 bytes
+    fwrite(&bmpHeader->id, 2, 1, output); // 2 bytes
+    fwrite(&bmpHeader->bmpSize, 4, 1, output); // 4 bytes
+    fwrite(&bmpHeader->junk, 4, 1, output); // 4 bytes
+    fwrite(&bmpHeader->offset, 4, 1, output); // 4 bytes
 
     // Write BmpInfoHeader
     fwrite(&infoHeader->headerSize, 4, 1, output);
@@ -266,7 +270,7 @@ void write_bmp_with_header_provided(BmpHeader* bmp, BmpInfoHeader* infoHeader,
     fwrite(&infoHeader->importantColours, 4, 1, output);
 
     const uint32_t currentPosition = ftell(output);
-    const uint32_t gapSize = bmp->offset - currentPosition;
+    const uint32_t gapSize = bmpHeader->offset - currentPosition;
     const uint8_t zero = 0;
     fwrite(&zero, sizeof(zero), gapSize, output);
 
