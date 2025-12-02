@@ -1,7 +1,7 @@
 CC = gcc
 
-WARNINGS = -Wall -Wextra -pedantic
-CFLAGS = -std=gnu99
+WARNINGS = -Wall -Wextra -pedantic -Wconversion -Wshadow
+CFLAGS = -std=gnu99 -O3 -march=native -flto
 DEBUG = -g
 
 .DEFAULT_GOAL := all
@@ -27,4 +27,3 @@ bmp: main.o fileParsing.o filters.o
 
 clean:
 	rm -f bmp *.o
-	clear

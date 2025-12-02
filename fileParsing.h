@@ -67,8 +67,8 @@ typedef struct __attribute__((packed)) {
 } Pixel;
 
 typedef struct {
-    uint16_t width;
-    uint16_t height;
+    int32_t width;
+    int32_t height;
     Pixel** pixels;
 } Image;
 
