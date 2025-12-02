@@ -12,17 +12,22 @@ void filter_invert_colours(Image* image)
 {
     for (int y = 0; y < image->height; y++) {
         for (int x = 0; x < image->width; x++) {
-            image->pixels[y][x].red = 255 - image->pixels[y][x].red;
-            image->pixels[y][x].green = 255 - image->pixels[y][x].green;
-            image->pixels[y][x].blue = 255 - image->pixels[y][x].blue;
+            image->pixels[y][x].red = UINT8_MAX - image->pixels[y][x].red;
+            image->pixels[y][x].green = UINT8_MAX - image->pixels[y][x].green;
+            image->pixels[y][x].blue = UINT8_MAX - image->pixels[y][x].blue;
         }
     }
 }
 
 void filter_red(Image* image)
 {
+    // For each row
     for (int y = 0; y < image->height; y++) {
+
+        // For each pixel
         for (int x = 0; x < image->width; x++) {
+
+            // Disable the red component of the pixel
             image->pixels[y][x].red = 0;
         }
     }
@@ -30,8 +35,13 @@ void filter_red(Image* image)
 
 void filter_green(Image* image)
 {
+    // For each row
     for (int y = 0; y < image->height; y++) {
+
+        // For each pixel
         for (int x = 0; x < image->width; x++) {
+
+            // Disable the red component of the pixel
             image->pixels[y][x].green = 0;
         }
     }
@@ -39,8 +49,13 @@ void filter_green(Image* image)
 
 void filter_blue(Image* image)
 {
+    // For each row
     for (int y = 0; y < image->height; y++) {
+
+        // For each pixel
         for (int x = 0; x < image->width; x++) {
+
+            // Disable the red component of the pixel
             image->pixels[y][x].blue = 0;
         }
     }
@@ -48,15 +63,25 @@ void filter_blue(Image* image)
 
 void gray_filter(Image* image)
 {
+    // For each row
     for (int y = 0; y < image->height; y++) {
+
+        // For each pixel
         for (int x = 0; x < image->width; x++) {
 
-            uint8_t grayScaled = (uint8_t)(GS_RED_MAP * image->pixels[y][x].red
-                    + GS_GREEN_MAP * image->pixels[y][x].green
-                    + GS_BLUE_MAP * image->pixels[y][x].blue);
-            image->pixels[y][x].blue = grayScaled;
-            image->pixels[y][x].green = grayScaled;
-            image->pixels[y][x].red = grayScaled;
+            // Calculate gray scaled value using weighted values based on how
+            // sensitive the human eye is to different wavelengths of light.
+            const uint32_t temp
+                    = (uint32_t)(GS_RED_MAP * image->pixels[y][x].red
+                            + GS_GREEN_MAP * image->pixels[y][x].green
+                            + GS_BLUE_MAP * image->pixels[y][x].blue);
+
+            const uint8_t grayScaled
+                    = (uint8_t)(temp / GS_PIXEL_SCALING_FACTOR);
+
+            // Assign value to each pixel
+            image->pixels[y][x].red = image->pixels[y][x].green
+                    = image->pixels[y][x].blue = grayScaled;
         }
     }
 }
@@ -79,18 +104,27 @@ void average_pixels(Image* image)
 
 void brightness_cap_filter(Image* image, const uint8_t maxBrightness)
 {
+    // For each row
     for (int y = 0; y < image->height; y++) {
+
+        // For each pixel in row
         for (int x = 0; x < image->width; x++) {
 
             if (image->pixels[y][x].blue > maxBrightness) {
+
+                // Disable blue component of pixel
                 image->pixels[y][x].blue = 0;
             }
 
             if (image->pixels[y][x].green > maxBrightness) {
+
+                // Disable green component of pixel
                 image->pixels[y][x].green = 0;
             }
 
             if (image->pixels[y][x].red > maxBrightness) {
+
+                // Disable red component of pixel
                 image->pixels[y][x].red = 0;
             }
         }

@@ -73,14 +73,16 @@ void parse_bmp_header(BMP* bmpImage)
     BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
 
     // Store the value in the ID field
-    fread(&(bmpHeader->id), 2, 1, file);
+    fread(&(bmpHeader->id), sizeof(uint16_t), 1, file);
 
     // Store the size of the BMP file
-    fread(&(bmpHeader->bmpSize), 4, 1, file);
+    fread(&(bmpHeader->bmpSize), sizeof(uint32_t), 1, file);
 
-    // Jump to pixle array offset, and store value
-    fseek(file, 0x0A, SEEK_SET);
-    fread(&(bmpHeader->offset), 4, 1, file);
+    // Junk can be ignored, however, we will store incase it is useful later
+    fread(&(bmpHeader->junk), sizeof(uint32_t), 1, file);
+
+    // Store the pixel array offset value
+    fread(&(bmpHeader->offset), sizeof(uint32_t), 1, file);
 }
 
 void parse_bmp_info_header(BMP* bmpImage)
@@ -88,27 +90,33 @@ void parse_bmp_info_header(BMP* bmpImage)
     FILE* file = bmpImage->file;
     BmpInfoHeader* info = &(bmpImage->infoHeader);
 
-    fseek(file, 14, SEEK_SET); // Seek to start of header
+    // Seek to start of header
+    fseek(file, BITMAP_FILE_HEADER_SIZE, SEEK_SET);
 
-    fread(&info->headerSize, 4, 1, file); // Header size in bytes
-    fread(&info->bitmapWidth, 4, 1, file); // Bitmap width in pixles
-    fread(&info->bitmapHeight, 4, 1, file); // Bitmap height in pixels
-    fread(&info->colourPlanes, 2, 1, file); // Number of colour planes
+    fread(&info->headerSize, sizeof(uint32_t), 1, file); // Header size in bytes
+    fread(&info->bitmapWidth, sizeof(int32_t), 1,
+            file); // Bitmap width in pixles
+    fread(&info->bitmapHeight, sizeof(int32_t), 1,
+            file); // Bitmap height in pixels
+    fread(&info->colourPlanes, sizeof(uint16_t), 1,
+            file); // Number of colour planes
 
     if ((int)(info->colourPlanes) != 1) { // Must be one
         fprintf(stderr, invalidColourPlanesMessage, (int)(info->colourPlanes));
         exit(EXIT_FILE_INTEGRITY);
     }
 
-    fread(&info->bitsPerPixel, 2, 1,
+    fread(&info->bitsPerPixel, sizeof(uint16_t), 1,
             file); // Image colour depth (i.e. 16, 24)
-    fread(&info->compression, 4, 1,
+    fread(&info->compression, sizeof(uint32_t), 1,
             file); // BI_RGB (no compression) most common
-    fread(&info->imageSize, 4, 1, file); // Size of the raw bitmap data
-    fread(&info->horzResolution, 4, 1, file);
-    fread(&info->vertResolution, 4, 1, file);
-    fread(&info->coloursInPalette, 4, 1, file);
-    fread(&info->importantColours, 4, 1, file); // 0 if all colours important
+    fread(&info->imageSize, sizeof(uint32_t), 1,
+            file); // Size of the raw bitmap data
+    fread(&info->horzResolution, sizeof(uint32_t), 1, file);
+    fread(&info->vertResolution, sizeof(uint32_t), 1, file);
+    fread(&info->coloursInPalette, sizeof(uint32_t), 1, file);
+    fread(&info->importantColours, sizeof(uint32_t), 1,
+            file); // 0 if all colours important
 }
 
 void read_pixel_row(FILE* file, Image* image, const int rowNumber,
@@ -189,7 +197,8 @@ void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
     for (int colour = 1; colour <= RGB_PIXEL_BYTE_SIZE; colour++) {
 
         // Reads intensity of colour and stores into pixel
-        fread(&((*pixel)[RGB_PIXEL_BYTE_SIZE - colour]), 1, 1, file);
+        fread(&((*pixel)[RGB_PIXEL_BYTE_SIZE - colour]), sizeof(uint8_t), 1,
+                file);
     }
 }
 
@@ -227,6 +236,20 @@ void free_image(Image* image)
     free((void*)image->pixels);
     free(image);
     image = NULL;
+}
+
+void free_image_resources(BMP* bmpImage)
+{
+    // Safely free allocated memory for storing pixel data
+    if (bmpImage->image != NULL) {
+        free_image(bmpImage->image);
+    }
+
+    // Safely close the BMP image file stream
+    if (bmpImage->file != NULL) {
+        fclose(bmpImage->file);
+        bmpImage->file = NULL;
+    }
 }
 
 Image* flip_image(Image* image)

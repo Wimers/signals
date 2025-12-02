@@ -24,7 +24,6 @@
 #define RGB_PIXEL_BYTE_SIZE 3
 #define SIZE_BYTE 8
 #define BMP_ROW_DWORD_LEN 32
-#define VERT_TERMINAL_RESOLUTION 1
 #define MAX_ANSI_PIXEL_LEN 32
 #define OUTPUT_BUFFER_CAPACITY 8192
 
@@ -237,5 +236,11 @@ Image* flip_image(Image* image);
  *
  */
 void write_bmp_with_header_provided(BMP* bmpImage, const char* filename);
+
+/* free_image_resources()
+ * ----------------------
+ * bmpImage:
+ */
+void free_image_resources(BMP* bmpImage);
 
 #endif

@@ -284,13 +284,7 @@ void handle_commands(UserInput* userInput)
         print_image_to_terminal(bmpImage.image);
     }
 
-    if (bmpImage.image != NULL) {
-        free_image(bmpImage.image);
-    }
-
-    if (bmpImage.file != NULL) {
-        fclose(bmpImage.file);
-    }
+    free_image_resources(&bmpImage);
 }
 
 void handle_combine(const UserInput* userInput, BMP* bmpImage)

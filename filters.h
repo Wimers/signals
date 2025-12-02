@@ -1,13 +1,15 @@
-// #ifndef FILTERS_H
-// #define FILTERS_H
+#ifndef FILTERS_H
+#define FILTERS_H
 
 #include "fileParsing.h"
 #include <stdint.h>
 
 // Constants to best map RGB values to grayscale
-#define GS_RED_MAP 0.299
-#define GS_GREEN_MAP 0.587
-#define GS_BLUE_MAP 0.114
+// Each multiplied by 1000 to avoid floats
+#define GS_PIXEL_SCALING_FACTOR 1000
+#define GS_RED_MAP 299
+#define GS_GREEN_MAP 587
+#define GS_BLUE_MAP 114
 
 extern const char* const fileDimensionMismatchMessage;
 
@@ -21,4 +23,4 @@ void brightness_cap_filter(Image* image, const uint8_t maxBrightness);
 void combine_images(Image* restrict primary, const Image* restrict secondary);
 void glitch_effect(Image* image, const int32_t glitchOffset);
 
-// #endif
+#endif
