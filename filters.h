@@ -11,7 +11,7 @@ void filter_green(Image* image);
 void gray_filter(Image* image);
 void brightness_filter(Image* image);
 void brightness_cap_filter(Image* image, uint8_t maxBrightness);
-void combine_images(Image* primary, Image* secondary);
+void combine_images(Image* restrict primary, Image* restrict secondary);
 void glitch_effect(Image* image, int16_t glitchOffset);
 
 // #endif

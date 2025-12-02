@@ -93,10 +93,10 @@ void brightness_cap_filter(Image* image, uint8_t maxBrightness)
     }
 }
 
-void combine_images(Image* primary, Image* secondary)
+void combine_images(Image* restrict primary, Image* restrict secondary)
 {
-    int16_t height = primary->height;
-    int16_t width = primary->width;
+    const int32_t height = primary->height;
+    const int32_t width = primary->width;
 
     if ((secondary->height != height) || (secondary->width != width)) {
         exit(EXIT_OUT_OF_BOUNDS);
