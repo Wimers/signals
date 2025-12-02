@@ -31,7 +31,7 @@ const char* const glitchUsageMessage
 
 // Program constant strings
 const char* const usageMessage = "Usage: ./bmp <option> [--input <file>] ...\n";
-const char* const helpMessage
+const char* const helpMessage // Need to update
         = "Usage: ./bmp <option> [--input <file>] ...\n"
           "\n"
           "Help:\n"
@@ -84,6 +84,7 @@ static struct option const longOptions[] = {
         {"glitch", required_argument, NULL, GLITCH},
         {"average", no_argument, NULL, AVE},
         {"contrast", required_argument, NULL, CONTRAST},
+        {"dim", required_argument, NULL, DIM},
         {NULL, 0, NULL, 0},
 };
 
@@ -185,6 +186,9 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case CONTRAST:
             userInput->contrast = (uint8_t)atoi(optarg); // FIX
             break;
+        case DIM:
+            userInput->dim = (uint8_t)atoi(optarg); // FIX
+            break;
         default:
             exit(EXIT_NO_COMMAND);
         }
@@ -270,6 +274,10 @@ void handle_commands(UserInput* userInput)
 
     if (userInput->contrast) {
         contrast_effect(bmpImage.image, userInput->contrast, 100, 160);
+    }
+
+    if (userInput->dim) {
+        dim_effect(bmpImage.image, userInput->dim);
     }
 
     if (userInput->combine) {

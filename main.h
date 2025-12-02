@@ -59,6 +59,7 @@ typedef enum {
     GLITCH = 'l',
     AVE = 'a',
     CONTRAST = 't',
+    DIM = 'm',
 } Flag;
 
 typedef struct {
@@ -80,6 +81,7 @@ typedef struct {
     int32_t glitch;
     uint8_t average;
     uint8_t contrast;
+    uint8_t dim;
 } UserInput;
 
 /* print_bmp_header()

@@ -246,3 +246,32 @@ void min_val(uint8_t* val, const uint8_t contrastFactor, const uint8_t min,
         return;
     }
 }
+
+void dim_effect(Image* image, const uint8_t dimmingFactor)
+{
+    // For each row
+    for (int y = 0; y < image->height; y++) {
+
+        // For each pixel in row
+        for (int x = 0; x < image->width; x++) {
+
+            if (image->pixels[y][x].blue <= dimmingFactor) {
+                image->pixels[y][x].blue = 0;
+            } else {
+                image->pixels[y][x].blue -= dimmingFactor;
+            }
+
+            if (image->pixels[y][x].green <= dimmingFactor) {
+                image->pixels[y][x].green = 0;
+            } else {
+                image->pixels[y][x].green -= dimmingFactor;
+            }
+
+            if (image->pixels[y][x].red <= dimmingFactor) {
+                image->pixels[y][x].red = 0;
+            } else {
+                image->pixels[y][x].red -= dimmingFactor;
+            }
+        }
+    }
+}
