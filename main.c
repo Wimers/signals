@@ -86,8 +86,6 @@ static struct option const longOptions[] = {
         {NULL, 0, NULL, 0},
 };
 
-void verify_glitch_arg(UserInput* userInput, const char* arg);
-
 int main(const int argc, char** argv)
 {
     early_argument_checks(argc, argv);
@@ -191,25 +189,38 @@ void verify_glitch_arg(UserInput* userInput, const char* arg)
 {
     const int len = strlen(arg);
 
+    // For each character in input string
     for (int i = 0; i < len; i++) {
+
+        // If char is not a digit
         if (!isdigit(arg[i])) {
-            fputs(glitchUsageMessage, stderr);
-            fputs(glitchOffsetValMessage, stderr);
-            fprintf(stderr, gotStrMessage, arg);
-            exit(EXIT_INVALID_ARG); // FIX
+
+            // Print error message and exit program
+            glitch_offset_invalid(arg);
         }
     }
 
+    // Convert string to integer
     const int32_t glitchOffset = (int32_t)atoi(arg);
 
-    if (glitchOffset) {
+    // atoi returns 0 on error, and offset of zero would have no effect
+    if (glitchOffset != 0) {
+
+        // Assign offset
         userInput->glitch = glitchOffset;
     } else {
-        fputs(glitchUsageMessage, stderr);
-        fputs(glitchOffsetValMessage, stderr);
-        fprintf(stderr, gotStrMessage, arg);
-        exit(EXIT_INVALID_ARG);
+
+        // Prints error message and exits program
+        glitch_offset_invalid(arg);
     }
+}
+
+void glitch_offset_invalid(const char* arg)
+{
+    fputs(glitchUsageMessage, stderr);
+    fputs(glitchOffsetValMessage, stderr);
+    fprintf(stderr, gotStrMessage, arg);
+    exit(EXIT_INVALID_ARG);
 }
 
 void handle_commands(UserInput* userInput)

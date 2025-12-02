@@ -106,5 +106,7 @@ void early_argument_checks(const int argc, char** argv);
 void handle_commands(UserInput* userInput);
 void parse_user_commands(const int argc, char** argv, UserInput* userInput);
 void check_valid_file_type(const char* filePath);
+void verify_glitch_arg(UserInput* userInput, const char* arg);
+void glitch_offset_invalid(const char* arg);
 
 #endif
