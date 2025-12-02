@@ -19,10 +19,10 @@ filters.o: filters.c
 fileParsing.o: fileParsing.c
 	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
 
-bmp.o: main.c
+main.o: main.c
 	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
 
-bmp: bmp.o fileParsing.o filters.o
+bmp: main.o fileParsing.o filters.o
 	$(CC) $(CFLAGS) $(WARNINGS) $^ -o $@
 
 clean:

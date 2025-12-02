@@ -9,6 +9,8 @@
 #define GS_GREEN_MAP 0.587
 #define GS_BLUE_MAP 0.114
 
+extern const char* const fileDimensionMismatchMessage;
+
 void filter_invert_colours(Image* image);
 void filter_blue(Image* image);
 void filter_red(Image* image);

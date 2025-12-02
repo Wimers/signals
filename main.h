@@ -14,7 +14,7 @@
 #define EXIT_NO_COMMAND 6
 
 // cmd line argument indexes
-#define FILE_PATH_IX 2
+#define MIN_CMD_ARGS 2
 
 // Program constant strings
 extern const char* const usageMessage;
@@ -30,6 +30,14 @@ extern const char* const ssdFormat;
 extern const char* const sudFormat;
 extern const char* const fileType;
 extern const char* const optstring;
+extern const char* const gotStrMessage;
+extern const char* const gotIntMessage;
+extern const char* const emptyArgsMessage;
+extern const char* const noArgsProvidedMessage;
+extern const char* const userHelpPrompt;
+extern const char* const unexpectedArgMessage;
+extern const char* const glitchOffsetValMessage;
+extern const char* const glitchUsageMessage;
 
 // Assorted constant chars
 extern const char* const readMode;
@@ -97,5 +105,6 @@ int ends_with(const char* const target, const char* arg);
 void early_argument_checks(const int argc, char** argv);
 void handle_commands(UserInput* userInput);
 void parse_user_commands(const int argc, char** argv, UserInput* userInput);
+void check_valid_file_type(const char* filePath);
 
 #endif

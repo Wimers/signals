@@ -10,13 +10,24 @@
 #include <unistd.h>
 #include <getopt.h>
 
-#define MIN_CMD_ARGS 2
-
 // Error messages
 const char* const fileTypeMessage = "Input file must be \".bmp\"\n";
 const char* const fileOpeningErrorMessage
-        = "The provided file \"%s\" cannot be opened for reading\n";
-const char* const invalidArgsMessage = "Invalid arguments supplied\n";
+        = "Error opening file \"%s\" for reading.\n";
+const char* const invalidArgsMessage = "Invalid arguments supplied.\n";
+const char* const emptyArgsMessage = "Arguments must not be empty.\n";
+const char* const noArgsProvidedMessage = "An argument must be supplied.\n";
+const char* const userHelpPrompt
+        = "Enter: \"./bmp --help\" for available commands\n";
+const char* const unexpectedArgMessage = "Got \"%s\", expected \"%s\"\n";
+const char* const glitchOffsetValMessage
+        = "\nOffset must be a positive integer, within input image "
+          "bounds.\n";
+const char* const gotStrMessage = "    Got \"%s\".\n";
+const char* const gotIntMessage = "    Got \"%d\".\n";
+const char* const glitchUsageMessage
+        = "Glitch Effect\nUsage:  -l, --glitch <offset>  "
+          "    - Apply horizontal glitch effect\n";
 
 // Program constant strings
 const char* const usageMessage = "Usage: ./bmp <option> [--input <file>] ...\n";
@@ -75,12 +86,14 @@ static struct option const longOptions[] = {
         {NULL, 0, NULL, 0},
 };
 
+void verify_glitch_arg(UserInput* userInput, const char* arg);
+
 int main(const int argc, char** argv)
 {
     early_argument_checks(argc, argv);
 
     UserInput userInput;
-    memset(&userInput, 0, sizeof(userInput));
+    (void)memset(&userInput, 0, sizeof(userInput));
 
     parse_user_commands(argc, argv, &userInput);
     handle_commands(&userInput);
@@ -91,7 +104,9 @@ void check_for_empty_args(const int argc, char** argv)
 {
     for (int i = 0; i < argc; i++) {
         if (argv[i][0] == EOS) {
-            exit(EXIT_INVALID_ARG);
+            fputs(emptyArgsMessage, stderr);
+            fputs(usageMessage, stderr);
+            exit(EXIT_INVALID_ARG); // FIX
         }
     }
 }
@@ -107,10 +122,10 @@ void check_file_opened(FILE* file, const char* const filePath)
 void early_argument_checks(const int argc, char** argv)
 {
     if (!(argc >= MIN_CMD_ARGS)) {
-        fputs("Warning: An argument must be supplied\n", stderr);
+        fputs(noArgsProvidedMessage, stderr);
         fputs(usageMessage, stderr);
-        fputs("\nEnter \"./bmp --help\" for available commands\n", stderr);
-        exit(EXIT_INVALID_ARG);
+        fputs(userHelpPrompt, stderr);
+        exit(EXIT_INVALID_ARG); // FIX
     }
 
     check_for_empty_args(argc, argv);
@@ -161,7 +176,7 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->combineFilePath = optarg;
             break;
         case GLITCH:
-            userInput->glitch = (int32_t)atoi(optarg);
+            verify_glitch_arg(userInput, optarg);
             break;
         case AVE:
             userInput->average = 1;
@@ -169,6 +184,31 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
         default:
             exit(EXIT_NO_COMMAND);
         }
+    }
+}
+
+void verify_glitch_arg(UserInput* userInput, const char* arg)
+{
+    const int len = strlen(arg);
+
+    for (int i = 0; i < len; i++) {
+        if (!isdigit(arg[i])) {
+            fputs(glitchUsageMessage, stderr);
+            fputs(glitchOffsetValMessage, stderr);
+            fprintf(stderr, gotStrMessage, arg);
+            exit(EXIT_INVALID_ARG); // FIX
+        }
+    }
+
+    const int32_t glitchOffset = (int32_t)atoi(arg);
+
+    if (glitchOffset) {
+        userInput->glitch = glitchOffset;
+    } else {
+        fputs(glitchUsageMessage, stderr);
+        fputs(glitchOffsetValMessage, stderr);
+        fprintf(stderr, gotStrMessage, arg);
+        exit(EXIT_INVALID_ARG);
     }
 }
 
@@ -181,11 +221,7 @@ void handle_commands(UserInput* userInput)
     if (!(userInput->input)) {
         return;
     }
-
-    if (!ends_with(fileType, userInput->inputFilePath)) {
-        fputs(fileTypeMessage, stderr);
-        exit(EXIT_INVALID_ARG);
-    }
+    check_valid_file_type(userInput->inputFilePath);
 
     BMP bmpImage;
     initialise_bmp(&bmpImage);
@@ -216,6 +252,8 @@ void handle_commands(UserInput* userInput)
     }
 
     if (userInput->combine) {
+        check_valid_file_type(userInput->inputFilePath);
+
         BMP combinedImage;
         initialise_bmp(&combinedImage);
         open_bmp(&combinedImage, userInput->combineFilePath);
@@ -224,7 +262,9 @@ void handle_commands(UserInput* userInput)
         combine_images(bmpImage.image, combinedImage.image);
 
         // Free resources and memory
-        free_image(combinedImage.image);
+        if (combinedImage.image != NULL) {
+            free_image(combinedImage.image);
+        }
         fclose(combinedImage.file);
     }
 
@@ -285,11 +325,21 @@ void print_bmp_info_header(const BmpInfoHeader* bmp)
 
 int ends_with(const char* const target, const char* arg)
 {
-    int lenArg;
-    int lenTarget;
-    if ((lenArg = strlen(arg)) < (lenTarget = strlen(target))) {
+    const int lenArg = strlen(arg);
+    const int lenTarget = strlen(target);
+
+    if (lenArg < lenTarget) {
         return -1;
     }
 
     return !(strcmp(target, &(arg[lenArg - lenTarget])));
+}
+
+void check_valid_file_type(const char* filePath)
+{
+    if (!ends_with(fileType, filePath)) {
+        fputs(fileTypeMessage, stderr);
+        fprintf(stderr, unexpectedArgMessage, filePath, fileType);
+        exit(EXIT_INVALID_ARG);
+    }
 }

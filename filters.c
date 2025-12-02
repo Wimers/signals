@@ -3,6 +3,10 @@
 #include <string.h>
 #include "fileParsing.h"
 #include "filters.h"
+#include "main.h"
+
+const char* const fileDimensionMismatchMessage
+        = "File dimension mismatch: \"%dx%d\" is not \"%dx%d\"\n";
 
 void filter_invert_colours(Image* image)
 {
@@ -99,7 +103,9 @@ void combine_images(Image* restrict primary, const Image* restrict secondary)
     const int32_t width = primary->width;
 
     if ((secondary->height != height) || (secondary->width != width)) {
-        exit(EXIT_OUT_OF_BOUNDS);
+        fprintf(stderr, fileDimensionMismatchMessage, height, width,
+                secondary->height, secondary->width);
+        exit(EXIT_OUT_OF_BOUNDS); // Results in memory leak I believe
     }
 
     for (int y = 0; y < height; y++) {
@@ -121,6 +127,15 @@ void combine_images(Image* restrict primary, const Image* restrict secondary)
 
 void glitch_effect(Image* image, const int32_t glitchOffset)
 {
+    // Check if offset is out of image bounds
+    if (glitchOffset >= (image->width)) {
+        fputs(glitchUsageMessage, stderr);
+        fprintf(stderr, "Image bounds (%dx%d)\n", image->width, image->height);
+        fputs(glitchOffsetValMessage, stderr);
+        fprintf(stderr, gotIntMessage, glitchOffset);
+        exit(EXIT_OUT_OF_BOUNDS); // Results in a memory leak I believe
+    }
+
     Image* imageCopy = create_image(image->width, image->height);
 
     for (int y = 0; y < image->height; y++) {
