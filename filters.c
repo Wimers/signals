@@ -8,9 +8,12 @@
 const char* const fileDimensionMismatchMessage
         = "File dimension mismatch: \"%dx%d\" is not \"%dx%d\"\n";
 
-void filter_invert_colours(Image* image)
+void invert_colours(Image* image)
 {
+    // For each row
     for (int y = 0; y < image->height; y++) {
+
+        // For each pixel in row
         for (int x = 0; x < image->width; x++) {
             image->pixels[y][x].red = UINT8_MAX - image->pixels[y][x].red;
             image->pixels[y][x].green = UINT8_MAX - image->pixels[y][x].green;
@@ -24,7 +27,7 @@ void filter_red(Image* image)
     // For each row
     for (int y = 0; y < image->height; y++) {
 
-        // For each pixel
+        // For each pixel in row
         for (int x = 0; x < image->width; x++) {
 
             // Disable the red component of the pixel
@@ -38,7 +41,7 @@ void filter_green(Image* image)
     // For each row
     for (int y = 0; y < image->height; y++) {
 
-        // For each pixel
+        // For each pixel in row
         for (int x = 0; x < image->width; x++) {
 
             // Disable the red component of the pixel
@@ -52,7 +55,7 @@ void filter_blue(Image* image)
     // For each row
     for (int y = 0; y < image->height; y++) {
 
-        // For each pixel
+        // For each pixel in row
         for (int x = 0; x < image->width; x++) {
 
             // Disable the red component of the pixel
@@ -66,7 +69,7 @@ void gray_filter(Image* image)
     // For each row
     for (int y = 0; y < image->height; y++) {
 
-        // For each pixel
+        // For each pixel in row
         for (int x = 0; x < image->width; x++) {
 
             // Calculate gray scaled value using weighted values based on how
@@ -88,7 +91,10 @@ void gray_filter(Image* image)
 
 void average_pixels(Image* image)
 {
+    // For each row
     for (int y = 0; y < image->height; y++) {
+
+        // For each pixel in row
         for (int x = 0; x < image->width; x++) {
 
             uint8_t brightness = (uint8_t)((image->pixels[y][x].red
@@ -142,7 +148,10 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
         return EXIT_OUT_OF_BOUNDS;
     }
 
+    // For each row
     for (int y = 0; y < height; y++) {
+
+        // For each pixel in row
         for (int x = 0; x < width; x++) {
             uint8_t newRed = (primary->pixels[y][x].red) / 2
                     + (secondary->pixels[y][x].red / 2);
@@ -170,10 +179,12 @@ int glitch_effect(Image* image, const int32_t glitchOffset)
 
     Image* imageCopy = create_image(image->width, image->height);
 
+    // For each row
     for (int y = 0; y < image->height; y++) {
         memcpy(imageCopy->pixels[y], image->pixels[y],
                 image->width * sizeof(Pixel));
 
+        // For each pixel in row
         for (int x = 0; x < image->width; x++) {
             int accessRedRegion = x + glitchOffset;
             if ((accessRedRegion < 0) || (accessRedRegion > image->width)) {
@@ -218,13 +229,42 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
     // For each row
     for (int y = 0; y < image->height; y++) {
 
-        // For each pixel
+        // For each pixel in row
         for (int x = 0; x < image->width; x++) {
 
             // Apply contrast filter to each colour
             min_val(&(image->pixels[y][x].blue), contrastFactor, min, max);
             min_val(&(image->pixels[y][x].green), contrastFactor, min, max);
             min_val(&(image->pixels[y][x].red), contrastFactor, min, max);
+        }
+    }
+}
+
+void dim_effect(Image* image, const uint8_t dimmingFactor)
+{
+    // For each row
+    for (int y = 0; y < image->height; y++) {
+
+        // For each pixel in row
+        for (int x = 0; x < image->width; x++) {
+
+            if (image->pixels[y][x].blue <= dimmingFactor) {
+                image->pixels[y][x].blue = 0;
+            } else {
+                image->pixels[y][x].blue -= dimmingFactor;
+            }
+
+            if (image->pixels[y][x].green <= dimmingFactor) {
+                image->pixels[y][x].green = 0;
+            } else {
+                image->pixels[y][x].green -= dimmingFactor;
+            }
+
+            if (image->pixels[y][x].red <= dimmingFactor) {
+                image->pixels[y][x].red = 0;
+            } else {
+                image->pixels[y][x].red -= dimmingFactor;
+            }
         }
     }
 }
@@ -257,34 +297,5 @@ void min_val(uint8_t* val, const uint8_t contrastFactor, const uint8_t min,
 
         *val = (uint8_t)sumMin;
         return;
-    }
-}
-
-void dim_effect(Image* image, const uint8_t dimmingFactor)
-{
-    // For each row
-    for (int y = 0; y < image->height; y++) {
-
-        // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
-
-            if (image->pixels[y][x].blue <= dimmingFactor) {
-                image->pixels[y][x].blue = 0;
-            } else {
-                image->pixels[y][x].blue -= dimmingFactor;
-            }
-
-            if (image->pixels[y][x].green <= dimmingFactor) {
-                image->pixels[y][x].green = 0;
-            } else {
-                image->pixels[y][x].green -= dimmingFactor;
-            }
-
-            if (image->pixels[y][x].red <= dimmingFactor) {
-                image->pixels[y][x].red = 0;
-            } else {
-                image->pixels[y][x].red -= dimmingFactor;
-            }
-        }
     }
 }

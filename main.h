@@ -18,7 +18,6 @@
 #define EXIT_INVALID_PARAMETER 90
 #define EXIT_SAME_FILE 91
 
-// cmd line argument indexes
 #define MIN_CMD_ARGS 2
 
 // Program constant strings
@@ -46,6 +45,7 @@ extern const char* const glitchUsageMessage;
 
 // Assorted constant chars
 extern const char* const readMode;
+extern const char* const writeMode;
 #define EOS '\0'
 
 typedef enum {
@@ -89,34 +89,110 @@ typedef struct {
     uint8_t dim;
 } UserInput;
 
-/* print_bmp_header()
- * ------------------
- * Prints the values of each parameter from the BMP Info header parsed.
+/* check_for_empty_args()
+ * ----------------------
+ * argc:
+ * argv:
  *
- * bmp: Struct containing all parsed BMP Header metadata.
+ * Returns:
  */
-void print_bmp_header(const BmpHeader* bmp);
-
-/* print_bmp_info_header()
- * -----------------------
- * Prints the values of each parameter from the BMP Info header parsed.
- *
- * bmp: Pointer to struct containing all parsed BMP Info Header metadata.
- */
-void print_bmp_info_header(const BmpInfoHeader* bmp);
-
-int early_argument_checks(const int argc, char** argv);
 int check_for_empty_args(const int argc, char** argv);
-void check_argument_validity(const int argc, char** argv);
-Flag command_mapping(const char* command);
-int ends_with(const char* const target, const char* arg);
-int handle_commands(UserInput* userInput);
+
+/* early_argument_checks()
+ * -----------------------
+ *  argc:
+ *  argv:
+ *
+ *  Returns:
+ */
+int early_argument_checks(const int argc, char** argv);
+
+/* parse_user_commands()
+ * ---------------------
+ * argc:
+ * argv:
+ *
+ * Returns:
+ */
 int parse_user_commands(const int argc, char** argv, UserInput* userInput);
-int check_valid_file_type(const char* filePath);
-int verify_glitch_arg(UserInput* userInput, const char* arg);
-int glitch_offset_invalid(const char* arg);
-int handle_combine(const UserInput* userInput, BMP* bmpImage);
-int verify_int_arg_with_bounds(const char* arg, const int min, const int max);
+
+/* check_each_char_is_digit()
+ * --------------------------
+ * arg:
+ *
+ * Returns:
+ */
+int check_each_char_is_digit(const char* arg);
+
+/* check_int_within_bounds()
+ * -------------------------
+ * num:
+ * min:
+ * max:
+ *
+ * Returns:
+ */
 int check_int_within_bounds(const int num, const int min, const int max);
+
+/* verify_int_arg_with_bounds()
+ * ----------------------------
+ * arg:
+ * min:
+ * max:
+ *
+ * Returns:
+ */
+int verify_int_arg_with_bounds(const char* arg, const int min, const int max);
+
+/* verify_glitch_arg()
+ * -------------------
+ * userInput:
+ * arg:
+ *
+ * Returns:
+ */
+int verify_glitch_arg(UserInput* userInput, const char* arg);
+
+/* glitch_offset_invalid_message()
+ * -------------------------------
+ * arg:
+ *
+ * Returns:
+ */
+int glitch_offset_invalid_message(const char* arg);
+
+/* handle_commands()
+ * -----------------
+ * userInput:
+ *
+ * Returns:
+ */
+int handle_commands(UserInput* userInput);
+
+/* handle_combine()
+ * ----------------
+ * userInput:
+ * bmpImage:
+ *
+ * Returns:
+ */
+int handle_combine(const UserInput* userInput, BMP* bmpImage);
+
+/* ends_with()
+ * -----------
+ * target:
+ * arg:
+ *
+ * Returns:
+ */
+int ends_with(const char* const target, const char* arg);
+
+/* check_valid_file_type()
+ * -----------------------
+ * filePath:
+ *
+ * Returns:
+ */
+int check_valid_file_type(const char* filePath);
 
 #endif

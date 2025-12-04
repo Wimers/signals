@@ -79,7 +79,26 @@ typedef struct {
     Image* image;
 } BMP;
 
+/* initialise_bmp()
+ * ----------------
+ * bmpImage:
+ */
 void initialise_bmp(BMP* bmpImage);
+
+/* free_image()
+ * ------------
+ * Frees all memory associated with the provided image struct.
+ *
+ * image: Pointer to the image struct to free.
+ */
+void free_image(Image* image);
+
+/* free_image_resources()
+ * ----------------------
+ * bmpImage:
+ */
+void free_image_resources(BMP* bmpImage);
+
 int open_bmp(BMP* bmpImage, const char* const filePath);
 
 /* read_headers()
@@ -204,14 +223,6 @@ uint32_t calc_row_byte_offset(
  */
 Image* create_image(const int32_t width, const int32_t height);
 
-/* free_image()
- * ------------
- * Frees all memory associated with the provided image struct.
- *
- * image: Pointer to the image struct to free.
- */
-void free_image(Image* image);
-
 /* flip_image()
  * ------------
  * Flips the input image upside down by replacing top pixel rows moving down,
@@ -228,7 +239,6 @@ Image* flip_image(Image* image);
 
 /* write_bmp_with_header_provided()
  * --------------------------------
- *
  * bmp:
  * infoHeader:
  * image:
@@ -237,12 +247,11 @@ Image* flip_image(Image* image);
  */
 void write_bmp_with_header_provided(BMP* bmpImage, const char* filename);
 
-/* free_image_resources()
- * ----------------------
- * bmpImage:
+/* check_file_opened()
+ * -------------------
+ * file:
+ * filePath:
  */
-void free_image_resources(BMP* bmpImage);
-
 int check_file_opened(FILE* file, const char* const filePath);
 
 #endif

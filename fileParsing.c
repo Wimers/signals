@@ -34,6 +34,28 @@ void initialise_bmp(BMP* bmpImage)
     bmpImage->infoHeader = infoHeader;
 }
 
+void free_image(Image* image)
+{
+    free((image->pixels)[0]);
+    free((void*)image->pixels);
+    free(image);
+    image = NULL;
+}
+
+void free_image_resources(BMP* bmpImage)
+{
+    // Safely free allocated memory for storing pixel data
+    if (bmpImage->image != NULL) {
+        free_image(bmpImage->image);
+    }
+
+    // Safely close the BMP image file stream
+    if (bmpImage->file != NULL) {
+        fclose(bmpImage->file);
+        bmpImage->file = NULL;
+    }
+}
+
 int open_bmp(BMP* bmpImage, const char* const filePath)
 {
     bmpImage->file = fopen(filePath, readMode);
@@ -128,6 +150,38 @@ int parse_bmp_info_header(BMP* bmpImage)
             file); // 0 if all colours important
 
     return EXIT_SUCCESS;
+}
+
+void print_bmp_header(const BmpHeader* bmp)
+{
+    fprintf(stdout, sssFormat, "BMP Header", "Data", "Hex");
+    fputs(lineSeparator, stdout);
+    fprintf(stdout, ssdFormat, "ID", (char*)&(bmp->id), bmp->id);
+    fprintf(stdout, suXFormat, "Size", bmp->bmpSize, bmp->bmpSize);
+    fprintf(stdout, suXFormat, "Offset", bmp->offset, bmp->offset);
+}
+
+void print_bmp_info_header(const BmpInfoHeader* bmp)
+{
+    fputs(newlineStr, stdout);
+    printf(sssFormat, "DIB Header", "Data", "Hex");
+    fputs(lineSeparator, stdout);
+    printf(suXFormat, "Header Size", bmp->headerSize, bmp->headerSize);
+    printf(sdXFormat, "Bitmap Width", bmp->bitmapWidth, bmp->bitmapWidth);
+    printf(sdXFormat, "Bitmap Height", bmp->bitmapHeight, bmp->bitmapHeight);
+    printf(sudFormat, "Num. Colour Planes", bmp->colourPlanes,
+            bmp->colourPlanes);
+    printf(sudFormat, "Bits Per Pixel", bmp->bitsPerPixel, bmp->bitsPerPixel);
+    printf(suXFormat, "Compression", bmp->compression, bmp->compression);
+    printf(suXFormat, "Image Size", bmp->imageSize, bmp->imageSize);
+    printf(sdXFormat, "Horizontal Resolution", bmp->horzResolution,
+            bmp->horzResolution);
+    printf(sdXFormat, "Verticle Resolution", bmp->vertResolution,
+            bmp->vertResolution);
+    printf(suXFormat, "Colours In Palette", bmp->coloursInPalette,
+            bmp->coloursInPalette);
+    printf(suXFormat, "Important Colours", bmp->importantColours,
+            bmp->importantColours);
 }
 
 void read_pixel_row(FILE* file, Image* image, const int rowNumber,
@@ -239,28 +293,6 @@ Image* create_image(const int32_t width, const int32_t height)
     }
 
     return img;
-}
-
-void free_image(Image* image)
-{
-    free((image->pixels)[0]);
-    free((void*)image->pixels);
-    free(image);
-    image = NULL;
-}
-
-void free_image_resources(BMP* bmpImage)
-{
-    // Safely free allocated memory for storing pixel data
-    if (bmpImage->image != NULL) {
-        free_image(bmpImage->image);
-    }
-
-    // Safely close the BMP image file stream
-    if (bmpImage->file != NULL) {
-        fclose(bmpImage->file);
-        bmpImage->file = NULL;
-    }
 }
 
 Image* flip_image(Image* image)

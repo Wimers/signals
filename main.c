@@ -271,7 +271,7 @@ int verify_glitch_arg(UserInput* userInput, const char* arg)
     if (verify_int_arg_with_bounds(arg, 1, INT32_MAX) == -1) {
 
         // Prints error messages
-        return glitch_offset_invalid(arg);
+        return glitch_offset_invalid_message(arg);
     }
 
     const int32_t glitchOffset = (int32_t)atoi(arg);
@@ -284,13 +284,13 @@ int verify_glitch_arg(UserInput* userInput, const char* arg)
     } else {
 
         // Prints error messages
-        return glitch_offset_invalid(arg);
+        return glitch_offset_invalid_message(arg);
     }
 
     return EXIT_SUCCESS;
 }
 
-int glitch_offset_invalid(const char* arg)
+int glitch_offset_invalid_message(const char* arg)
 {
     fputs(glitchUsageMessage, stderr);
     fputs(glitchOffsetValMessage, stderr);
@@ -365,7 +365,7 @@ int handle_commands(UserInput* userInput)
     }
 
     if (userInput->invert) {
-        filter_invert_colours(bmpImage.image);
+        invert_colours(bmpImage.image);
     }
 
     if (userInput->average) {
@@ -418,38 +418,6 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
 
     free_image_resources(&combinedImage);
     return EXIT_SUCCESS;
-}
-
-void print_bmp_header(const BmpHeader* bmp)
-{
-    fprintf(stdout, sssFormat, "BMP Header", "Data", "Hex");
-    fputs(lineSeparator, stdout);
-    fprintf(stdout, ssdFormat, "ID", (char*)&(bmp->id), bmp->id);
-    fprintf(stdout, suXFormat, "Size", bmp->bmpSize, bmp->bmpSize);
-    fprintf(stdout, suXFormat, "Offset", bmp->offset, bmp->offset);
-}
-
-void print_bmp_info_header(const BmpInfoHeader* bmp)
-{
-    fputs(newlineStr, stdout);
-    printf(sssFormat, "DIB Header", "Data", "Hex");
-    fputs(lineSeparator, stdout);
-    printf(suXFormat, "Header Size", bmp->headerSize, bmp->headerSize);
-    printf(sdXFormat, "Bitmap Width", bmp->bitmapWidth, bmp->bitmapWidth);
-    printf(sdXFormat, "Bitmap Height", bmp->bitmapHeight, bmp->bitmapHeight);
-    printf(sudFormat, "Num. Colour Planes", bmp->colourPlanes,
-            bmp->colourPlanes);
-    printf(sudFormat, "Bits Per Pixel", bmp->bitsPerPixel, bmp->bitsPerPixel);
-    printf(suXFormat, "Compression", bmp->compression, bmp->compression);
-    printf(suXFormat, "Image Size", bmp->imageSize, bmp->imageSize);
-    printf(sdXFormat, "Horizontal Resolution", bmp->horzResolution,
-            bmp->horzResolution);
-    printf(sdXFormat, "Verticle Resolution", bmp->vertResolution,
-            bmp->vertResolution);
-    printf(suXFormat, "Colours In Palette", bmp->coloursInPalette,
-            bmp->coloursInPalette);
-    printf(suXFormat, "Important Colours", bmp->importantColours,
-            bmp->importantColours);
 }
 
 int ends_with(const char* const target, const char* arg)
