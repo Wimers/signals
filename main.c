@@ -88,49 +88,42 @@ static struct option const longOptions[] = {
         {NULL, 0, NULL, 0},
 };
 
-void handle_combine(const UserInput* userInput, BMP* bmpImage);
-
 int main(const int argc, char** argv)
 {
-    early_argument_checks(argc, argv);
+    if (early_argument_checks(argc, argv) != EXIT_SUCCESS) {
+        exit(EXIT_INVALID_ARG);
+    }
 
     UserInput userInput;
     (void)memset(&userInput, 0, sizeof(userInput));
 
     parse_user_commands(argc, argv, &userInput);
-    handle_commands(&userInput);
-    exit(EXIT_OK);
+    exit(handle_commands(&userInput));
 }
 
-void check_for_empty_args(const int argc, char** argv)
+int check_for_empty_args(const int argc, char** argv)
 {
     for (int i = 0; i < argc; i++) {
         if (argv[i][0] == EOS) {
             fputs(emptyArgsMessage, stderr);
             fputs(usageMessage, stderr);
-            exit(EXIT_INVALID_ARG); // FIX
+            return -1;
         }
     }
+
+    return EXIT_SUCCESS;
 }
 
-void check_file_opened(FILE* file, const char* const filePath)
-{
-    if (file == NULL) { // Check if file can be opened
-        fprintf(stderr, fileOpeningErrorMessage, filePath);
-        exit(EXIT_FILE_CANNOT_BE_READ);
-    }
-}
-
-void early_argument_checks(const int argc, char** argv)
+int early_argument_checks(const int argc, char** argv)
 {
     if (!(argc >= MIN_CMD_ARGS)) {
         fputs(noArgsProvidedMessage, stderr);
         fputs(usageMessage, stderr);
         fputs(userHelpPrompt, stderr);
-        exit(EXIT_INVALID_ARG); // FIX
+        return -1;
     }
 
-    check_for_empty_args(argc, argv);
+    return check_for_empty_args(argc, argv);
 }
 
 void parse_user_commands(const int argc, char** argv, UserInput* userInput)
@@ -140,62 +133,89 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
     while ((opt = getopt_long(argc, argv, optstring, longOptions, NULL))
             != -1) {
         switch (opt) {
+
         case HELP:
             userInput->help = 1;
             break;
+
         case DUMP_HEADER:
             userInput->header = 1;
             break;
+
         case PRINT_IMAGE:
             userInput->print = 1;
             break;
+
         case INPUT_FILE:
             userInput->input = 1;
             userInput->inputFilePath = optarg;
             break;
+
         case OUTPUT_FILE:
             userInput->output = 1;
             userInput->outputFilePath = optarg;
             break;
+
         case FILTERS:
             userInput->filter = 1;
             userInput->filters = optarg;
             break;
+
         case GRAY_SCALE:
             userInput->grayscale = 1;
             break;
+
         case INVERT:
             userInput->invert = 1;
             break;
+
         case FLIP:
             userInput->flip = 1;
             break;
+
         case BRIGHTNESS_CAP:
-            userInput->maxBrightness = (uint8_t)atoi(optarg); // FIX
+            if (verify_int_arg_with_bounds(optarg, 0, UINT8_MAX) == -1) {
+                exit(EXIT_INVALID_PARAMETER);
+            }
+            userInput->maxBrightness = (uint8_t)atoi(optarg);
             break;
+
         case COMBINE:
             userInput->combine = 1;
             userInput->combineFilePath = optarg;
             break;
+
         case GLITCH:
-            verify_glitch_arg(userInput, optarg);
+            if (verify_glitch_arg(userInput, optarg) == -1) {
+                exit(EXIT_INVALID_PARAMETER);
+            }
             break;
+
         case AVE:
             userInput->average = 1;
             break;
+
         case CONTRAST:
-            userInput->contrast = (uint8_t)atoi(optarg); // FIX
+            if (verify_int_arg_with_bounds(optarg, 0, UINT8_MAX) == -1) {
+                exit(EXIT_INVALID_PARAMETER);
+            }
+            userInput->contrast = (uint8_t)atoi(optarg);
             break;
+
         case DIM:
-            userInput->dim = (uint8_t)atoi(optarg); // FIX
+            if (verify_int_arg_with_bounds(optarg, 0, UINT8_MAX) == -1) {
+                exit(EXIT_INVALID_PARAMETER);
+            }
+            userInput->dim = (uint8_t)atoi(optarg);
             break;
+
         default:
             exit(EXIT_NO_COMMAND);
         }
     }
 }
 
-void verify_glitch_arg(UserInput* userInput, const char* arg)
+int check_each_char_is_digit(const char* arg)
 {
     const int len = strlen(arg);
 
@@ -204,13 +224,44 @@ void verify_glitch_arg(UserInput* userInput, const char* arg)
 
         // If char is not a digit
         if (!isdigit(arg[i])) {
-
-            // Print error message and exit program
-            glitch_offset_invalid(arg);
+            return -1;
         }
     }
 
+    return EXIT_SUCCESS;
+}
+
+int verify_int_arg_with_bounds(const char* arg, const int min, const int max)
+{
+    if (check_each_char_is_digit(arg) == -1) {
+        return -1;
+    }
+
     // Convert string to integer
+    const int num = atoi(arg); // FIX returns 0 on error
+
+    // Check number within specified bounds
+    return check_int_within_bounds(num, min, max); // Returns -1 on error
+}
+
+int check_int_within_bounds(const int num, const int min, const int max)
+{
+    // Check number within specified bounds
+    if ((num < min) || (num > max)) {
+        return -1;
+    }
+
+    return EXIT_SUCCESS;
+}
+
+int verify_glitch_arg(UserInput* userInput, const char* arg)
+{
+    if (verify_int_arg_with_bounds(arg, 1, INT32_MAX) == -1) {
+
+        // Prints error messages
+        return glitch_offset_invalid(arg);
+    }
+
     const int32_t glitchOffset = (int32_t)atoi(arg);
 
     // atoi returns 0 on error, and offset of zero would have no effect
@@ -220,33 +271,44 @@ void verify_glitch_arg(UserInput* userInput, const char* arg)
         userInput->glitch = glitchOffset;
     } else {
 
-        // Prints error message and exits program
-        glitch_offset_invalid(arg);
+        // Prints error messages
+        return glitch_offset_invalid(arg);
     }
+
+    return EXIT_SUCCESS;
 }
 
-void glitch_offset_invalid(const char* arg)
+int glitch_offset_invalid(const char* arg)
 {
     fputs(glitchUsageMessage, stderr);
     fputs(glitchOffsetValMessage, stderr);
     fprintf(stderr, gotStrMessage, arg);
-    exit(EXIT_INVALID_ARG);
+    return -1;
 }
 
-void handle_commands(UserInput* userInput)
+int handle_commands(UserInput* userInput)
 {
+    int status;
+
     if (userInput->help) {
         fputs(helpMessage, stdout);
     }
 
     if (!(userInput->input)) {
-        return;
+        return EXIT_MISSING_INPUT_FILE;
     }
-    check_valid_file_type(userInput->inputFilePath);
+    if (check_valid_file_type(userInput->inputFilePath) == -1) {
+        return EXIT_INVALID_FILE_TYPE;
+    }
 
     BMP bmpImage;
     initialise_bmp(&bmpImage);
-    open_bmp(&bmpImage, userInput->inputFilePath);
+
+    if ((status = open_bmp(&bmpImage, userInput->inputFilePath))
+            != EXIT_SUCCESS) {
+        free_image_resources(&bmpImage);
+        return status;
+    }
 
     if (userInput->header) {
         dump_headers(&bmpImage);
@@ -269,7 +331,10 @@ void handle_commands(UserInput* userInput)
     }
 
     if (userInput->glitch) {
-        glitch_effect(bmpImage.image, userInput->glitch);
+        if (glitch_effect(bmpImage.image, userInput->glitch) == -1) {
+            free_image_resources(&bmpImage);
+            return EXIT_OUT_OF_BOUNDS; // FIX
+        }
     }
 
     if (userInput->contrast) {
@@ -281,7 +346,10 @@ void handle_commands(UserInput* userInput)
     }
 
     if (userInput->combine) {
-        handle_combine(userInput, &bmpImage);
+        if ((status = handle_combine(userInput, &bmpImage)) != EXIT_SUCCESS) {
+            free_image_resources(&bmpImage);
+            return status;
+        }
     }
 
     if (userInput->invert) {
@@ -301,40 +369,43 @@ void handle_commands(UserInput* userInput)
     }
 
     free_image_resources(&bmpImage);
+
+    return EXIT_SUCCESS;
 }
 
-void handle_combine(const UserInput* userInput, BMP* bmpImage)
+int handle_combine(const UserInput* userInput, BMP* bmpImage)
 {
-    check_valid_file_type(userInput->combineFilePath);
+    if (check_valid_file_type(userInput->combineFilePath) == -1) {
+        return EXIT_INVALID_FILE_TYPE;
+    }
 
     // Exit if input and combine file paths match
     if (!strcmp(userInput->inputFilePath, userInput->combineFilePath)) {
-        if (bmpImage->image != NULL) {
-            free_image(bmpImage->image);
-        }
-
-        if (bmpImage->file != NULL) {
-            fclose(bmpImage->file);
-            bmpImage->file = NULL;
-        }
 
         fprintf(stderr, "Input and combine file paths must be unique!\n");
-        exit(EXIT_INVALID_ARG); // FIX
+        return EXIT_SAME_FILE;
     }
 
     BMP combinedImage;
     initialise_bmp(&combinedImage);
-    open_bmp(&combinedImage, userInput->combineFilePath);
+
+    int status;
+    if ((status = open_bmp(&combinedImage, userInput->combineFilePath))
+            != EXIT_SUCCESS) {
+        free_image_resources(&combinedImage);
+        return status;
+    }
 
     combinedImage.image = flip_image(combinedImage.image);
-    combine_images(bmpImage->image, combinedImage.image);
 
-    // Free resources and memory
-    if (combinedImage.image != NULL) {
-        free_image(combinedImage.image);
+    if ((status = combine_images(bmpImage->image, combinedImage.image))
+            == EXIT_SUCCESS) {
+        free_image_resources(&combinedImage);
+        return status;
     }
-    fclose(combinedImage.file);
-    combinedImage.file = NULL;
+
+    free_image_resources(&combinedImage);
+    return EXIT_SUCCESS;
 }
 
 void print_bmp_header(const BmpHeader* bmp)
@@ -381,11 +452,13 @@ int ends_with(const char* const target, const char* arg)
     return !(strcmp(target, &(arg[lenArg - lenTarget])));
 }
 
-void check_valid_file_type(const char* filePath)
+int check_valid_file_type(const char* filePath)
 {
     if (!ends_with(fileType, filePath)) {
         fputs(fileTypeMessage, stderr);
         fprintf(stderr, unexpectedArgMessage, filePath, fileType);
-        exit(EXIT_INVALID_ARG);
+        return -1;
     }
+
+    return EXIT_SUCCESS;
 }

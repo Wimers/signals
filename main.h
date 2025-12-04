@@ -9,9 +9,14 @@
 
 // Exit codes
 #define EXIT_OK 0
+#define EXIT_EMPTY_ARG 19
 #define EXIT_INVALID_ARG 20
 #define EXIT_FILE_CANNOT_BE_READ 9
 #define EXIT_NO_COMMAND 6
+#define EXIT_MISSING_INPUT_FILE 88
+#define EXIT_INVALID_FILE_TYPE 89
+#define EXIT_INVALID_PARAMETER 90
+#define EXIT_SAME_FILE 91
 
 // cmd line argument indexes
 #define MIN_CMD_ARGS 2
@@ -100,17 +105,18 @@ void print_bmp_header(const BmpHeader* bmp);
  */
 void print_bmp_info_header(const BmpInfoHeader* bmp);
 
-void check_file_opened(FILE* file, const char* const filePath);
-void early_argument_checks(const int argc, char** argv);
-void check_for_empty_args(const int argc, char** argv);
+int early_argument_checks(const int argc, char** argv);
+int check_for_empty_args(const int argc, char** argv);
 void check_argument_validity(const int argc, char** argv);
 Flag command_mapping(const char* command);
 int ends_with(const char* const target, const char* arg);
-void early_argument_checks(const int argc, char** argv);
-void handle_commands(UserInput* userInput);
+int handle_commands(UserInput* userInput);
 void parse_user_commands(const int argc, char** argv, UserInput* userInput);
-void check_valid_file_type(const char* filePath);
-void verify_glitch_arg(UserInput* userInput, const char* arg);
-void glitch_offset_invalid(const char* arg);
+int check_valid_file_type(const char* filePath);
+int verify_glitch_arg(UserInput* userInput, const char* arg);
+int glitch_offset_invalid(const char* arg);
+int handle_combine(const UserInput* userInput, BMP* bmpImage);
+int verify_int_arg_with_bounds(const char* arg, const int min, const int max);
+int check_int_within_bounds(const int num, const int min, const int max);
 
 #endif

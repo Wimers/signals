@@ -1,6 +1,7 @@
 CC = gcc
 
-WARNINGS = -Wall -Wextra -pedantic -Wconversion -Wshadow
+# -Wconversion -Wshadow
+WARNINGS = -Wall -Wextra -pedantic
 CFLAGS = -std=gnu99 -O3 -march=native -flto
 DEBUG = -g
 
@@ -27,3 +28,4 @@ bmp: main.o fileParsing.o filters.o
 
 clean:
 	rm -f bmp *.o
+	clear

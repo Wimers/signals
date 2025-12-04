@@ -6,10 +6,12 @@
 
 // Constants to best map RGB values to grayscale
 // Each multiplied by 1000 to avoid floats
-#define GS_PIXEL_SCALING_FACTOR 1000
 #define GS_RED_MAP 299
 #define GS_GREEN_MAP 587
 #define GS_BLUE_MAP 114
+
+// Used for division by 1024 (more efficient than dividing by 1000)
+#define GS_PIXEL_SCALING_FACTOR 10
 
 extern const char* const fileDimensionMismatchMessage;
 
@@ -20,12 +22,13 @@ void filter_green(Image* image);
 void gray_filter(Image* image);
 void average_pixels(Image* image);
 void brightness_cap_filter(Image* image, const uint8_t maxBrightness);
-void combine_images(Image* restrict primary, const Image* restrict secondary);
-void glitch_effect(Image* image, const int32_t glitchOffset);
+int combine_images(Image* restrict primary, const Image* restrict secondary);
+int glitch_effect(Image* image, const int32_t glitchOffset);
 void contrast_effect(Image* image, const uint8_t contrastFactor,
         const uint8_t min, const uint8_t max);
 void min_val(uint8_t* val, const uint8_t contrastFactor, const uint8_t min,
         const uint8_t max);
 void dim_effect(Image* image, const uint8_t dimmingFactor);
+int verify_offset_bounds(Image* image, const int32_t offset);
 
 #endif

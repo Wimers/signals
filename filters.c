@@ -77,7 +77,7 @@ void gray_filter(Image* image)
                             + GS_BLUE_MAP * image->pixels[y][x].blue);
 
             const uint8_t grayScaled
-                    = (uint8_t)(temp / GS_PIXEL_SCALING_FACTOR);
+                    = (uint8_t)(temp >> GS_PIXEL_SCALING_FACTOR);
 
             // Assign value to each pixel
             image->pixels[y][x].red = image->pixels[y][x].green
@@ -131,7 +131,7 @@ void brightness_cap_filter(Image* image, const uint8_t maxBrightness)
     }
 }
 
-void combine_images(Image* restrict primary, const Image* restrict secondary)
+int combine_images(Image* restrict primary, const Image* restrict secondary)
 {
     const int32_t height = primary->height;
     const int32_t width = primary->width;
@@ -139,7 +139,7 @@ void combine_images(Image* restrict primary, const Image* restrict secondary)
     if ((secondary->height != height) || (secondary->width != width)) {
         fprintf(stderr, fileDimensionMismatchMessage, height, width,
                 secondary->height, secondary->width);
-        exit(EXIT_OUT_OF_BOUNDS); // Results in memory leak I believe
+        return EXIT_OUT_OF_BOUNDS;
     }
 
     for (int y = 0; y < height; y++) {
@@ -157,17 +157,15 @@ void combine_images(Image* restrict primary, const Image* restrict secondary)
             primary->pixels[y][x].blue = newBlue;
         }
     }
+
+    return EXIT_SUCCESS;
 }
 
-void glitch_effect(Image* image, const int32_t glitchOffset)
+int glitch_effect(Image* image, const int32_t glitchOffset)
 {
     // Check if offset is out of image bounds
-    if (glitchOffset >= (image->width)) {
-        fputs(glitchUsageMessage, stderr);
-        fprintf(stderr, "Image bounds (%dx%d)\n", image->width, image->height);
-        fputs(glitchOffsetValMessage, stderr);
-        fprintf(stderr, gotIntMessage, glitchOffset);
-        exit(EXIT_OUT_OF_BOUNDS); // Results in a memory leak I believe
+    if (verify_offset_bounds(image, glitchOffset) == -1) {
+        return -1;
     }
 
     Image* imageCopy = create_image(image->width, image->height);
@@ -197,6 +195,21 @@ void glitch_effect(Image* image, const int32_t glitchOffset)
     }
 
     free_image(imageCopy);
+    return EXIT_SUCCESS;
+}
+
+int verify_offset_bounds(Image* image, const int32_t offset) // FIX
+{
+    if (offset >= image->width) {
+        fputs(glitchUsageMessage, stderr);
+        fprintf(stderr, "Image bounds (%dx%d)\n", image->width, image->height);
+        fputs(glitchOffsetValMessage, stderr);
+        fprintf(stderr, gotIntMessage, offset);
+        free_image(image);
+        return -1;
+    }
+
+    return EXIT_SUCCESS;
 }
 
 void contrast_effect(Image* image, const uint8_t contrastFactor,

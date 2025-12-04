@@ -34,15 +34,17 @@ void initialise_bmp(BMP* bmpImage)
     bmpImage->infoHeader = infoHeader;
 }
 
-void open_bmp(BMP* bmpImage, const char* filePath)
+int open_bmp(BMP* bmpImage, const char* const filePath)
 {
     bmpImage->file = fopen(filePath, readMode);
-    if (bmpImage->file == NULL) {
-        exit(100);
+
+    if (check_file_opened(bmpImage->file, filePath) == -1) {
+        return EXIT_FILE_CANNOT_BE_READ;
     }
 
-    check_file_opened(bmpImage->file, filePath);
-    read_headers(bmpImage);
+    if (read_headers(bmpImage) == -1) {
+        return EXIT_FILE_INTEGRITY;
+    }
 
     bmpImage->image = load_bmp_2d(
             bmpImage->file, &(bmpImage->bmpHeader), &(bmpImage->infoHeader));
@@ -51,14 +53,21 @@ void open_bmp(BMP* bmpImage, const char* filePath)
         fputs(fileOpeningErrorMessage, stderr);
         fclose(bmpImage->file);
         bmpImage->file = NULL;
-        exit(EXIT_FILE_INTEGRITY);
+        return EXIT_FILE_INTEGRITY;
     }
+
+    return EXIT_SUCCESS;
 }
 
-void read_headers(BMP* bmpImage)
+int read_headers(BMP* bmpImage)
 {
     parse_bmp_header(bmpImage);
-    parse_bmp_info_header(bmpImage);
+
+    if (parse_bmp_info_header(bmpImage) == -1) {
+        return -1;
+    }
+
+    return EXIT_SUCCESS;
 }
 
 void dump_headers(const BMP* bmpImage)
@@ -85,7 +94,7 @@ void parse_bmp_header(BMP* bmpImage)
     fread(&(bmpHeader->offset), sizeof(uint32_t), 1, file);
 }
 
-void parse_bmp_info_header(BMP* bmpImage)
+int parse_bmp_info_header(BMP* bmpImage)
 {
     FILE* file = bmpImage->file;
     BmpInfoHeader* info = &(bmpImage->infoHeader);
@@ -103,7 +112,7 @@ void parse_bmp_info_header(BMP* bmpImage)
 
     if ((int)(info->colourPlanes) != 1) { // Must be one
         fprintf(stderr, invalidColourPlanesMessage, (int)(info->colourPlanes));
-        exit(EXIT_FILE_INTEGRITY);
+        return -1;
     }
 
     fread(&info->bitsPerPixel, sizeof(uint16_t), 1,
@@ -117,6 +126,8 @@ void parse_bmp_info_header(BMP* bmpImage)
     fread(&info->coloursInPalette, sizeof(uint32_t), 1, file);
     fread(&info->importantColours, sizeof(uint32_t), 1,
             file); // 0 if all colours important
+
+    return EXIT_SUCCESS;
 }
 
 void read_pixel_row(FILE* file, Image* image, const int rowNumber,
@@ -311,4 +322,14 @@ void write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     }
 
     fclose(output);
+}
+
+int check_file_opened(FILE* file, const char* const filePath)
+{
+    if (file == NULL) { // Check if file can be opened
+        fprintf(stderr, fileOpeningErrorMessage, filePath);
+        return -1;
+    }
+
+    return EXIT_SUCCESS;
 }

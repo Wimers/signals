@@ -80,7 +80,7 @@ typedef struct {
 } BMP;
 
 void initialise_bmp(BMP* bmpImage);
-void open_bmp(BMP* bmpImage, const char* filePath);
+int open_bmp(BMP* bmpImage, const char* const filePath);
 
 /* read_headers()
  * --------------
@@ -90,7 +90,7 @@ void open_bmp(BMP* bmpImage, const char* filePath);
  *
  * bmpImage:
  */
-void read_headers(BMP* bmpImage);
+int read_headers(BMP* bmpImage);
 
 /* dump_headers()
  * --------------
@@ -117,7 +117,7 @@ void parse_bmp_header(BMP* bmpImage);
  * Errors: Exits with EXIT_FILE_INTEGRITY if the number of colour planes of file
  *         is not one.
  */
-void parse_bmp_info_header(BMP* bmpImage);
+int parse_bmp_info_header(BMP* bmpImage);
 
 /* print_bmp_header()
  * ------------------
@@ -242,5 +242,7 @@ void write_bmp_with_header_provided(BMP* bmpImage, const char* filename);
  * bmpImage:
  */
 void free_image_resources(BMP* bmpImage);
+
+int check_file_opened(FILE* file, const char* const filePath);
 
 #endif
