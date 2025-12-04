@@ -315,7 +315,7 @@ void write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     BmpInfoHeader* infoHeader = &(bmpImage->infoHeader);
     Image* image = bmpImage->image;
 
-    FILE* output = fopen(filename, "wb");
+    FILE* output = fopen(filename, writeMode);
 
     // Write BmpHeader
     fwrite(&bmpHeader->id, sizeof(uint16_t), 1, output);

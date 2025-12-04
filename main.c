@@ -68,6 +68,7 @@ const char* const optstring = "i:o:dphfb:c:l:gvuat:"; // Defined program flags
 
 // Assorted constant chars
 const char* const readMode = "rb";
+const char* const writeMode = "wb";
 
 static struct option const longOptions[] = {
         {"input", required_argument, NULL, INPUT_FILE},
