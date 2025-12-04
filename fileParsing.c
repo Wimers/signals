@@ -123,16 +123,20 @@ int parse_bmp_info_header(BMP* bmpImage)
 
     // Seek to start of header
     fseek(file, BITMAP_FILE_HEADER_SIZE, SEEK_SET);
-
     fread(&info->headerSize, sizeof(uint32_t), 1, file); // Header size in bytes
+
     fread(&info->bitmapWidth, sizeof(int32_t), 1,
             file); // Bitmap width in pixles
+    if (info->bitmapWidth < 0) {
+        return -1; // Add appropriate error message
+    }
+
     fread(&info->bitmapHeight, sizeof(int32_t), 1,
             file); // Bitmap height in pixels
+
     fread(&info->colourPlanes, sizeof(uint16_t), 1,
             file); // Number of colour planes
-
-    if ((int)(info->colourPlanes) != 1) { // Must be one
+    if (info->colourPlanes != 1) { // Must be one
         fprintf(stderr, invalidColourPlanesMessage, (int)(info->colourPlanes));
         return -1;
     }
@@ -184,11 +188,12 @@ void print_bmp_info_header(const BmpInfoHeader* bmp)
             bmp->importantColours);
 }
 
-void read_pixel_row(FILE* file, Image* image, const int rowNumber,
-        const uint32_t byteOffset)
+void read_pixel_row(
+        FILE* file, Image* image, const int rowNumber, const size_t byteOffset)
 {
     // Read row of pixels
-    fread((image->pixels)[rowNumber], sizeof(Pixel), image->width, file);
+    fread((image->pixels)[rowNumber], sizeof(Pixel), (size_t)image->width,
+            file);
 
     if (byteOffset) { // If offset non-zero update file pointer
         fseek(file, byteOffset, SEEK_CUR);
@@ -202,7 +207,7 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     Image* image = create_image(bmp->bitmapWidth, bmp->bitmapHeight);
 
     // Calculate offset required due to row padding (32-bit DWORD length)
-    const uint32_t byteOffset
+    const size_t byteOffset
             = calc_row_byte_offset(bmp->bitsPerPixel, bmp->bitmapWidth);
 
     // Seek to start of pixel data
@@ -222,7 +227,7 @@ void print_image_to_terminal(const Image* image)
 {
     // Initialise
     char buffer[OUTPUT_BUFFER_CAPACITY];
-    int bufferPosition = 0;
+    size_t bufferPosition = 0;
 
     // For each pixel (RGB)
     for (int height = 0; height < image->height; height++) {
@@ -238,7 +243,7 @@ void print_image_to_terminal(const Image* image)
             Pixel p = (image->pixels)[height][width];
 
             // Append pixel to buffer
-            bufferPosition += sprintf(&buffer[bufferPosition],
+            bufferPosition += (size_t)sprintf(&buffer[bufferPosition],
                     colouredBlockFormatter, p.red, p.green, p.blue);
         }
 
@@ -247,6 +252,7 @@ void print_image_to_terminal(const Image* image)
             fwrite(buffer, 1, bufferPosition, stdout);
             bufferPosition = 0;
         }
+
         // Add newline
         buffer[bufferPosition++] = newlineChar;
     }
@@ -267,10 +273,11 @@ void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
     }
 }
 
-uint32_t calc_row_byte_offset(const int bitsPerPixel, const int32_t bitmapWidth)
+size_t calc_row_byte_offset(
+        const uint16_t bitsPerPixel, const int32_t bitmapWidth)
 {
     // Calculate offset required due to row padding (32-bit DWORD len)
-    const uint32_t byteOffset
+    const size_t byteOffset
             = (((bitsPerPixel * bitmapWidth) % BMP_ROW_DWORD_LEN) / SIZE_BYTE);
     return byteOffset;
 }
@@ -341,7 +348,7 @@ void write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     const uint8_t zero = 0;
     fwrite(&zero, sizeof(zero), gapSize, output);
 
-    const uint32_t byteOffset = calc_row_byte_offset(
+    const size_t byteOffset = calc_row_byte_offset(
             infoHeader->bitsPerPixel, infoHeader->bitmapWidth);
 
     for (int row = 0; row < infoHeader->bitmapHeight; row++) {

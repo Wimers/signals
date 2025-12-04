@@ -230,13 +230,13 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
 int check_each_char_is_digit(const char* arg)
 {
-    const int len = strlen(arg);
+    const size_t len = strlen(arg);
 
     // For each character in input string
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
 
         // If char is not a digit
-        if (!isdigit(arg[i])) {
+        if (!isdigit((unsigned char)arg[i])) {
             return -1;
         }
     }
@@ -423,8 +423,8 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
 
 int ends_with(const char* const target, const char* arg)
 {
-    const int lenArg = strlen(arg);
-    const int lenTarget = strlen(target);
+    const size_t lenArg = strlen(arg);
+    const size_t lenTarget = strlen(target);
 
     if (lenArg < lenTarget) {
         return -1;

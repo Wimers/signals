@@ -163,8 +163,8 @@ void print_bmp_info_header(const BmpInfoHeader* bmp);
  * rowNumber: The current row index (height) being read.
  * byteOffset: The number of padding bytes to skip after reading the row.
  */
-void read_pixel_row(FILE* file, Image* image, const int rowNumber,
-        const uint32_t byteOffset);
+void read_pixel_row(
+        FILE* file, Image* image, const int rowNumber, const size_t byteOffset);
 
 /* load_bmp_2d()
  * -------------
@@ -209,8 +209,8 @@ void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
  *
  * Returns: The number of padding bytes per row.
  */
-uint32_t calc_row_byte_offset(
-        const int bitsPerPixel, const int32_t bitmapWidth);
+size_t calc_row_byte_offset(
+        const uint16_t bitsPerPixel, const int32_t bitmapWidth);
 
 /* create_image()
  * --------------
