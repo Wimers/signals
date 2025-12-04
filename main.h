@@ -111,7 +111,7 @@ void check_argument_validity(const int argc, char** argv);
 Flag command_mapping(const char* command);
 int ends_with(const char* const target, const char* arg);
 int handle_commands(UserInput* userInput);
-void parse_user_commands(const int argc, char** argv, UserInput* userInput);
+int parse_user_commands(const int argc, char** argv, UserInput* userInput);
 int check_valid_file_type(const char* filePath);
 int verify_glitch_arg(UserInput* userInput, const char* arg);
 int glitch_offset_invalid(const char* arg);

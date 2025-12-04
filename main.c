@@ -97,7 +97,12 @@ int main(const int argc, char** argv)
     UserInput userInput;
     (void)memset(&userInput, 0, sizeof(userInput));
 
-    parse_user_commands(argc, argv, &userInput);
+    int status;
+    if ((status = parse_user_commands(argc, argv, &userInput))
+            != EXIT_SUCCESS) {
+        exit(status);
+    }
+
     exit(handle_commands(&userInput));
 }
 
@@ -123,12 +128,17 @@ int early_argument_checks(const int argc, char** argv)
         return -1;
     }
 
-    return check_for_empty_args(argc, argv);
+    if (check_for_empty_args(argc, argv) == -1) {
+        return -1;
+    }
+
+    return EXIT_SUCCESS;
 }
 
-void parse_user_commands(const int argc, char** argv, UserInput* userInput)
+int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 {
     Flag opt;
+
     // loop over all of the options
     while ((opt = getopt_long(argc, argv, optstring, longOptions, NULL))
             != -1) {
@@ -175,7 +185,7 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
         case BRIGHTNESS_CAP:
             if (verify_int_arg_with_bounds(optarg, 0, UINT8_MAX) == -1) {
-                exit(EXIT_INVALID_PARAMETER);
+                return EXIT_INVALID_PARAMETER;
             }
             userInput->maxBrightness = (uint8_t)atoi(optarg);
             break;
@@ -187,7 +197,7 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
         case GLITCH:
             if (verify_glitch_arg(userInput, optarg) == -1) {
-                exit(EXIT_INVALID_PARAMETER);
+                return EXIT_INVALID_PARAMETER;
             }
             break;
 
@@ -197,22 +207,24 @@ void parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
         case CONTRAST:
             if (verify_int_arg_with_bounds(optarg, 0, UINT8_MAX) == -1) {
-                exit(EXIT_INVALID_PARAMETER);
+                return EXIT_INVALID_PARAMETER;
             }
             userInput->contrast = (uint8_t)atoi(optarg);
             break;
 
         case DIM:
             if (verify_int_arg_with_bounds(optarg, 0, UINT8_MAX) == -1) {
-                exit(EXIT_INVALID_PARAMETER);
+                return EXIT_INVALID_PARAMETER;
             }
             userInput->dim = (uint8_t)atoi(optarg);
             break;
 
         default:
-            exit(EXIT_NO_COMMAND);
+            return EXIT_NO_COMMAND;
         }
     }
+
+    return EXIT_SUCCESS;
 }
 
 int check_each_char_is_digit(const char* arg)
