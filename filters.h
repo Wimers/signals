@@ -5,10 +5,10 @@
 #include <stdint.h>
 
 // Constants to best map RGB values to grayscale
-// Each multiplied by 1000 to avoid floats
-#define GS_RED_MAP 299
-#define GS_GREEN_MAP 587
-#define GS_BLUE_MAP 114
+// Each multiplied by 1024 to avoid floats
+#define GS_RED_MAP 306 // 0.299
+#define GS_GREEN_MAP 601 // 0.587
+#define GS_BLUE_MAP 117 // 0.114
 
 // Used for division by 1024 (more efficient than dividing by 1000)
 #define GS_PIXEL_SCALING_FACTOR 10

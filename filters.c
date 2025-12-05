@@ -13,12 +13,15 @@ void invert_colours(Image* image)
 {
     // For each row
     for (int y = 0; y < image->height; y++) {
+        Pixel* row = image->pixels[y];
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
-            image->pixels[y][x].red = UINT8_MAX - image->pixels[y][x].red;
-            image->pixels[y][x].green = UINT8_MAX - image->pixels[y][x].green;
-            image->pixels[y][x].blue = UINT8_MAX - image->pixels[y][x].blue;
+            Pixel* pixel = &(row[x]);
+
+            pixel->red = UINT8_MAX - pixel->red;
+            pixel->green = UINT8_MAX - pixel->green;
+            pixel->blue = UINT8_MAX - pixel->blue;
         }
     }
 }
@@ -27,12 +30,13 @@ void filter_red(Image* image)
 {
     // For each row
     for (int y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
 
             // Disable the red component of the pixel
-            image->pixels[y][x].red = 0;
+            row[x].red = 0;
         }
     }
 }
@@ -41,12 +45,13 @@ void filter_green(Image* image)
 {
     // For each row
     for (int y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
 
             // Disable the red component of the pixel
-            image->pixels[y][x].green = 0;
+            row[x].green = 0;
         }
     }
 }
@@ -55,12 +60,13 @@ void filter_blue(Image* image)
 {
     // For each row
     for (int y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
 
             // Disable the red component of the pixel
-            image->pixels[y][x].blue = 0;
+            row[x].blue = 0;
         }
     }
 }
@@ -69,23 +75,22 @@ void gray_filter(Image* image)
 {
     // For each row
     for (int y = 0; y < image->height; y++) {
+        Pixel* row = image->pixels[y];
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
+            Pixel* pixel = &(row[x]);
 
             // Calculate gray scaled value using weighted values based on how
             // sensitive the human eye is to different wavelengths of light.
-            const uint32_t temp
-                    = (uint32_t)(GS_RED_MAP * image->pixels[y][x].red
-                            + GS_GREEN_MAP * image->pixels[y][x].green
-                            + GS_BLUE_MAP * image->pixels[y][x].blue);
+            const uint32_t temp = (uint32_t)(GS_RED_MAP * pixel->red
+                    + GS_GREEN_MAP * pixel->green + GS_BLUE_MAP * pixel->blue);
 
             const uint8_t grayScaled
                     = (uint8_t)(temp >> GS_PIXEL_SCALING_FACTOR);
 
             // Assign value to each pixel
-            image->pixels[y][x].red = image->pixels[y][x].green
-                    = image->pixels[y][x].blue = grayScaled;
+            pixel->red = pixel->green = pixel->blue = grayScaled;
         }
     }
 }
@@ -94,17 +99,17 @@ void average_pixels(Image* image)
 {
     // For each row
     for (int y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
+            Pixel* pixel = &(row[x]);
 
-            uint8_t brightness = (uint8_t)((image->pixels[y][x].red
-                                                   + image->pixels[y][x].green
-                                                   + image->pixels[y][x].blue)
-                    / 3);
-            image->pixels[y][x].blue = brightness;
-            image->pixels[y][x].green = brightness;
-            image->pixels[y][x].red = brightness;
+            uint8_t brightness
+                    = (uint8_t)((pixel->red + pixel->green + pixel->blue) / 3);
+            pixel->blue = brightness;
+            pixel->green = brightness;
+            pixel->red = brightness;
         }
     }
 }
@@ -113,26 +118,28 @@ void brightness_cap_filter(Image* image, const uint8_t maxBrightness)
 {
     // For each row
     for (int y = 0; y < image->height; y++) {
+        Pixel* row = image->pixels[y];
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
+            Pixel* pixel = &(row[x]);
 
-            if (image->pixels[y][x].blue > maxBrightness) {
+            if (pixel->blue > maxBrightness) {
 
                 // Disable blue component of pixel
-                image->pixels[y][x].blue = 0;
+                pixel->blue = 0;
             }
 
-            if (image->pixels[y][x].green > maxBrightness) {
+            if (pixel->green > maxBrightness) {
 
                 // Disable green component of pixel
-                image->pixels[y][x].green = 0;
+                pixel->green = 0;
             }
 
-            if (image->pixels[y][x].red > maxBrightness) {
+            if (pixel->red > maxBrightness) {
 
                 // Disable red component of pixel
-                image->pixels[y][x].red = 0;
+                pixel->red = 0;
             }
         }
     }
@@ -157,15 +164,17 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
 
         // For each pixel in row
         for (int x = 0; x < width; x++) {
+            Pixel* pPixel = &(pRow[x]);
+            Pixel* sPixel = &(sRow[x]);
 
-            uint8_t newRed = (uint8_t)((pRow[x].red + sRow[x].red) >> 1);
-            pRow[x].red = newRed;
+            uint8_t newRed = (uint8_t)((pPixel->red + sPixel->red) >> 1);
+            pPixel->red = newRed;
 
-            uint8_t newGreen = (uint8_t)((pRow[x].green + sRow[x].green) >> 1);
-            pRow[x].green = newGreen;
+            uint8_t newGreen = (uint8_t)((pPixel->green + sPixel->green) >> 1);
+            pPixel->green = newGreen;
 
-            uint8_t newBlue = (uint8_t)((pRow[x].blue + sRow[x].blue) >> 1);
-            pRow[x].blue = newBlue;
+            uint8_t newBlue = (uint8_t)((pPixel->blue + sPixel->blue) >> 1);
+            pPixel->blue = newBlue;
         }
     }
 
@@ -187,24 +196,24 @@ int glitch_effect(Image* image, const int32_t glitchOffset)
     // For each row
     for (int y = 0; y < image->height; y++) {
 
-        memcpy(rowCopy, image->pixels[y],
-                (size_t)(image->width) * sizeof(Pixel));
+        Pixel* row = (image->pixels)[y];
+        memcpy(rowCopy, row, (size_t)(image->width) * sizeof(Pixel));
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
+
             const int accessRedRegion = x + glitchOffset;
             if ((accessRedRegion < 0) || (accessRedRegion >= image->width)) {
                 ;
             } else {
-                image->pixels[y][x].red = rowCopy[accessRedRegion].red;
+                row[x].red = rowCopy[accessRedRegion].red;
             }
 
             const int accessBlueRegion = x - glitchOffset;
-
             if ((accessBlueRegion < 0) || (accessBlueRegion >= image->width)) {
                 ;
             } else {
-                image->pixels[y][x].blue = rowCopy[accessBlueRegion].blue;
+                row[x].blue = rowCopy[accessBlueRegion].blue;
             }
         }
     }
@@ -231,14 +240,16 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
 {
     // For each row
     for (int y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
+            Pixel* pixel = &(row[x]);
 
             // Apply contrast filter to each colour
-            min_val(&(image->pixels[y][x].blue), contrastFactor, min, max);
-            min_val(&(image->pixels[y][x].green), contrastFactor, min, max);
-            min_val(&(image->pixels[y][x].red), contrastFactor, min, max);
+            min_val(&(pixel->blue), contrastFactor, min, max);
+            min_val(&(pixel->green), contrastFactor, min, max);
+            min_val(&(pixel->red), contrastFactor, min, max);
         }
     }
 }
@@ -247,26 +258,28 @@ void dim_effect(Image* image, const uint8_t dimmingFactor)
 {
     // For each row
     for (int y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
+            Pixel* pixel = &(row[x]);
 
-            if (image->pixels[y][x].blue <= dimmingFactor) {
-                image->pixels[y][x].blue = 0;
+            if (pixel->blue <= dimmingFactor) {
+                pixel->blue = 0;
             } else {
-                image->pixels[y][x].blue -= dimmingFactor;
+                pixel->blue -= dimmingFactor;
             }
 
-            if (image->pixels[y][x].green <= dimmingFactor) {
-                image->pixels[y][x].green = 0;
+            if (pixel->green <= dimmingFactor) {
+                pixel->green = 0;
             } else {
-                image->pixels[y][x].green -= dimmingFactor;
+                pixel->green -= dimmingFactor;
             }
 
-            if (image->pixels[y][x].red <= dimmingFactor) {
-                image->pixels[y][x].red = 0;
+            if (pixel->red <= dimmingFactor) {
+                pixel->red = 0;
             } else {
-                image->pixels[y][x].red -= dimmingFactor;
+                pixel->red -= dimmingFactor;
             }
         }
     }
