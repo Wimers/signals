@@ -152,19 +152,20 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
     // For each row
     for (int y = 0; y < height; y++) {
 
+        Pixel* pRow = (primary->pixels)[y];
+        Pixel* sRow = (secondary->pixels)[y];
+
         // For each pixel in row
         for (int x = 0; x < width; x++) {
-            uint8_t newRed = (primary->pixels[y][x].red) / 2
-                    + (secondary->pixels[y][x].red / 2);
-            primary->pixels[y][x].red = newRed;
 
-            uint8_t newGreen = (primary->pixels[y][x].green) / 2
-                    + (secondary->pixels[y][x].green / 2);
-            primary->pixels[y][x].green = newGreen;
+            uint8_t newRed = (uint8_t)((pRow[x].red + sRow[x].red) >> 1);
+            pRow[x].red = newRed;
 
-            uint8_t newBlue = (primary->pixels[y][x].blue) / 2
-                    + (secondary->pixels[y][x].blue / 2);
-            primary->pixels[y][x].blue = newBlue;
+            uint8_t newGreen = (uint8_t)((pRow[x].green + sRow[x].green) >> 1);
+            pRow[x].green = newGreen;
+
+            uint8_t newBlue = (uint8_t)((pRow[x].blue + sRow[x].blue) >> 1);
+            pRow[x].blue = newBlue;
         }
     }
 
