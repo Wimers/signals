@@ -356,10 +356,11 @@ size_t calc_row_byte_offset(
 {
     // Calculate offset required due to row padding (32-bit DWORD len)
     const size_t byteOffset
-            = (size_t)(((BMP_ROW_DWORD_LEN - (bitsPerPixel * bitmapWidth))
-                               % BMP_ROW_DWORD_LEN)
-                    / SIZE_BYTE);
-    return byteOffset;
+            = (BMP_ROW_DWORD_LEN
+                      - (((size_t)bitsPerPixel * (size_t)bitmapWidth)
+                              % BMP_ROW_DWORD_LEN))
+            % BMP_ROW_DWORD_LEN;
+    return byteOffset / SIZE_BYTE;
 }
 
 Image* create_image(const int32_t width, const int32_t height)
