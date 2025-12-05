@@ -327,6 +327,9 @@ int handle_commands(UserInput* userInput)
 
     if (!userInput->flip) {
         bmpImage.image = flip_image(bmpImage.image);
+        if (bmpImage.image == NULL) {
+            return EXIT_FILE_INTEGRITY; // FIX	;
+        }
     }
 
     if (userInput->filter) {
@@ -372,7 +375,10 @@ int handle_commands(UserInput* userInput)
     }
 
     if (userInput->output) {
-        write_bmp_with_header_provided(&bmpImage, userInput->outputFilePath);
+        if (write_bmp_with_header_provided(&bmpImage, userInput->outputFilePath)
+                == -1) {
+            return EXIT_OUTPUT_FILE_ERROR;
+        }
     }
 
     if (userInput->print) {
@@ -408,6 +414,10 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
     }
 
     combinedImage.image = flip_image(combinedImage.image);
+
+    if (combinedImage.image == NULL) {
+        return EXIT_FILE_INTEGRITY; // FIX	;
+    }
 
     if ((status = combine_images(bmpImage->image, combinedImage.image))
             == EXIT_SUCCESS) {

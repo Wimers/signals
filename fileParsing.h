@@ -31,6 +31,10 @@
 extern const char* const invalidColourPlanesMessage;
 extern const char* const fileOpeningErrorMessage;
 extern const char* const errorReadingHeaderMessage;
+extern const char* const negativeWidthMessage;
+extern const char* const errorReadingPixelsMessage;
+extern const char* const bmpLoadFailMessage;
+extern const char* const eofMismatchMessage;
 extern const char* const bitMap;
 extern const char* const eofAddrMessage;
 extern const char* const colouredBlockFormatter;
@@ -258,7 +262,7 @@ Image* flip_image(Image* image);
  * filename:
  *
  */
-void write_bmp_with_header_provided(BMP* bmpImage, const char* filename);
+int write_bmp_with_header_provided(BMP* bmpImage, const char* filename);
 
 /* check_file_opened()
  * -------------------
@@ -266,5 +270,12 @@ void write_bmp_with_header_provided(BMP* bmpImage, const char* filename);
  * filePath:
  */
 int check_file_opened(FILE* file, const char* const filePath);
+
+/* write_padding()
+ * ---------------
+ * file:
+ * gapSize:
+ */
+void write_padding(FILE* file, const size_t gapSize);
 
 #endif

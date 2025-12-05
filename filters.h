@@ -14,6 +14,7 @@
 #define GS_PIXEL_SCALING_FACTOR 10
 
 extern const char* const fileDimensionMismatchMessage;
+extern const char* const imageBoundsMessage;
 
 /* invert_colour()
  * ---------------

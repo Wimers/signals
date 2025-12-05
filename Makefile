@@ -1,7 +1,7 @@
 CC = gcc
 
-# -Wformat=2 -Wconversion
-WARNINGS = -Wall -Wextra -Werror -Wshadow -Wnull-dereference -Wunreachable-code -Wcast-align -pedantic -pedantic-errors
+# -Wformat=2
+WARNINGS = -Wall -Wextra -Werror -Wshadow -Wconversion -Wnull-dereference -Wunreachable-code -Wcast-align -pedantic -pedantic-errors
 CFLAGS = -std=gnu99 -march=native
 PFLAGS = -O3 -flto -funroll-loops
 DEBUG = -g -fsanitize=address -fsanitize=undefined

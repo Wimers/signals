@@ -8,15 +8,22 @@
 
 // Error message
 const char* const invalidColourPlanesMessage
-        = "The number of colour planes must be 1, got \"%d\"\n";
+        = "The number of colour planes must be 1, got \"%d\".\n";
 const char* const fileOpeningErrorMessage
         = "Error opening file \"%s\" for reading.\n";
-const char* const errorReadingHeaderMessage
-        = "Error reading \"%s\" from file header\n";
+const char* const errorReadingHeaderMessage = "Error reading \"%s\".\n";
+const char* const errorReadingPixelsMessage
+        = "Error reading pixels: (row %d)\n";
+const char* const negativeWidthMessage = "Bitmap width cannot be negative!\n";
+const char* const bmpLoadFailMessage = "BMP could not be loaded.\n";
+const char* const headerReadFailMessage
+        = "The header from \"%s\" could not be read.\n";
+const char* const eofMismatchMessage
+        = "Location of EOF mismatch: Got \'%ld\', expected \'%d\'.\n";
 
 // Constant program strings
 const char* const bitMap = "BM";
-const char* const eofAddrMessage = "End of File Addr: %lu\n";
+const char* const eofAddrMessage = "End of File Addr: %ld\n";
 const char* const colouredBlockFormatter = "\033[38;2;%d;%d;%dm██\033[0m";
 const char* const newlineStr = "\n";
 
@@ -74,6 +81,7 @@ int open_bmp(BMP* bmpImage, const char* const filePath)
     }
 
     if (read_headers(bmpImage) == -1) {
+        fprintf(stderr, headerReadFailMessage, filePath);
         return EXIT_FILE_INTEGRITY;
     }
 
@@ -151,7 +159,7 @@ int parse_bmp_info_header(BMP* bmpImage)
     READ_HEADER_SAFE(&(info->bitmapWidth), sizeof(info->bitmapWidth), file,
             "Bitmap Width");
     if (info->bitmapWidth < 0) {
-        fputs("Bitmap Width cannot be negative!\n", stderr);
+        fputs(negativeWidthMessage, stderr);
         fprintf(stderr, gotIntMessage, info->bitmapWidth);
         return -1;
     }
@@ -229,16 +237,19 @@ void print_bmp_info_header(const BmpInfoHeader* bmp)
 int read_pixel_row(
         FILE* file, Image* image, const int rowNumber, const size_t byteOffset)
 {
-    const size_t numBytes = (size_t)(image->width);
+    const size_t numPixels = (size_t)(image->width);
 
     // Read row of pixels
-    if (fread((image->pixels)[rowNumber], sizeof(Pixel), numBytes, file)
-            != numBytes) {
+    if (fread((image->pixels)[rowNumber], sizeof(Pixel), numPixels, file)
+            != numPixels) {
+
+        // Print message upon read error
+        fprintf(stderr, errorReadingPixelsMessage, rowNumber);
         return -1;
     }
 
     if (byteOffset) { // If offset non-zero update file pointer
-        fseek(file, byteOffset, SEEK_CUR);
+        fseek(file, (long)byteOffset, SEEK_CUR);
     }
 
     return EXIT_SUCCESS;
@@ -249,6 +260,11 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
 {
     // Initialise pixel array
     Image* image = create_image(bmp->bitmapWidth, bmp->bitmapHeight);
+
+    if (image == NULL) {
+        fputs(bmpLoadFailMessage, stderr);
+        return NULL;
+    }
 
     // Calculate offset required due to row padding (32-bit DWORD length)
     const size_t byteOffset
@@ -261,12 +277,21 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     for (int height = 0; height < bmp->bitmapHeight; height++) {
         if (read_pixel_row(file, image, height, byteOffset) == -1) {
             free_image(image);
-            return NULL; // Add error message
+            fputs(bmpLoadFailMessage, stderr);
+            return NULL;
         }
     }
 
+    const long endAddr = ftell(file); // Could check for error
+
     // Print offset of file pointer after iterating all pixels
-    printf(eofAddrMessage, ftell(file));
+    printf(eofAddrMessage, endAddr);
+
+    if ((int64_t)endAddr != (int64_t)(bmp->imageSize)) {
+        fprintf(stderr, eofMismatchMessage, endAddr, bmp->imageSize);
+        // Could add error return value
+    }
+
     return image;
 }
 
@@ -318,6 +343,7 @@ int read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
         if (fread(&((*pixel)[RGB_PIXEL_BYTE_SIZE - colour]), sizeof(uint8_t), 1,
                     file)
                 != 1) {
+            fputs(bmpLoadFailMessage, stderr);
             return -1;
         }
     }
@@ -330,25 +356,51 @@ size_t calc_row_byte_offset(
 {
     // Calculate offset required due to row padding (32-bit DWORD len)
     const size_t byteOffset
-            = (((bitsPerPixel * bitmapWidth) % BMP_ROW_DWORD_LEN) / SIZE_BYTE);
+            = (size_t)(((BMP_ROW_DWORD_LEN - (bitsPerPixel * bitmapWidth))
+                               % BMP_ROW_DWORD_LEN)
+                    / SIZE_BYTE);
     return byteOffset;
 }
 
 Image* create_image(const int32_t width, const int32_t height)
 {
     Image* img = malloc(sizeof(Image));
+
+    // If malloc fails
+    if (img == NULL) {
+        return NULL;
+    }
+
     img->width = width;
     img->height = height;
 
+    size_t normHeight;
+    if (height < 0) {
+        normHeight = (size_t)(-height);
+    } else {
+        normHeight = (size_t)height;
+    }
+
     // Allocate memory for array of row pointers
-    img->pixels = (Pixel**)malloc(height * sizeof(Pixel*));
+    img->pixels = (Pixel**)malloc(normHeight * sizeof(Pixel*));
+
+    if (img->pixels == NULL) { // Malloc failed
+        free(img);
+        return NULL;
+    }
 
     // Allocate memory for all pixel data
-    Pixel* data = malloc(width * height * sizeof(Pixel));
+    Pixel* data = malloc((size_t)width * normHeight * sizeof(Pixel));
+
+    if (data == NULL) { // If malloc fails
+        free(img->pixels);
+        free(img);
+        return NULL;
+    }
 
     // Link the pixel data to each row
-    for (int i = 0; i < (int)height; i++) {
-        (img->pixels)[i] = &data[width * i];
+    for (size_t i = 0; i < normHeight; i++) {
+        (img->pixels)[i] = &data[(size_t)width * i];
     }
 
     return img;
@@ -357,24 +409,40 @@ Image* create_image(const int32_t width, const int32_t height)
 Image* flip_image(Image* image)
 {
     Image* rotatedImage = create_image(image->width, image->height);
+    if (rotatedImage == NULL) {
+        free_image(image);
+        return NULL;
+    }
 
     for (int row = 0; row < image->height; row++) {
         int sourceRow = image->height - 1 - row;
         memcpy(rotatedImage->pixels[row], image->pixels[sourceRow],
-                image->width * sizeof(Pixel));
+                (size_t)image->width * sizeof(Pixel));
     }
 
     free_image(image);
     return rotatedImage;
 }
 
-void write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
+void write_padding(FILE* file, const size_t gapSize)
+{
+    const uint8_t zero = 0;
+
+    for (size_t i = 0; i < gapSize; i++) {
+        fwrite(&zero, 1, 1, file);
+    }
+}
+
+int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
 {
     BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
     BmpInfoHeader* infoHeader = &(bmpImage->infoHeader);
     Image* image = bmpImage->image;
 
     FILE* output = fopen(filename, writeMode);
+    if (check_file_opened(output, filename) == -1) {
+        return -1;
+    }
 
     // Write BmpHeader
     fwrite(&bmpHeader->id, sizeof(bmpHeader->id), 1, output);
@@ -405,24 +473,27 @@ void write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     fwrite(&infoHeader->importantColours, sizeof(infoHeader->importantColours),
             1, output);
 
-    const uint32_t currentPosition = ftell(output);
-    const uint32_t gapSize = bmpHeader->offset - currentPosition;
-    const uint8_t zero = 0;
-    fwrite(&zero, sizeof(zero), gapSize, output);
+    const long currentPosition = ftell(output);
+
+    if (!(currentPosition < 0) && (currentPosition < bmpHeader->offset)) {
+        const size_t gapSize = (size_t)(bmpHeader->offset - currentPosition);
+        write_padding(output, gapSize);
+    }
 
     const size_t byteOffset = calc_row_byte_offset(
             infoHeader->bitsPerPixel, infoHeader->bitmapWidth);
 
     for (int row = 0; row < infoHeader->bitmapHeight; row++) {
-        fwrite(image->pixels[row], infoHeader->bitmapWidth * sizeof(Pixel), 1,
-                output);
+        fwrite(image->pixels[row],
+                (size_t)infoHeader->bitmapWidth * sizeof(Pixel), 1, output);
 
         if (byteOffset) {
-            fwrite(&zero, sizeof(zero), byteOffset, output);
+            write_padding(output, byteOffset);
         }
     }
 
-    fclose(output);
+    safely_close_file(output);
+    return EXIT_SUCCESS;
 }
 
 int check_file_opened(FILE* file, const char* const filePath)

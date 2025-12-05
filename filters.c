@@ -7,6 +7,7 @@
 
 const char* const fileDimensionMismatchMessage
         = "File dimension mismatch: \"%dx%d\" is not \"%dx%d\"\n";
+const char* const imageBoundsMessage = "Image bounds (%dx%d)\n";
 
 void invert_colours(Image* image)
 {
@@ -182,7 +183,7 @@ int glitch_effect(Image* image, const int32_t glitchOffset)
     // For each row
     for (int y = 0; y < image->height; y++) {
         memcpy(imageCopy->pixels[y], image->pixels[y],
-                image->width * sizeof(Pixel));
+                (size_t)(image->width) * sizeof(Pixel));
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
@@ -213,7 +214,7 @@ int verify_offset_bounds(Image* image, const int32_t offset) // FIX
 {
     if (offset >= image->width) {
         fputs(glitchUsageMessage, stderr);
-        fprintf(stderr, "Image bounds (%dx%d)\n", image->width, image->height);
+        fprintf(stderr, imageBoundsMessage, image->width, image->height);
         fputs(glitchOffsetValMessage, stderr);
         fprintf(stderr, gotIntMessage, offset);
         free_image(image);
