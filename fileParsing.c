@@ -45,12 +45,12 @@ void initialise_bmp(BMP* bmpImage)
     bmpImage->infoHeader = infoHeader;
 }
 
-void free_image(Image* image)
+void free_image(Image** image)
 {
-    free((image->pixels)[0]);
-    free((void*)image->pixels);
-    free(image);
-    image = NULL;
+    free(((*image)->pixels)[0]);
+    free((void*)(*image)->pixels);
+    free(*image);
+    *image = NULL;
 }
 
 void safely_close_file(FILE* file)
@@ -65,7 +65,7 @@ void free_image_resources(BMP* bmpImage)
 {
     // Safely free allocated memory for storing pixel data
     if (bmpImage->image != NULL) {
-        free_image(bmpImage->image);
+        free_image(&(bmpImage->image));
     }
 
     // Safely close the BMP image file stream
@@ -276,7 +276,7 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     // For each row of pixels
     for (int height = 0; height < bmp->bitmapHeight; height++) {
         if (read_pixel_row(file, image, height, byteOffset) == -1) {
-            free_image(image);
+            free_image(&image);
             fputs(bmpLoadFailMessage, stderr);
             return NULL;
         }
@@ -287,8 +287,8 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     // Print offset of file pointer after iterating all pixels
     printf(eofAddrMessage, endAddr);
 
-    if ((int64_t)endAddr != (int64_t)(bmp->imageSize)) {
-        fprintf(stderr, eofMismatchMessage, endAddr, bmp->imageSize);
+    if ((int64_t)endAddr != (int64_t)(header->bmpSize)) {
+        fprintf(stderr, eofMismatchMessage, endAddr, header->bmpSize);
         // Could add error return value
     }
 
@@ -411,7 +411,7 @@ Image* flip_image(Image* image)
 {
     Image* rotatedImage = create_image(image->width, image->height);
     if (rotatedImage == NULL) {
-        free_image(image);
+        free_image(&image);
         return NULL;
     }
 
@@ -421,7 +421,7 @@ Image* flip_image(Image* image)
                 (size_t)image->width * sizeof(Pixel));
     }
 
-    free_image(image);
+    free_image(&image);
     return rotatedImage;
 }
 

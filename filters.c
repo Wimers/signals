@@ -206,7 +206,7 @@ int glitch_effect(Image* image, const int32_t glitchOffset)
         }
     }
 
-    free_image(imageCopy);
+    free_image(&imageCopy);
     return EXIT_SUCCESS;
 }
 
@@ -217,7 +217,6 @@ int verify_offset_bounds(Image* image, const int32_t offset) // FIX
         fprintf(stderr, imageBoundsMessage, image->width, image->height);
         fputs(glitchOffsetValMessage, stderr);
         fprintf(stderr, gotIntMessage, offset);
-        free_image(image);
         return -1;
     }
 

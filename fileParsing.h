@@ -109,9 +109,9 @@ void initialise_bmp(BMP* bmpImage);
  * ------------
  * Frees all memory associated with the provided image struct.
  *
- * image: Pointer to the image struct to free.
+ * image: Pointer to the pointer of the image struct to free.
  */
-void free_image(Image* image);
+void free_image(Image** image);
 
 /* free_image_resources()
  * ----------------------
