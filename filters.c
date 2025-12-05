@@ -188,7 +188,7 @@ int glitch_effect(Image* image, const int32_t glitchOffset)
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
             int accessRedRegion = x + glitchOffset;
-            if ((accessRedRegion < 0) || (accessRedRegion > image->width)) {
+            if ((accessRedRegion < 0) || (accessRedRegion >= image->width)) {
                 ;
             } else {
                 image->pixels[y][x].red
@@ -197,7 +197,7 @@ int glitch_effect(Image* image, const int32_t glitchOffset)
 
             int accessBlueRegion = x - glitchOffset;
 
-            if ((accessBlueRegion < 0) || (accessBlueRegion > image->width)) {
+            if ((accessBlueRegion < 0) || (accessBlueRegion >= image->width)) {
                 ;
             } else {
                 image->pixels[y][x].red
