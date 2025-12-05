@@ -27,6 +27,12 @@
 #define MAX_ANSI_PIXEL_LEN 32
 #define OUTPUT_BUFFER_CAPACITY 8192
 
+#define suXFormat "%-25s %-15u %X\n"
+#define sdXFormat "%-25s %-15d %X\n"
+#define sssFormat "%-25s %-15s %s\n"
+#define ssdFormat "%-25s %-15s %d\n"
+#define sudFormat "%-25s %-15u %d\n"
+
 // Program constant strings
 extern const char* const invalidColourPlanesMessage;
 extern const char* const fileOpeningErrorMessage;

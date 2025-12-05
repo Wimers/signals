@@ -21,6 +21,8 @@
 
 #define MIN_CMD_ARGS 2
 
+#define gotIntMessage "    Got \"%d\".\n"
+
 // Program constant strings
 extern const char* const usageMessage;
 extern const char* const commandHelpMessage;
@@ -28,15 +30,9 @@ extern const char* const fileTypeMessage;
 extern const char* const fileOpeningErrorMessage;
 extern const char* const invalidArgsMessage;
 extern const char* const lineSeparator;
-extern const char* const suXFormat;
-extern const char* const sdXFormat;
-extern const char* const sssFormat;
-extern const char* const ssdFormat;
-extern const char* const sudFormat;
 extern const char* const fileType;
 extern const char* const optstring;
 extern const char* const gotStrMessage;
-extern const char* const gotIntMessage;
 extern const char* const emptyArgsMessage;
 extern const char* const noArgsProvidedMessage;
 extern const char* const userHelpPrompt;

@@ -160,7 +160,7 @@ int parse_bmp_info_header(BMP* bmpImage)
             "Bitmap Width");
     if (info->bitmapWidth < 0) {
         fputs(negativeWidthMessage, stderr);
-        fprintf(stderr, gotIntMessage, info->bitmapWidth);
+        fprintf(stderr, gotIntMessage, (int)info->bitmapWidth); // Check cast
         return -1;
     }
 

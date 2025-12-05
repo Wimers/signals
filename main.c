@@ -22,7 +22,6 @@ const char* const glitchOffsetValMessage
         = "\nOffset must be a positive integer, within input image "
           "bounds.\n";
 const char* const gotStrMessage = "    Got \"%s\".\n";
-const char* const gotIntMessage = "    Got \"%d\".\n";
 const char* const glitchUsageMessage
         = "Glitch Effect\nUsage:  -l, --glitch <offset>  "
           "    - Apply horizontal glitch effect\n";
@@ -56,11 +55,6 @@ const char* const helpMessage // Need to update
 
 const char* const lineSeparator
         = "--------------------------------------------------\n";
-const char* const suXFormat = "%-25s %-15u %X\n";
-const char* const sdXFormat = "%-25s %-15d %X\n";
-const char* const sssFormat = "%-25s %-15s %s\n";
-const char* const ssdFormat = "%-25s %-15s %d\n";
-const char* const sudFormat = "%-25s %-15u %d\n";
 const char* const fileType = ".bmp";
 const char* const optstring = "i:o:dphfb:c:l:gvuat:"; // Defined program flags
 
