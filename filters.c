@@ -105,6 +105,7 @@ void average_pixels(Image* image)
         for (int x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
+            // Calculates the mean value of the pixel
             uint8_t brightness
                     = (uint8_t)(((pixel->red + pixel->green + pixel->blue)
                                         * DIV_3_CONST)
@@ -240,6 +241,12 @@ int verify_offset_bounds(Image* image, const int32_t offset) // FIX
 void contrast_effect(Image* image, const uint8_t contrastFactor,
         const uint8_t min, const uint8_t max)
 {
+    uint8_t lookupTable[256] = {0};
+
+    for (int i = 0; i <= UINT8_MAX; i++) {
+        lookupTable[i] = min_val((uint8_t)i, contrastFactor, min, max);
+    }
+
     // For each row
     for (int y = 0; y < image->height; y++) {
         Pixel* row = (image->pixels)[y];
@@ -249,9 +256,9 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
             Pixel* pixel = &(row[x]);
 
             // Apply contrast filter to each colour
-            min_val(&(pixel->blue), contrastFactor, min, max);
-            min_val(&(pixel->green), contrastFactor, min, max);
-            min_val(&(pixel->red), contrastFactor, min, max);
+            pixel->blue = lookupTable[pixel->blue];
+            pixel->green = lookupTable[pixel->green];
+            pixel->red = lookupTable[pixel->red];
         }
     }
 }
@@ -287,33 +294,31 @@ void dim_effect(Image* image, const uint8_t dimmingFactor)
     }
 }
 
-void min_val(uint8_t* val, const uint8_t contrastFactor, const uint8_t min,
-        const uint8_t max)
+uint8_t min_val(const uint8_t val, const uint8_t contrastFactor,
+        const uint8_t min, const uint8_t max)
 {
-    if (*val >= max) {
-        const int sumMax = *val + contrastFactor;
-        if (sumMax <= UINT8_MAX) {
-            *val = (uint8_t)sumMax;
-            return;
-        }
+    if (val >= max) {
+        const int sumMax = val + contrastFactor;
 
-        *val = (uint8_t)UINT8_MAX;
-        return;
+        if (sumMax <= UINT8_MAX) {
+            return (uint8_t)sumMax;
+        }
+        return (uint8_t)UINT8_MAX;
     }
 
-    if (*val <= min) {
-        const int sumMin = *val - contrastFactor;
+    if (val <= min) {
+        const int sumMin = val - contrastFactor;
+
         if (sumMin <= 0) {
-            *val = (uint8_t)0;
-            return;
+            return (uint8_t)0;
         }
 
         if (sumMin >= UINT8_MAX) {
-            *val = (uint8_t)UINT8_MAX;
-            return;
+            return (uint8_t)UINT8_MAX;
         }
 
-        *val = (uint8_t)sumMin;
-        return;
+        return (uint8_t)sumMin;
     }
+
+    return val;
 }

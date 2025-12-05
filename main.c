@@ -320,10 +320,7 @@ int handle_commands(UserInput* userInput)
     }
 
     if (!userInput->flip) {
-        bmpImage.image = flip_image(bmpImage.image);
-        if (bmpImage.image == NULL) {
-            return EXIT_FILE_INTEGRITY; // FIX	;
-        }
+        flip_image(bmpImage.image);
     }
 
     if (userInput->filter) {
@@ -407,11 +404,7 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
         return status;
     }
 
-    combinedImage.image = flip_image(combinedImage.image);
-
-    if (combinedImage.image == NULL) {
-        return EXIT_FILE_INTEGRITY; // FIX	;
-    }
+    flip_image(combinedImage.image);
 
     if ((status = combine_images(bmpImage->image, combinedImage.image))
             == EXIT_SUCCESS) {

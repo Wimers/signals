@@ -47,8 +47,20 @@ void initialise_bmp(BMP* bmpImage)
 
 void free_image(Image** image)
 {
-    free(((*image)->pixels)[0]);
-    free((void*)(*image)->pixels);
+    if ((image == NULL) || (*image == NULL)) {
+        return;
+    }
+
+    if ((*image)->pixelData != NULL) {
+        free((*image)->pixelData);
+        (*image)->pixelData = NULL;
+    }
+
+    if ((*image)->pixels != NULL) {
+        free((void*)(*image)->pixels);
+        (*image)->pixels = NULL;
+    }
+
     free(*image);
     *image = NULL;
 }
@@ -391,9 +403,9 @@ Image* create_image(const int32_t width, const int32_t height)
     }
 
     // Allocate memory for all pixel data
-    Pixel* data = malloc((size_t)width * normHeight * sizeof(Pixel));
+    img->pixelData = malloc((size_t)width * normHeight * sizeof(Pixel));
 
-    if (data == NULL) { // If malloc fails
+    if (img->pixelData == NULL) { // If malloc fails
         free(img->pixels);
         free(img);
         return NULL;
@@ -401,28 +413,23 @@ Image* create_image(const int32_t width, const int32_t height)
 
     // Link the pixel data to each row
     for (size_t i = 0; i < normHeight; i++) {
-        (img->pixels)[i] = &data[(size_t)width * i];
+        (img->pixels)[i] = &(img->pixelData)[(size_t)width * i];
     }
 
     return img;
 }
 
-Image* flip_image(Image* image)
+void flip_image(Image* image)
 {
-    Image* rotatedImage = create_image(image->width, image->height);
-    if (rotatedImage == NULL) {
-        free_image(&image);
-        return NULL;
-    }
+    const int32_t last = image->height >> 1;
+    for (int32_t y = 0; y < last; y++) {
 
-    for (int row = 0; row < image->height; row++) {
-        int sourceRow = image->height - 1 - row;
-        memcpy(rotatedImage->pixels[row], image->pixels[sourceRow],
-                (size_t)image->width * sizeof(Pixel));
-    }
+        Pixel* tempRow = (image->pixels)[y];
+        const int32_t bottomRow = image->height - y - 1;
 
-    free_image(&image);
-    return rotatedImage;
+        (image->pixels)[y] = (image->pixels)[bottomRow];
+        (image->pixels)[bottomRow] = tempRow;
+    }
 }
 
 void write_padding(FILE* file, const size_t gapSize)

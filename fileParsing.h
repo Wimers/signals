@@ -89,6 +89,7 @@ typedef struct __attribute__((packed)) {
 typedef struct {
     int32_t width;
     int32_t height;
+    Pixel* pixelData;
     Pixel** pixels;
 } Image;
 
@@ -255,10 +256,8 @@ Image* create_image(const int32_t width, const int32_t height);
  * image.
  *
  * image: Pointer to the image struct to be flipped.
- *
- * Returns: Pointer to the newly allocated flipped Image struct.
  */
-Image* flip_image(Image* image);
+void flip_image(Image* image);
 
 /* write_bmp_with_header_provided()
  * --------------------------------

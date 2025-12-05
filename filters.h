@@ -113,8 +113,10 @@ void dim_effect(Image* image, const uint8_t dimmingFactor);
  * contrastFactor:
  * min:
  * max:
+ *
+ * Returns:
  */
-void min_val(uint8_t* val, const uint8_t contrastFactor, const uint8_t min,
+uint8_t min_val(uint8_t val, const uint8_t contrastFactor, const uint8_t min,
         const uint8_t max);
 
 #endif
