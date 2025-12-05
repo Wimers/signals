@@ -178,35 +178,37 @@ int glitch_effect(Image* image, const int32_t glitchOffset)
         return -1;
     }
 
-    Image* imageCopy = create_image(image->width, image->height);
+    Pixel* rowCopy = malloc((size_t)image->width * sizeof(Pixel));
+    if (rowCopy == NULL) {
+        return -1; // Add unique exit code
+    }
 
     // For each row
     for (int y = 0; y < image->height; y++) {
-        memcpy(imageCopy->pixels[y], image->pixels[y],
+
+        memcpy(rowCopy, image->pixels[y],
                 (size_t)(image->width) * sizeof(Pixel));
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
-            int accessRedRegion = x + glitchOffset;
+            const int accessRedRegion = x + glitchOffset;
             if ((accessRedRegion < 0) || (accessRedRegion >= image->width)) {
                 ;
             } else {
-                image->pixels[y][x].red
-                        = imageCopy->pixels[y][accessRedRegion].red;
+                image->pixels[y][x].red = rowCopy[accessRedRegion].red;
             }
 
-            int accessBlueRegion = x - glitchOffset;
+            const int accessBlueRegion = x - glitchOffset;
 
             if ((accessBlueRegion < 0) || (accessBlueRegion >= image->width)) {
                 ;
             } else {
-                image->pixels[y][x].red
-                        = imageCopy->pixels[y][accessBlueRegion].red;
+                image->pixels[y][x].blue = rowCopy[accessBlueRegion].blue;
             }
         }
     }
 
-    free_image(&imageCopy);
+    free(rowCopy);
     return EXIT_SUCCESS;
 }
 
