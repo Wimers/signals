@@ -106,7 +106,9 @@ void average_pixels(Image* image)
             Pixel* pixel = &(row[x]);
 
             uint8_t brightness
-                    = (uint8_t)((pixel->red + pixel->green + pixel->blue) / 3);
+                    = (uint8_t)(((pixel->red + pixel->green + pixel->blue)
+                                        * DIV_3_CONST)
+                            >> DIV_3_SHIFT);
             pixel->blue = brightness;
             pixel->green = brightness;
             pixel->red = brightness;

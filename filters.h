@@ -10,6 +10,10 @@
 #define GS_GREEN_MAP 601 // 0.587
 #define GS_BLUE_MAP 117 // 0.114
 
+// Used to optimise division by 3 (for positive integers less than 765)
+#define DIV_3_CONST 683
+#define DIV_3_SHIFT 11
+
 // Used for division by 1024 (more efficient than dividing by 1000)
 #define GS_PIXEL_SCALING_FACTOR 10
 
