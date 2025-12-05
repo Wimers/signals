@@ -29,6 +29,8 @@
 
 // Program constant strings
 extern const char* const invalidColourPlanesMessage;
+extern const char* const fileOpeningErrorMessage;
+extern const char* const errorReadingHeaderMessage;
 extern const char* const bitMap;
 extern const char* const eofAddrMessage;
 extern const char* const colouredBlockFormatter;
@@ -38,10 +40,18 @@ extern const char* const newlineStr;
 extern const char newlineChar;
 #define EOS '\0'
 
+#define READ_HEADER_SAFE(dest, size, file, parameterName)                      \
+    (void)sizeof(char[(sizeof(*dest) == size) ? 1 : -1]);                      \
+    if (fread(dest, size, 1, file) != 1) {                                     \
+        fprintf(stderr, errorReadingHeaderMessage, parameterName);             \
+        return -1;                                                             \
+    }
+
 typedef struct { // 14 bytes
     uint16_t id;
     uint32_t bmpSize;
-    uint32_t junk;
+    uint16_t reserved1;
+    uint16_t reserved2;
     uint32_t offset;
 } BmpHeader;
 
@@ -54,8 +64,8 @@ typedef struct { // 40 bytes
     uint16_t bitsPerPixel;
     uint32_t compression;
     uint32_t imageSize;
-    uint32_t horzResolution;
-    uint32_t vertResolution;
+    int32_t horzResolution;
+    int32_t vertResolution;
     uint32_t coloursInPalette;
     uint32_t importantColours;
 } BmpInfoHeader;
@@ -124,7 +134,7 @@ void dump_headers(const BMP* bmpImage);
  *
  * It is assumed the input file is a .BMP file.
  */
-void parse_bmp_header(BMP* bmpImage);
+int parse_bmp_header(BMP* bmpImage);
 
 /* parse_bmp_info_header()
  * -----------------------
@@ -162,8 +172,10 @@ void print_bmp_info_header(const BmpInfoHeader* bmp);
  * image: The Image struct containing the pixel data.
  * rowNumber: The current row index (height) being read.
  * byteOffset: The number of padding bytes to skip after reading the row.
+ *
+ * Returns:
  */
-void read_pixel_row(
+int read_pixel_row(
         FILE* file, Image* image, const int rowNumber, const size_t byteOffset);
 
 /* load_bmp_2d()
@@ -196,8 +208,9 @@ void print_image_to_terminal(const Image* image);
  * pixel: Pointer to a buffer capable of holding RGB_PIXEL_BYTE_SIZE bytes.
  * file: File stream to the open file.
  *
+ * Returns:
  */
-void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
+int read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
 
 /* calc_row_byte_offset()
  * ----------------------

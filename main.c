@@ -12,8 +12,6 @@
 
 // Error messages
 const char* const fileTypeMessage = "Input file must be \".bmp\"\n";
-const char* const fileOpeningErrorMessage
-        = "Error opening file \"%s\" for reading.\n";
 const char* const invalidArgsMessage = "Invalid arguments supplied.\n";
 const char* const emptyArgsMessage = "Arguments must not be empty.\n";
 const char* const noArgsProvidedMessage = "An argument must be supplied.\n";

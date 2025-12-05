@@ -12,11 +12,15 @@ DEBUG = -g -fsanitize=address -fsanitize=undefined
 
 all: bmp
 
-debug: CFLAGS += $(DEBUG)
-debug: all
+debug:
+	clear
+	$(MAKE) clean
+	$(MAKE) all CFLAGS="$(CFLAGS) $(DEBUG)"
 
-performance: CFLAGS += $(PFLAGS)
-performance: all
+performance:
+	clear
+	$(MAKE) clean
+	$(MAKE) all CFLAGS="$(CFLAGS) $(PFLAGS)"
 
 clean:
 	rm -f bmp *.o

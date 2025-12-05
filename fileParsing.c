@@ -1,14 +1,18 @@
 // Included Libraries
 #include "fileParsing.h"
 #include "main.h"
-#include <string.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
+#include <string.h>
 
 // Error message
 const char* const invalidColourPlanesMessage
         = "The number of colour planes must be 1, got \"%d\"\n";
+const char* const fileOpeningErrorMessage
+        = "Error opening file \"%s\" for reading.\n";
+const char* const errorReadingHeaderMessage
+        = "Error reading \"%s\" from file header\n";
 
 // Constant program strings
 const char* const bitMap = "BM";
@@ -42,6 +46,14 @@ void free_image(Image* image)
     image = NULL;
 }
 
+void safely_close_file(FILE* file)
+{
+    if (file != NULL) {
+        fclose(file);
+        file = NULL;
+    }
+}
+
 void free_image_resources(BMP* bmpImage)
 {
     // Safely free allocated memory for storing pixel data
@@ -50,10 +62,7 @@ void free_image_resources(BMP* bmpImage)
     }
 
     // Safely close the BMP image file stream
-    if (bmpImage->file != NULL) {
-        fclose(bmpImage->file);
-        bmpImage->file = NULL;
-    }
+    safely_close_file(bmpImage->file);
 }
 
 int open_bmp(BMP* bmpImage, const char* const filePath)
@@ -72,9 +81,8 @@ int open_bmp(BMP* bmpImage, const char* const filePath)
             bmpImage->file, &(bmpImage->bmpHeader), &(bmpImage->infoHeader));
 
     if (bmpImage->image == NULL) {
-        fputs(fileOpeningErrorMessage, stderr);
-        fclose(bmpImage->file);
-        bmpImage->file = NULL;
+        fprintf(stderr, fileOpeningErrorMessage, filePath);
+        safely_close_file(bmpImage->file);
         return EXIT_FILE_INTEGRITY;
     }
 
@@ -83,7 +91,9 @@ int open_bmp(BMP* bmpImage, const char* const filePath)
 
 int read_headers(BMP* bmpImage)
 {
-    parse_bmp_header(bmpImage);
+    if (parse_bmp_header(bmpImage) == -1) {
+        return -1;
+    }
 
     if (parse_bmp_info_header(bmpImage) == -1) {
         return -1;
@@ -98,22 +108,31 @@ void dump_headers(const BMP* bmpImage)
     print_bmp_info_header(&(bmpImage->infoHeader));
 }
 
-void parse_bmp_header(BMP* bmpImage)
+int parse_bmp_header(BMP* bmpImage)
 {
     FILE* file = bmpImage->file;
     BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
 
     // Store the value in the ID field
-    fread(&(bmpHeader->id), sizeof(uint16_t), 1, file);
+    READ_HEADER_SAFE(&(bmpHeader->id), sizeof(bmpHeader->id), file, "ID");
 
     // Store the size of the BMP file
-    fread(&(bmpHeader->bmpSize), sizeof(uint32_t), 1, file);
+    READ_HEADER_SAFE(&(bmpHeader->bmpSize), sizeof(bmpHeader->bmpSize), file,
+            "Bitmap Size");
 
-    // Junk can be ignored, however, we will store incase it is useful later
-    fread(&(bmpHeader->junk), sizeof(uint32_t), 1, file);
+    // Not used, however store for reference
+    READ_HEADER_SAFE(&(bmpHeader->reserved1), sizeof(bmpHeader->reserved1),
+            file, "Reserved1");
+
+    // Also not used
+    READ_HEADER_SAFE(&(bmpHeader->reserved2), sizeof(bmpHeader->reserved2),
+            file, "Reserved2");
 
     // Store the pixel array offset value
-    fread(&(bmpHeader->offset), sizeof(uint32_t), 1, file);
+    READ_HEADER_SAFE(
+            &(bmpHeader->offset), sizeof(bmpHeader->offset), file, "Offset");
+
+    return EXIT_SUCCESS;
 }
 
 int parse_bmp_info_header(BMP* bmpImage)
@@ -123,35 +142,54 @@ int parse_bmp_info_header(BMP* bmpImage)
 
     // Seek to start of header
     fseek(file, BITMAP_FILE_HEADER_SIZE, SEEK_SET);
-    fread(&info->headerSize, sizeof(uint32_t), 1, file); // Header size in bytes
 
-    fread(&info->bitmapWidth, sizeof(int32_t), 1,
-            file); // Bitmap width in pixles
+    // Header size in bytes
+    READ_HEADER_SAFE(
+            &(info->headerSize), sizeof(info->headerSize), file, "Header size");
+
+    // Bitmap width in pixles
+    READ_HEADER_SAFE(&(info->bitmapWidth), sizeof(info->bitmapWidth), file,
+            "Bitmap Width");
     if (info->bitmapWidth < 0) {
-        return -1; // Add appropriate error message
+        fputs("Bitmap Width cannot be negative!\n", stderr);
+        fprintf(stderr, gotIntMessage, info->bitmapWidth);
+        return -1;
     }
 
-    fread(&info->bitmapHeight, sizeof(int32_t), 1,
-            file); // Bitmap height in pixels
+    // Bitmap height in pixles
+    READ_HEADER_SAFE(&(info->bitmapHeight), sizeof(info->bitmapHeight), file,
+            "Bitmap Height");
 
-    fread(&info->colourPlanes, sizeof(uint16_t), 1,
-            file); // Number of colour planes
-    if (info->colourPlanes != 1) { // Must be one
+    // Number of colour planes
+    READ_HEADER_SAFE(&(info->colourPlanes), sizeof(info->colourPlanes), file,
+            "Colour planes");
+    if (info->colourPlanes != 1) { // Must be one       // CHECK this cast
         fprintf(stderr, invalidColourPlanesMessage, (int)(info->colourPlanes));
         return -1;
     }
 
-    fread(&info->bitsPerPixel, sizeof(uint16_t), 1,
-            file); // Image colour depth (i.e. 16, 24)
-    fread(&info->compression, sizeof(uint32_t), 1,
-            file); // BI_RGB (no compression) most common
-    fread(&info->imageSize, sizeof(uint32_t), 1,
-            file); // Size of the raw bitmap data
-    fread(&info->horzResolution, sizeof(uint32_t), 1, file);
-    fread(&info->vertResolution, sizeof(uint32_t), 1, file);
-    fread(&info->coloursInPalette, sizeof(uint32_t), 1, file);
-    fread(&info->importantColours, sizeof(uint32_t), 1,
-            file); // 0 if all colours important
+    // Image colour depth (i.e. 16, 24)
+    READ_HEADER_SAFE(&(info->bitsPerPixel), sizeof(info->bitsPerPixel), file,
+            "Bits per pixel");
+
+    // BI_RGB (no compression) most common
+    READ_HEADER_SAFE(&(info->compression), sizeof(info->compression), file,
+            "Compression");
+
+    // Size of the raw bitmap data
+    READ_HEADER_SAFE(
+            &(info->imageSize), sizeof(info->imageSize), file, "Image size");
+
+    READ_HEADER_SAFE(&(info->horzResolution), sizeof(info->horzResolution),
+            file, "Horizontal resolution");
+    READ_HEADER_SAFE(&(info->vertResolution), sizeof(info->vertResolution),
+            file, "Vertical resolution");
+    READ_HEADER_SAFE(&(info->coloursInPalette), sizeof(info->coloursInPalette),
+            file, "Colours in palette");
+
+    // 0 if all colours important
+    READ_HEADER_SAFE(&(info->importantColours), sizeof(info->importantColours),
+            file, "Important colours");
 
     return EXIT_SUCCESS;
 }
@@ -188,16 +226,22 @@ void print_bmp_info_header(const BmpInfoHeader* bmp)
             bmp->importantColours);
 }
 
-void read_pixel_row(
+int read_pixel_row(
         FILE* file, Image* image, const int rowNumber, const size_t byteOffset)
 {
+    const size_t numBytes = (size_t)(image->width);
+
     // Read row of pixels
-    fread((image->pixels)[rowNumber], sizeof(Pixel), (size_t)image->width,
-            file);
+    if (fread((image->pixels)[rowNumber], sizeof(Pixel), numBytes, file)
+            != numBytes) {
+        return -1;
+    }
 
     if (byteOffset) { // If offset non-zero update file pointer
         fseek(file, byteOffset, SEEK_CUR);
     }
+
+    return EXIT_SUCCESS;
 }
 
 Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
@@ -215,7 +259,10 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
 
     // For each row of pixels
     for (int height = 0; height < bmp->bitmapHeight; height++) {
-        read_pixel_row(file, image, height, byteOffset);
+        if (read_pixel_row(file, image, height, byteOffset) == -1) {
+            free_image(image);
+            return NULL; // Add error message
+        }
     }
 
     // Print offset of file pointer after iterating all pixels
@@ -262,15 +309,20 @@ void print_image_to_terminal(const Image* image)
     }
 }
 
-void read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
+int read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
 {
     // For each colour (RGB)
     for (int colour = 1; colour <= RGB_PIXEL_BYTE_SIZE; colour++) {
 
         // Reads intensity of colour and stores into pixel
-        fread(&((*pixel)[RGB_PIXEL_BYTE_SIZE - colour]), sizeof(uint8_t), 1,
-                file);
+        if (fread(&((*pixel)[RGB_PIXEL_BYTE_SIZE - colour]), sizeof(uint8_t), 1,
+                    file)
+                != 1) {
+            return -1;
+        }
     }
+
+    return EXIT_SUCCESS;
 }
 
 size_t calc_row_byte_offset(
@@ -325,23 +377,33 @@ void write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     FILE* output = fopen(filename, writeMode);
 
     // Write BmpHeader
-    fwrite(&bmpHeader->id, sizeof(uint16_t), 1, output);
-    fwrite(&bmpHeader->bmpSize, sizeof(uint32_t), 1, output);
-    fwrite(&bmpHeader->junk, sizeof(uint32_t), 1, output);
-    fwrite(&bmpHeader->offset, sizeof(uint32_t), 1, output);
+    fwrite(&bmpHeader->id, sizeof(bmpHeader->id), 1, output);
+    fwrite(&bmpHeader->bmpSize, sizeof(bmpHeader->bmpSize), 1, output);
+    fwrite(&bmpHeader->reserved1, sizeof(bmpHeader->reserved1), 1, output);
+    fwrite(&bmpHeader->reserved2, sizeof(bmpHeader->reserved2), 1, output);
+    fwrite(&bmpHeader->offset, sizeof(bmpHeader->offset), 1, output);
 
     // Write BmpInfoHeader
-    fwrite(&infoHeader->headerSize, sizeof(uint32_t), 1, output);
-    fwrite(&infoHeader->bitmapWidth, sizeof(int32_t), 1, output);
-    fwrite(&infoHeader->bitmapHeight, sizeof(int32_t), 1, output);
-    fwrite(&infoHeader->colourPlanes, sizeof(uint16_t), 1, output);
-    fwrite(&infoHeader->bitsPerPixel, sizeof(uint16_t), 1, output);
-    fwrite(&infoHeader->compression, sizeof(uint32_t), 1, output);
-    fwrite(&infoHeader->imageSize, sizeof(uint32_t), 1, output);
-    fwrite(&infoHeader->horzResolution, sizeof(uint32_t), 1, output);
-    fwrite(&infoHeader->vertResolution, sizeof(uint32_t), 1, output);
-    fwrite(&infoHeader->coloursInPalette, sizeof(uint32_t), 1, output);
-    fwrite(&infoHeader->importantColours, sizeof(uint32_t), 1, output);
+    fwrite(&infoHeader->headerSize, sizeof(infoHeader->headerSize), 1, output);
+    fwrite(&infoHeader->bitmapWidth, sizeof(infoHeader->bitmapWidth), 1,
+            output);
+    fwrite(&infoHeader->bitmapHeight, sizeof(infoHeader->bitmapHeight), 1,
+            output);
+    fwrite(&infoHeader->colourPlanes, sizeof(infoHeader->colourPlanes), 1,
+            output);
+    fwrite(&infoHeader->bitsPerPixel, sizeof(infoHeader->bitsPerPixel), 1,
+            output);
+    fwrite(&infoHeader->compression, sizeof(infoHeader->compression), 1,
+            output);
+    fwrite(&infoHeader->imageSize, sizeof(infoHeader->imageSize), 1, output);
+    fwrite(&infoHeader->horzResolution, sizeof(infoHeader->horzResolution), 1,
+            output);
+    fwrite(&infoHeader->vertResolution, sizeof(infoHeader->vertResolution), 1,
+            output);
+    fwrite(&infoHeader->coloursInPalette, sizeof(infoHeader->coloursInPalette),
+            1, output);
+    fwrite(&infoHeader->importantColours, sizeof(infoHeader->importantColours),
+            1, output);
 
     const uint32_t currentPosition = ftell(output);
     const uint32_t gapSize = bmpHeader->offset - currentPosition;
