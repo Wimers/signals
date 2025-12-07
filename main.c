@@ -9,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <errno.h>
 
 // Error messages
 const char* const fileTypeMessage = "Input file must be \".bmp\"\n";
@@ -25,6 +26,8 @@ const char* const gotStrMessage = "    Got \"%s\".\n";
 const char* const glitchUsageMessage
         = "Glitch Effect\nUsage:  -l, --glitch <offset>  "
           "    - Apply horizontal glitch effect\n";
+const char* const nonUniquePathsMessage
+        = "Input and combine file paths must be unique!\n";
 
 // Program constant strings
 const char* const usageMessage = "Usage: ./bmp <option> [--input <file>] ...\n";
@@ -56,7 +59,7 @@ const char* const helpMessage // Need to update
 const char* const lineSeparator
         = "--------------------------------------------------\n";
 const char* const fileType = ".bmp";
-const char* const optstring = "i:o:dphfb:c:l:gvuat:"; // Defined program flags
+const char* const optstring = "i:o:b:c:l:t:dphfgvua"; // Defined program flags
 
 // Assorted constant chars
 const char* const readMode = "rb";
@@ -81,7 +84,7 @@ static struct option const longOptions[] = {
         {NULL, 0, NULL, 0},
 };
 
-int main(const int argc, char** argv)
+int main(const int argc, char* argv[])
 {
     if (early_argument_checks(argc, argv) != EXIT_SUCCESS) {
         exit(EXIT_INVALID_ARG);
@@ -176,12 +179,15 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->flip = 1;
             break;
 
-        case BRIGHTNESS_CAP:
-            if (verify_int_arg_with_bounds(optarg, 0, UINT8_MAX) == -1) {
+        case BRIGHTNESS_CAP: {
+            long cap;
+            if ((cap = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
+                    == -1) {
                 return EXIT_INVALID_PARAMETER;
             }
-            userInput->maxBrightness = (uint8_t)atoi(optarg);
+            userInput->maxBrightness = (uint8_t)cap;
             break;
+        }
 
         case COMBINE:
             userInput->combine = 1;
@@ -198,19 +204,25 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->average = 1;
             break;
 
-        case CONTRAST:
-            if (verify_int_arg_with_bounds(optarg, 0, UINT8_MAX) == -1) {
+        case CONTRAST: {
+            long contrast;
+            if ((contrast = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
+                    == -1) {
                 return EXIT_INVALID_PARAMETER;
             }
-            userInput->contrast = (uint8_t)atoi(optarg);
+            userInput->contrast = (uint8_t)contrast;
             break;
+        }
 
-        case DIM:
-            if (verify_int_arg_with_bounds(optarg, 0, UINT8_MAX) == -1) {
+        case DIM: {
+            long dim;
+            if ((dim = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
+                    == -1) {
                 return EXIT_INVALID_PARAMETER;
             }
-            userInput->dim = (uint8_t)atoi(optarg);
+            userInput->dim = (uint8_t)dim;
             break;
+        }
 
         default:
             return EXIT_NO_COMMAND;
@@ -236,20 +248,31 @@ int check_each_char_is_digit(const char* arg)
     return EXIT_SUCCESS;
 }
 
-int verify_int_arg_with_bounds(const char* arg, const int min, const int max)
+long verify_long_arg_with_bounds(
+        const char* arg, const long min, const long max)
 {
-    if (check_each_char_is_digit(arg) == -1) {
+    char* endptr;
+    errno = 0;
+
+    const long val = strtol(arg, &endptr, BASE_10);
+
+    if ((arg == endptr) || (*endptr != EOS)) {
         return -1;
     }
 
-    // Convert string to integer
-    const int num = atoi(arg); // FIX returns 0 on error
+    if (errno == ERANGE) {
+        return -1;
+    }
 
     // Check number within specified bounds
-    return check_int_within_bounds(num, min, max); // Returns -1 on error
+    if (check_long_within_bounds(val, min, max) == -1) { // Returns -1 on error
+        return -1;
+    }
+
+    return val;
 }
 
-int check_int_within_bounds(const int num, const int min, const int max)
+int check_long_within_bounds(const long num, const long min, const long max)
 {
     // Check number within specified bounds
     if ((num < min) || (num > max)) {
@@ -261,40 +284,28 @@ int check_int_within_bounds(const int num, const int min, const int max)
 
 int verify_glitch_arg(UserInput* userInput, const char* arg)
 {
-    if (verify_int_arg_with_bounds(arg, 1, INT32_MAX) == -1) {
+    long glitchOffset;
+
+    if ((glitchOffset = verify_long_arg_with_bounds(arg, 1, INT32_MAX)) == -1) {
 
         // Prints error messages
-        return glitch_offset_invalid_message(arg);
+        glitch_offset_invalid_message(arg);
+        return -1;
     }
 
-    const int32_t glitchOffset = (int32_t)atoi(arg);
-
-    // atoi returns 0 on error, and offset of zero would have no effect
-    if (glitchOffset != 0) {
-
-        // Assign offset
-        userInput->glitch = glitchOffset;
-    } else {
-
-        // Prints error messages
-        return glitch_offset_invalid_message(arg);
-    }
-
+    userInput->glitch = (int32_t)glitchOffset;
     return EXIT_SUCCESS;
 }
 
-int glitch_offset_invalid_message(const char* arg)
+void glitch_offset_invalid_message(const char* arg)
 {
     fputs(glitchUsageMessage, stderr);
     fputs(glitchOffsetValMessage, stderr);
     fprintf(stderr, gotStrMessage, arg);
-    return -1;
 }
 
 int handle_commands(UserInput* userInput)
 {
-    int status;
-
     if (userInput->help) {
         fputs(helpMessage, stdout);
     }
@@ -308,6 +319,7 @@ int handle_commands(UserInput* userInput)
 
     BMP bmpImage;
     initialise_bmp(&bmpImage);
+    int status;
 
     if ((status = open_bmp(&bmpImage, userInput->inputFilePath))
             != EXIT_SUCCESS) {
@@ -389,8 +401,7 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
 
     // Exit if input and combine file paths match
     if (!strcmp(userInput->inputFilePath, userInput->combineFilePath)) {
-
-        fprintf(stderr, "Input and combine file paths must be unique!\n");
+        fputs(nonUniquePathsMessage, stderr);
         return EXIT_SAME_FILE;
     }
 
@@ -407,7 +418,7 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
     flip_image(combinedImage.image);
 
     if ((status = combine_images(bmpImage->image, combinedImage.image))
-            == EXIT_SUCCESS) {
+            != EXIT_SUCCESS) {
         free_image_resources(&combinedImage);
         return status;
     }

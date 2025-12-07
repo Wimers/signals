@@ -20,6 +20,7 @@
 #define EXIT_SAME_FILE 91
 
 #define MIN_CMD_ARGS 2
+#define BASE_10 10
 
 #define gotIntMessage "    Got \"%d\".\n"
 
@@ -30,6 +31,7 @@ extern const char* const fileTypeMessage;
 extern const char* const fileOpeningErrorMessage;
 extern const char* const invalidArgsMessage;
 extern const char* const lineSeparator;
+extern const char* const nonUniquePathsMessage;
 extern const char* const fileType;
 extern const char* const optstring;
 extern const char* const gotStrMessage;
@@ -121,7 +123,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput);
  */
 int check_each_char_is_digit(const char* arg);
 
-/* check_int_within_bounds()
+/* check_long_within_bounds()
  * -------------------------
  * num:
  * min:
@@ -129,7 +131,7 @@ int check_each_char_is_digit(const char* arg);
  *
  * Returns:
  */
-int check_int_within_bounds(const int num, const int min, const int max);
+int check_long_within_bounds(const long num, const long min, const long max);
 
 /* verify_int_arg_with_bounds()
  * ----------------------------
@@ -139,7 +141,8 @@ int check_int_within_bounds(const int num, const int min, const int max);
  *
  * Returns:
  */
-int verify_int_arg_with_bounds(const char* arg, const int min, const int max);
+long verify_long_arg_with_bounds(
+        const char* arg, const long min, const long max);
 
 /* verify_glitch_arg()
  * -------------------
@@ -156,7 +159,7 @@ int verify_glitch_arg(UserInput* userInput, const char* arg);
  *
  * Returns:
  */
-int glitch_offset_invalid_message(const char* arg);
+void glitch_offset_invalid_message(const char* arg);
 
 /* handle_commands()
  * -----------------

@@ -170,13 +170,15 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
             Pixel* pPixel = &(pRow[x]);
             Pixel* sPixel = &(sRow[x]);
 
-            uint8_t newRed = (uint8_t)((pPixel->red + sPixel->red) >> 1);
+            const uint8_t newRed = (uint8_t)((pPixel->red + sPixel->red) >> 1);
             pPixel->red = newRed;
 
-            uint8_t newGreen = (uint8_t)((pPixel->green + sPixel->green) >> 1);
+            const uint8_t newGreen
+                    = (uint8_t)((pPixel->green + sPixel->green) >> 1);
             pPixel->green = newGreen;
 
-            uint8_t newBlue = (uint8_t)((pPixel->blue + sPixel->blue) >> 1);
+            const uint8_t newBlue
+                    = (uint8_t)((pPixel->blue + sPixel->blue) >> 1);
             pPixel->blue = newBlue;
         }
     }
