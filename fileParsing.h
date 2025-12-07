@@ -11,13 +11,13 @@
 #define EXIT_OUT_OF_BOUNDS 10
 
 // File constants
-#define HEADER_FIELD_SIZE 2
-#define BMP_FILE_SIZE 4
+#define BMP_HEADER_SIZE 14
+#define DIB_HEADER_SIZE 40
 #define OFFSET_ADDR_SIZE 4
-#define BITMAP_FILE_HEADER_SIZE 14
-#define DIB_HEADER_SIZE 7
-#define BI_RGB 0 // compression method
-#define HALFTONING_ALGORITHM 0 // None
+
+// BMP compression modes, BI_RGB (none) is the default compression method
+#define BI_RGB 0
+#define COMP_METH_VAL_MAX 13 // (BMP standard allows values range from 0 <-> 13)
 
 #define RGB_PIXEL_BYTE_SIZE 3
 #define SIZE_BYTE 8
