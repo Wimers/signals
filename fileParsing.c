@@ -30,6 +30,9 @@ const char* const newlineStr = "\n";
 // Assorted constant chars
 const char newlineChar = '\n';
 
+static const char* const BmpIdentifier[]
+        = {"BM", "BA", "CI", "CP", "IC", "PT", NULL};
+
 void initialise_bmp(BMP* bmpImage)
 {
     BmpHeader header;
@@ -128,6 +131,32 @@ void dump_headers(const BMP* bmpImage)
     print_bmp_info_header(&(bmpImage->infoHeader));
 }
 
+int is_str_in_const_str_array(const void* restrict arg,
+        const char* const strArray[], const size_t nread)
+{
+    // Initialise
+    const int breakPoint = 1000;
+    int i = 0;
+
+    // For each string in string array
+    while (strArray[i] != NULL) {
+
+        // Check if arg is equal to this string
+        if ((strlen(strArray[i]) >= nread)
+                && (!memcmp(arg, strArray[i], nread))) {
+
+            return EXIT_SUCCESS; // Arg found
+        }
+
+        if (++i > breakPoint) {
+            return -1;
+        }
+    }
+
+    // Arg is not an element of the string array
+    return -1;
+}
+
 int parse_bmp_header(BMP* bmpImage)
 {
     FILE* file = bmpImage->file;
@@ -135,6 +164,12 @@ int parse_bmp_header(BMP* bmpImage)
 
     // Store the value in the ID field
     READ_HEADER_SAFE(&(bmpHeader->id), sizeof(bmpHeader->id), file, "ID");
+    if (is_str_in_const_str_array(
+                (char*)&(bmpHeader->id), BmpIdentifier, sizeof(bmpHeader->id))
+            == -1) {
+        fprintf(stderr, "%.2s\n", (char*)&(bmpHeader->id));
+        return -1; // FIX add verbose error message
+    }
 
     // Store the size of the BMP file
     READ_HEADER_SAFE(&(bmpHeader->bmpSize), sizeof(bmpHeader->bmpSize), file,
@@ -172,7 +207,8 @@ int parse_bmp_info_header(BMP* bmpImage)
             "Bitmap Width");
     if (info->bitmapWidth < 0) {
         fputs(negativeWidthMessage, stderr);
-        fprintf(stderr, gotIntMessage, (int)info->bitmapWidth); // Check cast
+        fprintf(stderr, gotIntMessage,
+                (int)info->bitmapWidth); // Check cast
         return -1;
     }
 
@@ -218,7 +254,10 @@ void print_bmp_header(const BmpHeader* bmp)
 {
     fprintf(stdout, sssFormat, "BMP Header", "Data", "Hex");
     fputs(lineSeparator, stdout);
+
+    // Output capped at two chars to prevent buffer overflow
     fprintf(stdout, ssdFormat, "ID", (char*)&(bmp->id), bmp->id);
+
     fprintf(stdout, suXFormat, "Size", bmp->bmpSize, bmp->bmpSize);
     fprintf(stdout, suXFormat, "Offset", bmp->offset, bmp->offset);
 }
@@ -317,8 +356,8 @@ void print_image_to_terminal(const Image* image)
     for (int height = 0; height < image->height; height++) {
         for (int width = 0; width < image->width; width++) {
 
-            // If buffer does not have room for pixel, write buffer to terminal
-            // and reset buffer position.
+            // If buffer does not have room for pixel, write buffer to
+            // terminal and reset buffer position.
             if ((bufferPosition + MAX_ANSI_PIXEL_LEN)
                     >= OUTPUT_BUFFER_CAPACITY) {
                 fwrite(buffer, 1, bufferPosition, stdout);

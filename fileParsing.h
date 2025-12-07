@@ -13,8 +13,6 @@
 // File constants
 #define HEADER_FIELD_SIZE 2
 #define BMP_FILE_SIZE 4
-#define RESERVED1 2
-#define RESERVED2 2
 #define OFFSET_ADDR_SIZE 4
 #define BITMAP_FILE_HEADER_SIZE 14
 #define DIB_HEADER_SIZE 7
@@ -30,7 +28,7 @@
 #define suXFormat "%-25s %-15u %X\n"
 #define sdXFormat "%-25s %-15d %X\n"
 #define sssFormat "%-25s %-15s %s\n"
-#define ssdFormat "%-25s %-15s %d\n"
+#define ssdFormat "%-25s %-15.2s %d\n"
 #define sudFormat "%-25s %-15u %d\n"
 
 // Program constant strings
@@ -283,4 +281,6 @@ int check_file_opened(FILE* file, const char* const filePath);
  */
 void write_padding(FILE* file, const size_t gapSize);
 
+int is_str_in_const_str_array(const void* restrict arg,
+        const char* const strArray[], const size_t nread);
 #endif
