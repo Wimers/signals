@@ -243,7 +243,7 @@ int verify_offset_bounds(Image* image, const int32_t offset) // FIX
 void contrast_effect(Image* image, const uint8_t contrastFactor,
         const uint8_t min, const uint8_t max)
 {
-    uint8_t lookupTable[256] = {0};
+    uint8_t lookupTable[UINT8_MAX + 1] = {0};
 
     for (int i = 0; i <= UINT8_MAX; i++) {
         lookupTable[i] = min_val((uint8_t)i, contrastFactor, min, max);

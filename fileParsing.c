@@ -48,7 +48,7 @@ const char* const newlineStr = "\n";
 // Assorted constant chars
 const char newlineChar = '\n';
 
-static const char* const BmpIdentifier[]
+static const char* const bmpIdentifier[]
         = {"BM", "BA", "CI", "CP", "IC", "PT", NULL};
 
 void initialise_bmp(BMP* bmpImage)
@@ -266,7 +266,7 @@ int header_safety_checks(BMP* bmpImage)
     const BmpInfoHeader* info = &(bmpImage->infoHeader);
 
     if (is_str_in_const_str_array(
-                (char*)&(bmpHeader->id), BmpIdentifier, sizeof(bmpHeader->id))
+                (char*)&(bmpHeader->id), bmpIdentifier, sizeof(bmpHeader->id))
             == -1) {
         fprintf(stderr, invalidBmpTypeMessage, (char*)&(bmpHeader->id));
         return -1;
@@ -539,7 +539,7 @@ Image* create_image(const int32_t width, const int32_t height)
     img->pixelData = malloc((size_t)width * normHeight * sizeof(Pixel));
 
     if (img->pixelData == NULL) { // If malloc fails
-        free(img->pixels);
+        free((void*)img->pixels);
         free(img);
         return NULL;
     }
@@ -577,7 +577,7 @@ void write_padding(FILE* file, const size_t gapSize)
 int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
 {
     BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
-    BmpInfoHeader* infoHeader = &(bmpImage->infoHeader);
+    BmpInfoHeader* info = &(bmpImage->infoHeader);
     Image* image = bmpImage->image;
 
     FILE* output = fopen(filename, writeMode);
@@ -593,26 +593,17 @@ int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     fwrite(&bmpHeader->offset, sizeof(bmpHeader->offset), 1, output);
 
     // Write BmpInfoHeader
-    fwrite(&infoHeader->headerSize, sizeof(infoHeader->headerSize), 1, output);
-    fwrite(&infoHeader->bitmapWidth, sizeof(infoHeader->bitmapWidth), 1,
-            output);
-    fwrite(&infoHeader->bitmapHeight, sizeof(infoHeader->bitmapHeight), 1,
-            output);
-    fwrite(&infoHeader->colourPlanes, sizeof(infoHeader->colourPlanes), 1,
-            output);
-    fwrite(&infoHeader->bitsPerPixel, sizeof(infoHeader->bitsPerPixel), 1,
-            output);
-    fwrite(&infoHeader->compression, sizeof(infoHeader->compression), 1,
-            output);
-    fwrite(&infoHeader->imageSize, sizeof(infoHeader->imageSize), 1, output);
-    fwrite(&infoHeader->horzResolution, sizeof(infoHeader->horzResolution), 1,
-            output);
-    fwrite(&infoHeader->vertResolution, sizeof(infoHeader->vertResolution), 1,
-            output);
-    fwrite(&infoHeader->coloursInPalette, sizeof(infoHeader->coloursInPalette),
-            1, output);
-    fwrite(&infoHeader->importantColours, sizeof(infoHeader->importantColours),
-            1, output);
+    fwrite(&info->headerSize, sizeof(info->headerSize), 1, output);
+    fwrite(&info->bitmapWidth, sizeof(info->bitmapWidth), 1, output);
+    fwrite(&info->bitmapHeight, sizeof(info->bitmapHeight), 1, output);
+    fwrite(&info->colourPlanes, sizeof(info->colourPlanes), 1, output);
+    fwrite(&info->bitsPerPixel, sizeof(info->bitsPerPixel), 1, output);
+    fwrite(&info->compression, sizeof(info->compression), 1, output);
+    fwrite(&info->imageSize, sizeof(info->imageSize), 1, output);
+    fwrite(&info->horzResolution, sizeof(info->horzResolution), 1, output);
+    fwrite(&info->vertResolution, sizeof(info->vertResolution), 1, output);
+    fwrite(&info->coloursInPalette, sizeof(info->coloursInPalette), 1, output);
+    fwrite(&info->importantColours, sizeof(info->importantColours), 1, output);
 
     const long currentPosition = ftell(output);
 
@@ -621,12 +612,12 @@ int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
         write_padding(output, gapSize);
     }
 
-    const size_t byteOffset = calc_row_byte_offset(
-            infoHeader->bitsPerPixel, infoHeader->bitmapWidth);
+    const size_t byteOffset
+            = calc_row_byte_offset(info->bitsPerPixel, info->bitmapWidth);
 
-    for (int row = 0; row < infoHeader->bitmapHeight; row++) {
-        fwrite(image->pixels[row],
-                (size_t)infoHeader->bitmapWidth * sizeof(Pixel), 1, output);
+    for (size_t row = 0; row < (size_t)abs(info->bitmapHeight); row++) {
+        fwrite((image->pixels)[row], (size_t)info->bitmapWidth * sizeof(Pixel),
+                1, output);
 
         if (byteOffset) {
             write_padding(output, byteOffset);

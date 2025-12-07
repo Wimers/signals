@@ -50,7 +50,7 @@ extern const char newlineChar;
 #define EOS '\0'
 
 #define READ_HEADER_SAFE(dest, size, file, parameterName)                      \
-    (void)sizeof(char[(sizeof(*dest) == size) ? 1 : -1]);                      \
+    (void)sizeof(char[(sizeof(*(dest)) == (size)) ? 1 : -1]);                  \
     if (fread(dest, size, 1, file) != 1) {                                     \
         fprintf(stderr, errorReadingHeaderMessage, parameterName);             \
         return -1;                                                             \
@@ -185,8 +185,8 @@ void print_bmp_info_header(const BmpInfoHeader* bmp);
  *
  * Returns:
  */
-int read_pixel_row(
-        FILE* file, Image* image, const size_t rowNumber, const size_t byteOffset);
+int read_pixel_row(FILE* file, Image* image, const size_t rowNumber,
+        const size_t byteOffset);
 
 /* load_bmp_2d()
  * -------------
