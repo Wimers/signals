@@ -13,7 +13,7 @@ void invert_colours(Image* image)
 {
     // For each row
     for (int y = 0; y < image->height; y++) {
-        Pixel* row = image->pixels[y];
+        Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
         for (int x = 0; x < image->width; x++) {
@@ -275,23 +275,17 @@ void dim_effect(Image* image, const uint8_t dimmingFactor)
         for (int x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
-            if (pixel->blue <= dimmingFactor) {
-                pixel->blue = 0;
-            } else {
-                pixel->blue = (uint8_t)(pixel->blue - dimmingFactor);
-            }
+            pixel->blue = (pixel->blue <= dimmingFactor)
+                    ? (0)
+                    : ((uint8_t)(pixel->blue - dimmingFactor));
 
-            if (pixel->green <= dimmingFactor) {
-                pixel->green = 0;
-            } else {
-                pixel->green = (uint8_t)(pixel->green - dimmingFactor);
-            }
+            pixel->green = (pixel->green <= dimmingFactor)
+                    ? (0)
+                    : ((uint8_t)(pixel->green - dimmingFactor));
 
-            if (pixel->red <= dimmingFactor) {
-                pixel->red = 0;
-            } else {
-                pixel->red = (uint8_t)(pixel->red - dimmingFactor);
-            }
+            pixel->red = (pixel->red <= dimmingFactor)
+                    ? (0)
+                    : ((uint8_t)(pixel->red - dimmingFactor));
         }
     }
 }
@@ -301,11 +295,7 @@ uint8_t min_val(const uint8_t val, const uint8_t contrastFactor,
 {
     if (val >= max) {
         const int sumMax = val + contrastFactor;
-
-        if (sumMax <= UINT8_MAX) {
-            return (uint8_t)sumMax;
-        }
-        return (uint8_t)UINT8_MAX;
+        return (sumMax <= UINT8_MAX) ? ((uint8_t)sumMax) : ((uint8_t)UINT8_MAX);
     }
 
     if (val <= min) {
@@ -314,12 +304,7 @@ uint8_t min_val(const uint8_t val, const uint8_t contrastFactor,
         if (sumMin <= 0) {
             return (uint8_t)0;
         }
-
-        if (sumMin >= UINT8_MAX) {
-            return (uint8_t)UINT8_MAX;
-        }
-
-        return (uint8_t)sumMin;
+        return (sumMin < UINT8_MAX) ? ((uint8_t)sumMin) : ((uint8_t)UINT8_MAX);
     }
 
     return val;

@@ -8,7 +8,7 @@
 
 // Error messages
 const char* const invalidColourPlanesMessage
-        = "The number of colour planes must be 1, got \"%d\".\n";
+        = "The number of colour planes must be 1, got \"%u\".\n";
 const char* const fileOpeningErrorMessage
         = "Error opening file \"%s\" for reading.\n";
 const char* const errorReadingHeaderMessage = "Error reading \"%s\".\n";
@@ -289,8 +289,8 @@ int header_safety_checks(BMP* bmpImage)
         return -1;
     }
 
-    if (info->colourPlanes != 1) { // Must be one       // CHECK this cast
-        fprintf(stderr, invalidColourPlanesMessage, (int)(info->colourPlanes));
+    if (info->colourPlanes != 1) { // Must be one
+        fprintf(stderr, invalidColourPlanesMessage, info->colourPlanes);
         return -1;
     }
 
@@ -315,15 +315,11 @@ int header_safety_checks(BMP* bmpImage)
 
     const long diff = metaFileSize - eofPos;
 
-    if (diff > 0) {
+    if (diff != 0) {
         fprintf(stderr, fileSizeCompareMessage, eofPos, metaFileSize);
-        fprintf(stderr, fileTooSmallMessage, diff);
-        return -1;
-    }
 
-    if (diff < 0) {
-        fprintf(stderr, fileSizeCompareMessage, eofPos, metaFileSize);
-        fprintf(stderr, fileCorruptionMessage, -diff);
+        (diff > 0) ? (fprintf(stderr, fileTooSmallMessage, diff))
+                   : (fprintf(stderr, fileCorruptionMessage, -diff));
         return -1;
     }
 
@@ -331,7 +327,7 @@ int header_safety_checks(BMP* bmpImage)
     const size_t padding = calc_row_byte_offset(
             info->bitsPerPixel, (size_t)info->bitmapWidth);
     const size_t minRequiredBytes
-            = (((size_t)abs(info->bitmapWidth) * 3 + padding) // FIX magic
+            = (((size_t)abs(info->bitmapWidth) * RGB_PIXEL_BYTE_SIZE + padding)
                     * (size_t)abs(info->bitmapHeight));
 
     if ((info->imageSize != minRequiredBytes)
@@ -542,12 +538,8 @@ Image* create_image(const int32_t width, const int32_t height)
     img->width = width;
     img->height = height;
 
-    size_t normHeight;
-    if (height < 0) {
-        normHeight = (size_t)(-height);
-    } else {
-        normHeight = (size_t)height;
-    }
+    const size_t normHeight
+            = (height < 0) ? (size_t)(-height) : (size_t)(height);
 
     // Allocate memory for array of row pointers
     img->pixels = (Pixel**)malloc(normHeight * sizeof(Pixel*));
