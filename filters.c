@@ -19,9 +19,9 @@ void invert_colours(Image* image)
         for (int x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
-            pixel->red = UINT8_MAX - pixel->red;
-            pixel->green = UINT8_MAX - pixel->green;
-            pixel->blue = UINT8_MAX - pixel->blue;
+            pixel->red = (uint8_t)(UINT8_MAX - pixel->red);
+            pixel->green = (uint8_t)(UINT8_MAX - pixel->green);
+            pixel->blue = (uint8_t)(UINT8_MAX - pixel->blue);
         }
     }
 }
@@ -278,19 +278,19 @@ void dim_effect(Image* image, const uint8_t dimmingFactor)
             if (pixel->blue <= dimmingFactor) {
                 pixel->blue = 0;
             } else {
-                pixel->blue -= dimmingFactor;
+                pixel->blue = (uint8_t)(pixel->blue - dimmingFactor);
             }
 
             if (pixel->green <= dimmingFactor) {
                 pixel->green = 0;
             } else {
-                pixel->green -= dimmingFactor;
+                pixel->green = (uint8_t)(pixel->green - dimmingFactor);
             }
 
             if (pixel->red <= dimmingFactor) {
                 pixel->red = 0;
             } else {
-                pixel->red -= dimmingFactor;
+                pixel->red = (uint8_t)(pixel->red - dimmingFactor);
             }
         }
     }
