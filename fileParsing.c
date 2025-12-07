@@ -13,7 +13,7 @@ const char* const fileOpeningErrorMessage
         = "Error opening file \"%s\" for reading.\n";
 const char* const errorReadingHeaderMessage = "Error reading \"%s\".\n";
 const char* const errorReadingPixelsMessage
-        = "Error reading pixels: (row %d)\n";
+        = "Error reading pixels: (row %zu)\n";
 const char* const negativeWidthMessage = "Bitmap width cannot be negative!\n";
 const char* const bmpLoadFailMessage = "BMP could not be loaded.\n";
 const char* const headerReadFailMessage
@@ -36,7 +36,8 @@ const char* const fileTooSmallMessage
         = "File size is too small, %ld less bytes than expected.\n";
 const char* const fileCorruptionMessage
         = "File may be corrupted, or contain hidden data (%ld bytes).\n";
-const char* const pixelOffsetInvalidMessage = "Pixel data offset invalid.\n";
+const char* const pixelOffsetInvalidMessage
+        = "Pixel data offset invalid (%u).\n";
 
 // Constant program strings
 const char* const windowsBmpID = "BM";
@@ -49,8 +50,6 @@ const char newlineChar = '\n';
 
 static const char* const BmpIdentifier[]
         = {"BM", "BA", "CI", "CP", "IC", "PT", NULL};
-
-int verify_header_offsets_and_size(BMP* bmpImage);
 
 void initialise_bmp(BMP* bmpImage)
 {
@@ -119,15 +118,19 @@ int open_bmp(BMP* bmpImage, const char* const filePath)
         return EXIT_FILE_INTEGRITY;
     }
 
-    if (verify_header_offsets_and_size(bmpImage) == -1) {
-        return -1; // FIX (add relevent code)
+    return EXIT_SUCCESS;
+}
+
+int handle_bmp_loading(BMP* bmpImage)
+{
+    if (header_safety_checks(bmpImage) == -1) {
+        return EXIT_HEADER_SAFETY;
     }
 
     bmpImage->image = load_bmp_2d(
             bmpImage->file, &(bmpImage->bmpHeader), &(bmpImage->infoHeader));
 
     if (bmpImage->image == NULL) {
-        fprintf(stderr, fileOpeningErrorMessage, filePath);
         safely_close_file(bmpImage->file);
         return EXIT_FILE_INTEGRITY;
     }
@@ -187,18 +190,6 @@ int parse_bmp_header(BMP* bmpImage)
 
     // Store the value in the ID field
     READ_HEADER_SAFE(&(bmpHeader->id), sizeof(bmpHeader->id), file, "ID");
-    if (is_str_in_const_str_array(
-                (char*)&(bmpHeader->id), BmpIdentifier, sizeof(bmpHeader->id))
-            == -1) {
-        fprintf(stderr, invalidBmpTypeMessage, (char*)&(bmpHeader->id));
-        return -1;
-    }
-
-    // Check if ID corresponds to an unsupported BMP version
-    if (memcmp(&(bmpHeader->id), windowsBmpID, sizeof(bmpHeader->id))) {
-        fprintf(stderr, unsupportedBmpTypeMessage, (char*)&(bmpHeader->id));
-        return -1;
-    }
 
     // Store the size of the BMP file (needs to be verified later)
     READ_HEADER_SAFE(&(bmpHeader->bmpSize), sizeof(bmpHeader->bmpSize), file,
@@ -234,12 +225,6 @@ int parse_bmp_info_header(BMP* bmpImage)
     // Bitmap width in pixles
     READ_HEADER_SAFE(&(info->bitmapWidth), sizeof(info->bitmapWidth), file,
             "Bitmap Width");
-    if (info->bitmapWidth < 0) {
-        fputs(negativeWidthMessage, stderr);
-        fprintf(stderr, gotIntMessage,
-                (int)info->bitmapWidth); // Check cast
-        return -1;
-    }
 
     // Bitmap height in pixles
     READ_HEADER_SAFE(&(info->bitmapHeight), sizeof(info->bitmapHeight), file,
@@ -248,10 +233,6 @@ int parse_bmp_info_header(BMP* bmpImage)
     // Number of colour planes
     READ_HEADER_SAFE(&(info->colourPlanes), sizeof(info->colourPlanes), file,
             "Colour planes");
-    if (info->colourPlanes != 1) { // Must be one       // CHECK this cast
-        fprintf(stderr, invalidColourPlanesMessage, (int)(info->colourPlanes));
-        return -1;
-    }
 
     // Image colour depth (i.e. 16, 24)
     READ_HEADER_SAFE(&(info->bitsPerPixel), sizeof(info->bitsPerPixel), file,
@@ -260,14 +241,6 @@ int parse_bmp_info_header(BMP* bmpImage)
     // BI_RGB (no compression) most common
     READ_HEADER_SAFE(&(info->compression), sizeof(info->compression), file,
             "Compression");
-    if (info->compression > COMP_METH_VAL_MAX) {
-        fprintf(stderr, invalidCompressionMessage, info->compression);
-        return -1;
-    }
-    if (info->compression != BI_RGB) { // Could be updated in future
-        fprintf(stderr, unsupportedCompressionMessage, info->compression);
-        return -1;
-    }
 
     // Size of the raw bitmap data
     READ_HEADER_SAFE(
@@ -287,9 +260,45 @@ int parse_bmp_info_header(BMP* bmpImage)
     return EXIT_SUCCESS;
 }
 
-int verify_header_offsets_and_size(BMP* bmpImage)
+int header_safety_checks(BMP* bmpImage)
 {
-    const uint32_t metaFileSize = (bmpImage->bmpHeader).bmpSize;
+    const BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
+    const BmpInfoHeader* info = &(bmpImage->infoHeader);
+
+    if (is_str_in_const_str_array(
+                (char*)&(bmpHeader->id), BmpIdentifier, sizeof(bmpHeader->id))
+            == -1) {
+        fprintf(stderr, invalidBmpTypeMessage, (char*)&(bmpHeader->id));
+        return -1;
+    }
+
+    // Check if ID corresponds to an unsupported BMP version
+    if (memcmp(&(bmpHeader->id), windowsBmpID, sizeof(bmpHeader->id))) {
+        fprintf(stderr, unsupportedBmpTypeMessage, (char*)&(bmpHeader->id));
+        return -1;
+    }
+
+    if (info->bitmapWidth < 0) {
+        fputs(negativeWidthMessage, stderr);
+        fprintf(stderr, "Width is \"%d\".\n", info->bitmapWidth);
+        return -1;
+    }
+
+    if (info->colourPlanes != 1) { // Must be one       // CHECK this cast
+        fprintf(stderr, invalidColourPlanesMessage, (int)(info->colourPlanes));
+        return -1;
+    }
+
+    if (info->compression > COMP_METH_VAL_MAX) {
+        fprintf(stderr, invalidCompressionMessage, info->compression);
+        return -1;
+    }
+    if (info->compression != BI_RGB) { // Could be updated in future
+        fprintf(stderr, unsupportedCompressionMessage, info->compression);
+        return -1;
+    }
+
+    const uint32_t metaFileSize = bmpHeader->bmpSize;
 
     // Seek to EOF and store offset
     fseek(bmpImage->file, 0L, SEEK_END);
@@ -313,17 +322,22 @@ int verify_header_offsets_and_size(BMP* bmpImage)
         return -1;
     }
 
-    const BmpInfoHeader* infoHeader = &(bmpImage->infoHeader);
-    const uint32_t offset = (bmpImage->bmpHeader).offset;
+    const uint32_t offset = bmpHeader->offset;
     const size_t padding = calc_row_byte_offset(
-            infoHeader->bitsPerPixel, (size_t)infoHeader->bitmapWidth);
+            info->bitsPerPixel, (size_t)info->bitmapWidth);
     const size_t minRequiredBytes
-            = ((size_t)abs(infoHeader->bitmapWidth) + padding)
-            * (size_t)abs(infoHeader->bitmapHeight);
+            = (((size_t)abs(info->bitmapWidth) * 3 + padding) // FIX magic
+                    * (size_t)abs(info->bitmapHeight));
+
+    if ((info->imageSize != minRequiredBytes)
+            && (info->compression != BI_RGB)) {
+        fprintf(stderr, "image size error: \"%zu\".\n", minRequiredBytes);
+        return -1;
+    }
 
     if ((offset + minRequiredBytes > (size_t)eofPos)
-            || (offset <= (BMP_HEADER_SIZE + DIB_HEADER_SIZE))) {
-        fputs(pixelOffsetInvalidMessage, stderr);
+            || (offset < (BMP_HEADER_SIZE + DIB_HEADER_SIZE))) {
+        fprintf(stderr, pixelOffsetInvalidMessage, offset);
         return -1;
     }
 
@@ -365,8 +379,8 @@ void print_bmp_info_header(const BmpInfoHeader* bmp)
             bmp->importantColours);
 }
 
-int read_pixel_row(
-        FILE* file, Image* image, const int rowNumber, const size_t byteOffset)
+int read_pixel_row(FILE* file, Image* image, const size_t rowNumber,
+        const size_t byteOffset)
 {
     const size_t numPixels = (size_t)(image->width);
 
@@ -405,7 +419,7 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     fseek(file, header->offset, SEEK_SET);
 
     // For each row of pixels
-    for (int height = 0; height < bmp->bitmapHeight; height++) {
+    for (size_t height = 0; height < (size_t)abs(bmp->bitmapHeight); height++) {
         if (read_pixel_row(file, image, height, byteOffset) == -1) {
             free_image(&image);
             fputs(bmpLoadFailMessage, stderr);

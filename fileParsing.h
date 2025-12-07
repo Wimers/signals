@@ -9,6 +9,7 @@
 #define EXIT_FILE_INTEGRITY 7
 #define EXIT_FILE_PARSING_ERROR 8
 #define EXIT_OUT_OF_BOUNDS 10
+#define EXIT_HEADER_SAFETY 22
 
 // File constants
 #define BMP_HEADER_SIZE 14
@@ -185,7 +186,7 @@ void print_bmp_info_header(const BmpInfoHeader* bmp);
  * Returns:
  */
 int read_pixel_row(
-        FILE* file, Image* image, const int rowNumber, const size_t byteOffset);
+        FILE* file, Image* image, const size_t rowNumber, const size_t byteOffset);
 
 /* load_bmp_2d()
  * -------------
@@ -283,4 +284,7 @@ void write_padding(FILE* file, const size_t gapSize);
 
 int is_str_in_const_str_array(const void* restrict arg,
         const char* const strArray[], const size_t nread);
+int header_safety_checks(BMP* bmpImage);
+int handle_bmp_loading(BMP* bmpImage);
+
 #endif

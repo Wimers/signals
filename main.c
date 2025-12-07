@@ -331,6 +331,11 @@ int handle_commands(UserInput* userInput)
         dump_headers(&bmpImage);
     }
 
+    if ((status = handle_bmp_loading(&bmpImage)) != EXIT_SUCCESS) {
+        free_image_resources(&bmpImage);
+        return status;
+    }
+
     if (!userInput->flip) {
         flip_image(bmpImage.image);
     }
@@ -411,6 +416,11 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
     int status;
     if ((status = open_bmp(&combinedImage, userInput->combineFilePath))
             != EXIT_SUCCESS) {
+        free_image_resources(&combinedImage);
+        return status;
+    }
+
+    if ((status = handle_bmp_loading(bmpImage)) != EXIT_SUCCESS) {
         free_image_resources(&combinedImage);
         return status;
     }
