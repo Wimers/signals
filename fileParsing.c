@@ -38,6 +38,11 @@ const char* const fileCorruptionMessage
         = "File may be corrupted, or contain hidden data (%ld bytes).\n";
 const char* const pixelOffsetInvalidMessage
         = "Pixel data offset invalid (%u).\n";
+const char* const negVertResMessage
+        = "Warning: Vertical resolution is negative (%d).\n";
+const char* const negHorzResMessage
+        = "Warning: Horizontal resolution is negative (%d).\n";
+const char* const resettingIntValueMessage = "Resetting value to \"%d\".\n";
 
 // Constant program strings
 const char* const windowsBmpID = "BM";
@@ -341,7 +346,24 @@ int header_safety_checks(BMP* bmpImage)
         return -1;
     }
 
+    check_image_resolution(&(bmpImage->infoHeader));
+
     return EXIT_SUCCESS;
+}
+
+void check_image_resolution(BmpInfoHeader* info)
+{
+    if (info->horzResolution < 0) {
+        fprintf(stderr, negHorzResMessage, info->horzResolution);
+        fprintf(stderr, resettingIntValueMessage, 0);
+        info->horzResolution = 0;
+    }
+
+    if (info->vertResolution < 0) {
+        fprintf(stderr, negVertResMessage, info->vertResolution);
+        fprintf(stderr, resettingIntValueMessage, 0);
+        info->vertResolution = 0;
+    }
 }
 
 void print_bmp_header(const BmpHeader* bmp)

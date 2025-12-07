@@ -38,6 +38,7 @@ extern const char* const fileOpeningErrorMessage;
 extern const char* const errorReadingHeaderMessage;
 extern const char* const negativeWidthMessage;
 extern const char* const errorReadingPixelsMessage;
+extern const char* const resettingIntValueMessage;
 extern const char* const bmpLoadFailMessage;
 extern const char* const eofMismatchMessage;
 extern const char* const bitMap;
@@ -286,5 +287,6 @@ int is_str_in_const_str_array(const void* restrict arg,
         const char* const strArray[], const size_t nread);
 int header_safety_checks(BMP* bmpImage);
 int handle_bmp_loading(BMP* bmpImage);
+void check_image_resolution(BmpInfoHeader* info);
 
 #endif
