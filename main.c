@@ -31,7 +31,7 @@ const char* const nonUniquePathsMessage
 
 // Program constant strings
 const char* const usageMessage = "Usage: ./bmp <option> [--input <file>] ...\n";
-const char* const helpMessage // Need to update
+const char* const helpMessage // Need to update FIX
         = "Usage: ./bmp <option> [--input <file>] ...\n"
           "\n"
           "Help:\n"
@@ -59,7 +59,7 @@ const char* const helpMessage // Need to update
 const char* const lineSeparator
         = "--------------------------------------------------\n";
 const char* const fileType = ".bmp";
-const char* const optstring = "i:o:b:c:l:t:dphfgvua"; // Defined program flags
+const char* const optstring = "i:o:b:c:l:t:dphfgvuas"; // Defined program flags
 
 // Assorted constant chars
 const char* const readMode = "rb";
@@ -81,6 +81,7 @@ static struct option const longOptions[] = {
         {"average", no_argument, NULL, AVE},
         {"contrast", required_argument, NULL, CONTRAST},
         {"dim", required_argument, NULL, DIM},
+        {"swap", no_argument, NULL, SWAP},
         {NULL, 0, NULL, 0},
 };
 
@@ -224,6 +225,10 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
         }
 
+        case SWAP:
+            userInput->swap = 1;
+            break;
+
         default:
             return EXIT_NO_COMMAND;
         }
@@ -293,7 +298,7 @@ int verify_glitch_arg(UserInput* userInput, const char* arg)
         return -1;
     }
 
-    userInput->glitch = (int32_t)glitchOffset;
+    userInput->glitch = (size_t)glitchOffset;
     return EXIT_SUCCESS;
 }
 
@@ -357,6 +362,10 @@ int handle_commands(UserInput* userInput)
             free_image_resources(&bmpImage);
             return EXIT_OUT_OF_BOUNDS; // FIX
         }
+    }
+
+    if (userInput->swap) {
+        swap_red_blue(bmpImage.image);
     }
 
     if (userInput->contrast) {

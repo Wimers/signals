@@ -64,6 +64,7 @@ typedef enum {
     AVE = 'a',
     CONTRAST = 't',
     DIM = 'm',
+    SWAP = 's',
 } Flag;
 
 typedef struct {
@@ -82,10 +83,11 @@ typedef struct {
     uint8_t maxBrightness;
     uint8_t combine;
     char* combineFilePath;
-    int32_t glitch;
+    size_t glitch;
     uint8_t average;
     uint8_t contrast;
     uint8_t dim;
+    uint8_t swap; // FIX
 } UserInput;
 
 /* check_for_empty_args()

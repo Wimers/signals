@@ -6,17 +6,17 @@
 #include "main.h"
 
 const char* const fileDimensionMismatchMessage
-        = "File dimension mismatch: \"%dx%d\" is not \"%dx%d\"\n";
-const char* const imageBoundsMessage = "Image bounds (%dx%d)\n";
+        = "File dimension mismatch: \"%zux%zu\" is not \"%zux%zu\"\n";
+const char* const imageBoundsMessage = "Image bounds (%zux%zu)\n";
 
 void invert_colours(Image* image)
 {
     // For each row
-    for (int y = 0; y < image->height; y++) {
+    for (size_t y = 0; y < image->height; y++) {
         Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
+        for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
             pixel->red = (uint8_t)(UINT8_MAX - pixel->red);
@@ -29,11 +29,11 @@ void invert_colours(Image* image)
 void filter_red(Image* image)
 {
     // For each row
-    for (int y = 0; y < image->height; y++) {
+    for (size_t y = 0; y < image->height; y++) {
         Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
+        for (size_t x = 0; x < image->width; x++) {
 
             // Disable the red component of the pixel
             row[x].red = 0;
@@ -44,11 +44,11 @@ void filter_red(Image* image)
 void filter_green(Image* image)
 {
     // For each row
-    for (int y = 0; y < image->height; y++) {
+    for (size_t y = 0; y < image->height; y++) {
         Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
+        for (size_t x = 0; x < image->width; x++) {
 
             // Disable the red component of the pixel
             row[x].green = 0;
@@ -59,11 +59,11 @@ void filter_green(Image* image)
 void filter_blue(Image* image)
 {
     // For each row
-    for (int y = 0; y < image->height; y++) {
+    for (size_t y = 0; y < image->height; y++) {
         Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
+        for (size_t x = 0; x < image->width; x++) {
 
             // Disable the red component of the pixel
             row[x].blue = 0;
@@ -74,11 +74,11 @@ void filter_blue(Image* image)
 void gray_filter(Image* image)
 {
     // For each row
-    for (int y = 0; y < image->height; y++) {
+    for (size_t y = 0; y < image->height; y++) {
         Pixel* row = image->pixels[y];
 
         // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
+        for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
             // Calculate gray scaled value using weighted values based on how
@@ -98,11 +98,11 @@ void gray_filter(Image* image)
 void average_pixels(Image* image)
 {
     // For each row
-    for (int y = 0; y < image->height; y++) {
+    for (size_t y = 0; y < image->height; y++) {
         Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
+        for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
             // Calculates the mean value of the pixel
@@ -120,11 +120,11 @@ void average_pixels(Image* image)
 void brightness_cap_filter(Image* image, const uint8_t maxBrightness)
 {
     // For each row
-    for (int y = 0; y < image->height; y++) {
+    for (size_t y = 0; y < image->height; y++) {
         Pixel* row = image->pixels[y];
 
         // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
+        for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
             if (pixel->blue > maxBrightness) {
@@ -150,8 +150,8 @@ void brightness_cap_filter(Image* image, const uint8_t maxBrightness)
 
 int combine_images(Image* restrict primary, const Image* restrict secondary)
 {
-    const int32_t height = primary->height;
-    const int32_t width = primary->width;
+    const size_t height = primary->height;
+    const size_t width = primary->width;
 
     if ((secondary->height != height) || (secondary->width != width)) {
         fprintf(stderr, fileDimensionMismatchMessage, height, width,
@@ -160,13 +160,13 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
     }
 
     // For each row
-    for (int y = 0; y < height; y++) {
+    for (size_t y = 0; y < height; y++) {
 
         Pixel* pRow = (primary->pixels)[y];
         Pixel* sRow = (secondary->pixels)[y];
 
         // For each pixel in row
-        for (int x = 0; x < width; x++) {
+        for (size_t x = 0; x < width; x++) {
             Pixel* pPixel = &(pRow[x]);
             Pixel* sPixel = &(sRow[x]);
 
@@ -186,40 +186,35 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
     return EXIT_SUCCESS;
 }
 
-int glitch_effect(Image* image, const int32_t glitchOffset)
+int glitch_effect(Image* image, const size_t glitchOffset)
 {
     // Check if offset is out of image bounds
     if (verify_offset_bounds(image, glitchOffset) == -1) {
         return -1;
     }
 
-    Pixel* rowCopy = malloc((size_t)image->width * sizeof(Pixel));
+    Pixel* rowCopy = malloc(image->width * sizeof(Pixel));
     if (rowCopy == NULL) {
-        return -1; // Add unique exit code
+        return -1; // FIX Add unique exit code
     }
 
     // For each row
-    for (int y = 0; y < image->height; y++) {
-
+    for (size_t y = 0; y < image->height; y++) {
         Pixel* row = (image->pixels)[y];
-        memcpy(rowCopy, row, (size_t)(image->width) * sizeof(Pixel));
+        memcpy(rowCopy, row, image->width * sizeof(Pixel));
 
         // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
+        for (size_t x = 0; x < image->width; x++) {
 
-            const int accessRedRegion = x + glitchOffset;
-            if ((accessRedRegion < 0) || (accessRedRegion >= image->width)) {
-                ;
-            } else {
-                row[x].red = rowCopy[accessRedRegion].red;
-            }
+            const size_t accessRedRegion = x + glitchOffset;
+            (accessRedRegion < image->width)
+                    ? (row[x].red = rowCopy[accessRedRegion].red)
+                    : 0;
 
-            const int accessBlueRegion = x - glitchOffset;
-            if ((accessBlueRegion < 0) || (accessBlueRegion >= image->width)) {
-                ;
-            } else {
-                row[x].blue = rowCopy[accessBlueRegion].blue;
-            }
+            const size_t accessBlueRegion = x - glitchOffset;
+            (accessBlueRegion < image->width)
+                    ? (row[x].blue = rowCopy[accessBlueRegion].blue)
+                    : 0;
         }
     }
 
@@ -227,13 +222,13 @@ int glitch_effect(Image* image, const int32_t glitchOffset)
     return EXIT_SUCCESS;
 }
 
-int verify_offset_bounds(Image* image, const int32_t offset) // FIX
+int verify_offset_bounds(Image* image, const size_t offset) // FIX
 {
     if (offset >= image->width) {
         fputs(glitchUsageMessage, stderr);
         fprintf(stderr, imageBoundsMessage, image->width, image->height);
         fputs(glitchOffsetValMessage, stderr);
-        fprintf(stderr, gotIntMessage, offset);
+        fprintf(stderr, "got \"%zu\".\n", offset); // FIX
         return -1;
     }
 
@@ -250,11 +245,11 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
     }
 
     // For each row
-    for (int y = 0; y < image->height; y++) {
+    for (size_t y = 0; y < image->height; y++) {
         Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
+        for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
             // Apply contrast filter to each colour
@@ -268,11 +263,11 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
 void dim_effect(Image* image, const uint8_t dimmingFactor)
 {
     // For each row
-    for (int y = 0; y < image->height; y++) {
+    for (size_t y = 0; y < image->height; y++) {
         Pixel* row = (image->pixels)[y];
 
         // For each pixel in row
-        for (int x = 0; x < image->width; x++) {
+        for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
             pixel->blue = (pixel->blue <= dimmingFactor)
@@ -308,4 +303,22 @@ uint8_t min_val(const uint8_t val, const uint8_t contrastFactor,
     }
 
     return val;
+}
+
+void swap_red_blue(Image* image)
+{
+    // For each row
+    for (size_t y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
+
+        // For each pixel in row
+        for (size_t x = 0; x < image->width; x++) {
+            Pixel* pixel = &(row[x]);
+
+            // Swap red and blue values
+            const uint8_t temp = pixel->red;
+            pixel->red = pixel->blue;
+            pixel->blue = temp;
+        }
+    }
 }

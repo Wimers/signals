@@ -79,7 +79,7 @@ int combine_images(Image* restrict primary, const Image* restrict secondary);
  *
  * Returns:
  */
-int glitch_effect(Image* image, const int32_t glitchOffset);
+int glitch_effect(Image* image, const size_t glitchOffset);
 
 /* verify_offset_bounds()
  * ----------------------
@@ -88,7 +88,7 @@ int glitch_effect(Image* image, const int32_t glitchOffset);
  *
  * Returns:
  */
-int verify_offset_bounds(Image* image, const int32_t offset);
+int verify_offset_bounds(Image* image, const size_t offset);
 
 /* contrast_effect()
  * -----------------
@@ -118,5 +118,7 @@ void dim_effect(Image* image, const uint8_t dimmingFactor);
  */
 uint8_t min_val(uint8_t val, const uint8_t contrastFactor, const uint8_t min,
         const uint8_t max);
+
+void swap_red_blue(Image* image);
 
 #endif
