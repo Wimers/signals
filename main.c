@@ -91,6 +91,7 @@ int main(const int argc, char* argv[])
         exit(EXIT_INVALID_ARG);
     }
 
+    // Initialise
     UserInput userInput;
     (void)memset(&userInput, 0, sizeof(userInput));
 
@@ -118,7 +119,10 @@ int check_for_empty_args(const int argc, char** argv)
 
 int early_argument_checks(const int argc, char** argv)
 {
+    // Check if user did not supply any arguments
     if (!(argc >= MIN_CMD_ARGS)) {
+
+        // Print error messages
         fputs(noArgsProvidedMessage, stderr);
         fputs(usageMessage, stderr);
         fputs(userHelpPrompt, stderr);
@@ -129,6 +133,7 @@ int early_argument_checks(const int argc, char** argv)
         return -1;
     }
 
+    // Checks passed
     return EXIT_SUCCESS;
 }
 
@@ -136,7 +141,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 {
     Flag opt;
 
-    // loop over all of the options
+    // Loop over all of the options
     while ((opt = getopt_long(argc, argv, optstring, longOptions, NULL))
             != -1) {
         switch (opt) {
@@ -180,7 +185,8 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->flip = 1;
             break;
 
-        case BRIGHTNESS_CAP: {
+        case BRIGHTNESS_CAP: { // If brightness cap flag used, verify the
+                               // required argument
             long cap;
             if ((cap = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
                     == -1) {
@@ -195,7 +201,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->combineFilePath = optarg;
             break;
 
-        case GLITCH: {
+        case GLITCH: { // If glitch flag used, verify the glitch offset
             long glitchOff;
             if ((glitchOff = verify_long_arg_with_bounds(optarg, 1, INT32_MAX))
                     == -1) {
@@ -210,7 +216,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->average = 1;
             break;
 
-        case CONTRAST: {
+        case CONTRAST: { // If contrast flag set, verify the required argument
             long contrast;
             if ((contrast = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
                     == -1) {
@@ -220,7 +226,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
         }
 
-        case DIM: {
+        case DIM: { // If dim flag set, verify the required argument
             long dim;
             if ((dim = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
                     == -1) {
@@ -234,11 +240,13 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->swap = 1;
             break;
 
+            // If valid command supplied, or none supplied at all
         default:
             return EXIT_NO_COMMAND;
         }
     }
 
+    // All options parses successfully
     return EXIT_SUCCESS;
 }
 
@@ -274,6 +282,7 @@ long verify_long_arg_with_bounds(
     char* endptr;
     errno = 0;
 
+    // Convert arg string to a long.
     const long val = strtol(arg, &endptr, BASE_10);
 
     if ((arg == endptr) || (*endptr != EOS)) {
@@ -301,100 +310,113 @@ void glitch_offset_invalid_message(const char* arg)
 
 int handle_commands(UserInput* userInput)
 {
-    if (userInput->help) {
+    if (userInput->help) { // If help mode enabled
         fputs(helpMessage, stdout);
     }
 
+    // An input file is required all non-help commands
     if (!(userInput->input)) {
         return EXIT_MISSING_INPUT_FILE;
     }
+
+    // Check the file type of supplied file path
     if (check_valid_file_type(fileType, userInput->inputFilePath) == -1) {
         return EXIT_INVALID_FILE_TYPE;
     }
 
+    // Initialise struct to store BMP data
     BMP bmpImage;
     initialise_bmp(&bmpImage);
-    int status;
+    int status = EXIT_SUCCESS;
 
-    if ((status = open_bmp(&bmpImage, userInput->inputFilePath))
-            != EXIT_SUCCESS) {
-        free_image_resources(&bmpImage);
-        return status;
-    }
-
-    if (userInput->header) {
-        dump_headers(&bmpImage);
-    }
-
-    if ((status = handle_bmp_loading(&bmpImage)) != EXIT_SUCCESS) {
-        free_image_resources(&bmpImage);
-        return status;
-    }
-
-    if (!userInput->flip) {
-        flip_image(bmpImage.image);
-    }
-
-    if (userInput->filter) {
-        filter_green(bmpImage.image);
-    }
-
-    if (userInput->maxBrightness) {
-        brightness_cap_filter(bmpImage.image, userInput->maxBrightness);
-    }
-
-    if (userInput->grayscale) {
-        gray_filter(bmpImage.image);
-    }
-
-    if (userInput->glitch) {
-        if (glitch_effect(bmpImage.image, userInput->glitch) == -1) {
-            free_image_resources(&bmpImage);
-            return EXIT_OUT_OF_BOUNDS; // FIX
+    // Goes through command modes, ensuring all memory is freed, and correct
+    // exit status is recorded for return value.
+    while (1) {
+        // Attempt to open the BMP and read file headers
+        if ((status = open_bmp(&bmpImage, userInput->inputFilePath))
+                != EXIT_SUCCESS) {
+            break;
         }
-    }
 
-    if (userInput->swap) {
-        swap_red_blue(bmpImage.image);
-    }
-
-    if (userInput->contrast) {
-        contrast_effect(bmpImage.image, userInput->contrast, 100, 160);
-    }
-
-    if (userInput->dim) {
-        dim_effect(bmpImage.image, userInput->dim);
-    }
-
-    if (userInput->combine) {
-        if ((status = handle_combine(userInput, &bmpImage)) != EXIT_SUCCESS) {
-            free_image_resources(&bmpImage);
-            return status;
+        if (userInput->header) { // If header dump mode enabled
+            dump_headers(&bmpImage);
         }
-    }
 
-    if (userInput->invert) {
-        invert_colours(bmpImage.image);
-    }
-
-    if (userInput->average) {
-        average_pixels(bmpImage.image);
-    }
-
-    if (userInput->output) {
-        if (write_bmp_with_header_provided(&bmpImage, userInput->outputFilePath)
-                == -1) {
-            return EXIT_OUTPUT_FILE_ERROR;
+        // Attempt to load pixel data from file into bmpImage struct
+        if ((status = handle_bmp_loading(&bmpImage)) != EXIT_SUCCESS) {
+            break;
         }
+
+        if (!userInput->flip) { // If flip mode enabled
+            flip_image(bmpImage.image);
+        }
+
+        if (userInput->filter) {
+            filter_green(bmpImage.image);
+        }
+
+        if (userInput->maxBrightness) {
+            brightness_cap_filter(bmpImage.image, userInput->maxBrightness);
+        }
+
+        if (userInput->grayscale) { // If grayscale mode enabled
+            gray_filter(bmpImage.image);
+        }
+
+        if (userInput->glitch) { // If glitch mode enabled
+            if (glitch_effect(bmpImage.image, userInput->glitch) == -1) {
+                status = EXIT_OUT_OF_BOUNDS; // FIX
+                break;
+            }
+        }
+
+        if (userInput->swap) { // If swap mode enabled
+            swap_red_blue(bmpImage.image);
+        }
+
+        if (userInput->contrast) { // If contrast mode enabled
+            contrast_effect(
+                    bmpImage.image, userInput->contrast, 100, 160); // Fix Magic
+        }
+
+        if (userInput->dim) { // If dim mode enabled
+            dim_effect(bmpImage.image, userInput->dim);
+        }
+
+        if (userInput->combine) { // If image combination mode enabled
+            if ((status = handle_combine(userInput, &bmpImage))
+                    != EXIT_SUCCESS) {
+                break;
+            }
+        }
+
+        if (userInput->invert) { // If image inversion mode enabled
+            invert_colours(bmpImage.image);
+        }
+
+        if (userInput->average) { // If pixel averaging mode enabled
+            average_pixels(bmpImage.image);
+        }
+
+        if (userInput->output) { // If output file mode enabled
+            if (write_bmp_with_header_provided(
+                        &bmpImage, userInput->outputFilePath)
+                    == -1) {
+                status = EXIT_OUTPUT_FILE_ERROR;
+                break;
+            }
+        }
+
+        if (userInput->print) { // If terminal printing mode enabled
+            print_image_to_terminal(bmpImage.image);
+        }
+
+        break;
     }
 
-    if (userInput->print) {
-        print_image_to_terminal(bmpImage.image);
-    }
-
+    // Cleanup and exit
     free_image_resources(&bmpImage);
-
-    return EXIT_SUCCESS;
+    return status;
 }
 
 int handle_combine(const UserInput* userInput, BMP* bmpImage)
@@ -412,28 +434,31 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
     BMP combinedImage;
     initialise_bmp(&combinedImage);
 
-    int status;
-    if ((status = open_bmp(&combinedImage, userInput->combineFilePath))
-            != EXIT_SUCCESS) {
-        free_image_resources(&combinedImage);
-        return status;
+    int status = EXIT_SUCCESS;
+    while (1) {
+        if ((status = open_bmp(&combinedImage, userInput->combineFilePath))
+                != EXIT_SUCCESS) {
+            break;
+        }
+
+        if ((status = handle_bmp_loading(bmpImage)) != EXIT_SUCCESS) {
+            break;
+        }
+
+        // Flip in upside down to correct for BMP pixel storage format
+        flip_image(combinedImage.image);
+
+        if ((status = combine_images(bmpImage->image, combinedImage.image))
+                != EXIT_SUCCESS) {
+            break;
+        }
+
+        break;
     }
 
-    if ((status = handle_bmp_loading(bmpImage)) != EXIT_SUCCESS) {
-        free_image_resources(&combinedImage);
-        return status;
-    }
-
-    flip_image(combinedImage.image);
-
-    if ((status = combine_images(bmpImage->image, combinedImage.image))
-            != EXIT_SUCCESS) {
-        free_image_resources(&combinedImage);
-        return status;
-    }
-
+    // Cleanup and exit
     free_image_resources(&combinedImage);
-    return EXIT_SUCCESS;
+    return status;
 }
 
 int ends_with(const char* const target, const char* arg)
@@ -453,7 +478,10 @@ int ends_with(const char* const target, const char* arg)
 
 int check_valid_file_type(const char* const type, const char* filePath)
 {
+    // Check path ends with expected file type string
     if (!ends_with(type, filePath)) {
+
+        // Prints error message to stderr
         fputs(fileTypeMessage, stderr);
         fprintf(stderr, unexpectedArgMessage, filePath, type);
         return -1;
