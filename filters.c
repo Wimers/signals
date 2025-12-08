@@ -19,6 +19,7 @@ void invert_colours(Image* image)
         for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
+            // Invert pixel colour value
             pixel->red = (uint8_t)(UINT8_MAX - pixel->red);
             pixel->green = (uint8_t)(UINT8_MAX - pixel->green);
             pixel->blue = (uint8_t)(UINT8_MAX - pixel->blue);
@@ -153,7 +154,10 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
     const size_t height = primary->height;
     const size_t width = primary->width;
 
+    // Check images share the same physical dimensions
     if ((secondary->height != height) || (secondary->width != width)) {
+
+        // Print error message
         fprintf(stderr, fileDimensionMismatchMessage, height, width,
                 secondary->height, secondary->width);
         return EXIT_OUT_OF_BOUNDS;
@@ -162,13 +166,19 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
     // For each row
     for (size_t y = 0; y < height; y++) {
 
+        // For reduced cpu cycles
         Pixel* pRow = (primary->pixels)[y];
         Pixel* sRow = (secondary->pixels)[y];
 
         // For each pixel in row
         for (size_t x = 0; x < width; x++) {
+
+            // For reduced cpu cycles
             Pixel* pPixel = &(pRow[x]);
             Pixel* sPixel = &(sRow[x]);
+
+            // Average the each colour value from each image and update value in
+            // primary image.
 
             const uint8_t newRed = (uint8_t)((pPixel->red + sPixel->red) >> 1);
             pPixel->red = newRed;
@@ -201,11 +211,16 @@ int glitch_effect(Image* image, const size_t glitchOffset)
     // For each row
     for (size_t y = 0; y < image->height; y++) {
         Pixel* row = (image->pixels)[y];
+
+        // Copy data from the row to allow glitch pixel values to be calculated
+        // based on original image appearance.
         memcpy(rowCopy, row, image->width * sizeof(Pixel));
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
 
+            // Update pixel value if data access region is within image bounds,
+            // else set component to zero.
             const size_t accessRedRegion = x + glitchOffset;
             (accessRedRegion < image->width)
                     ? (row[x].red = rowCopy[accessRedRegion].red)
@@ -218,6 +233,7 @@ int glitch_effect(Image* image, const size_t glitchOffset)
         }
     }
 
+    // Free temp memory and exit
     free(rowCopy);
     return EXIT_SUCCESS;
 }
@@ -238,6 +254,8 @@ int verify_offset_bounds(Image* image, const size_t offset) // FIX
 void contrast_effect(Image* image, const uint8_t contrastFactor,
         const uint8_t min, const uint8_t max)
 {
+    // Create a lookup table mapping input -> output pixels based on the
+    // contrast factor, and min and max values.
     uint8_t lookupTable[UINT8_MAX + 1] = {0};
 
     for (int i = 0; i <= UINT8_MAX; i++) {
@@ -270,6 +288,8 @@ void dim_effect(Image* image, const uint8_t dimmingFactor)
         for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
+            // Reduce value of each pixel component by the dimming factor.
+            // Zero is the minimum value components can be reduced to.
             pixel->blue = (pixel->blue <= dimmingFactor)
                     ? (0)
                     : ((uint8_t)(pixel->blue - dimmingFactor));
