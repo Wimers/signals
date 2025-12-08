@@ -195,11 +195,16 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->combineFilePath = optarg;
             break;
 
-        case GLITCH:
-            if (verify_glitch_arg(userInput, optarg) == -1) {
+        case GLITCH: {
+            long glitchOff;
+            if ((glitchOff = verify_long_arg_with_bounds(optarg, 1, INT32_MAX))
+                    == -1) {
+                glitch_offset_invalid_message(optarg); // Prints error messages
                 return EXIT_INVALID_PARAMETER;
             }
+            userInput->glitch = (size_t)glitchOff;
             break;
+        }
 
         case AVE:
             userInput->average = 1;
@@ -253,6 +258,16 @@ int check_each_char_is_digit(const char* arg)
     return EXIT_SUCCESS;
 }
 
+int check_long_within_bounds(const long num, const long min, const long max)
+{
+    // Check number within specified bounds
+    if ((num < min) || (num > max)) {
+        return -1;
+    }
+
+    return EXIT_SUCCESS;
+}
+
 long verify_long_arg_with_bounds(
         const char* arg, const long min, const long max)
 {
@@ -277,31 +292,6 @@ long verify_long_arg_with_bounds(
     return val;
 }
 
-int check_long_within_bounds(const long num, const long min, const long max)
-{
-    // Check number within specified bounds
-    if ((num < min) || (num > max)) {
-        return -1;
-    }
-
-    return EXIT_SUCCESS;
-}
-
-int verify_glitch_arg(UserInput* userInput, const char* arg)
-{
-    long glitchOffset;
-
-    if ((glitchOffset = verify_long_arg_with_bounds(arg, 1, INT32_MAX)) == -1) {
-
-        // Prints error messages
-        glitch_offset_invalid_message(arg);
-        return -1;
-    }
-
-    userInput->glitch = (size_t)glitchOffset;
-    return EXIT_SUCCESS;
-}
-
 void glitch_offset_invalid_message(const char* arg)
 {
     fputs(glitchUsageMessage, stderr);
@@ -318,7 +308,7 @@ int handle_commands(UserInput* userInput)
     if (!(userInput->input)) {
         return EXIT_MISSING_INPUT_FILE;
     }
-    if (check_valid_file_type(userInput->inputFilePath) == -1) {
+    if (check_valid_file_type(fileType, userInput->inputFilePath) == -1) {
         return EXIT_INVALID_FILE_TYPE;
     }
 
@@ -409,7 +399,7 @@ int handle_commands(UserInput* userInput)
 
 int handle_combine(const UserInput* userInput, BMP* bmpImage)
 {
-    if (check_valid_file_type(userInput->combineFilePath) == -1) {
+    if (check_valid_file_type(fileType, userInput->combineFilePath) == -1) {
         return EXIT_INVALID_FILE_TYPE;
     }
 
@@ -448,21 +438,24 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
 
 int ends_with(const char* const target, const char* arg)
 {
+    // Initialise
     const size_t lenArg = strlen(arg);
     const size_t lenTarget = strlen(target);
 
+    // Check argument isn't smaller than the target
     if (lenArg < lenTarget) {
         return -1;
     }
 
+    // Returns 1 if arg does end with the target, else returns 0.
     return !(strcmp(target, &(arg[lenArg - lenTarget])));
 }
 
-int check_valid_file_type(const char* filePath)
+int check_valid_file_type(const char* const type, const char* filePath)
 {
-    if (!ends_with(fileType, filePath)) {
+    if (!ends_with(type, filePath)) {
         fputs(fileTypeMessage, stderr);
-        fprintf(stderr, unexpectedArgMessage, filePath, fileType);
+        fprintf(stderr, unexpectedArgMessage, filePath, type);
         return -1;
     }
 
