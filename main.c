@@ -28,6 +28,8 @@ const char* const glitchUsageMessage
           "    - Apply horizontal glitch effect\n";
 const char* const nonUniquePathsMessage
         = "Input and combine file paths must be unique!\n";
+const char* const invalidFilterColourMessage
+        = "Filter colour/s invalid \"%s\", must be RGB characters.\n";
 
 // Program constant strings
 const char* const usageMessage = "Usage: ./bmp <option> [--input <file>] ...\n";
@@ -71,7 +73,7 @@ static struct option const longOptions[] = {
         {"dump", no_argument, NULL, DUMP_HEADER},
         {"print", no_argument, NULL, PRINT_IMAGE},
         {"help", no_argument, NULL, HELP},
-        {"filter", no_argument, NULL, FILTERS},
+        {"filter", required_argument, NULL, FILTERS},
         {"grayscale", no_argument, NULL, GRAY_SCALE},
         {"invert", no_argument, NULL, INVERT},
         {"flip", no_argument, NULL, FLIP},
@@ -169,8 +171,10 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
 
         case FILTERS:
-            userInput->filter = 1;
-            userInput->filters = optarg;
+            userInput->filters = handle_colour_filter_arg_parsing(optarg);
+            if (userInput->filters == 0) {
+                return EXIT_INVALID_PARAMETER;
+            }
             break;
 
         case GRAY_SCALE:
@@ -351,8 +355,14 @@ int handle_commands(UserInput* userInput)
             flip_image(bmpImage.image);
         }
 
-        if (userInput->filter) {
-            filter_green(bmpImage.image);
+        if (userInput->filters) {
+            ColourFilter filter
+                    = (ColourFilter)handle_colour_filters(userInput->filters);
+            if (filter == NULL) { // FIX check this is even possible
+                break; // FIX update status add add error message
+            }
+
+            filter(bmpImage.image);
         }
 
         if (userInput->maxBrightness) {
@@ -417,6 +427,55 @@ int handle_commands(UserInput* userInput)
     // Cleanup and exit
     free_image_resources(&bmpImage);
     return status;
+}
+
+Function handle_colour_filters(const uint8_t filters)
+{
+    const uint8_t index = filters & 0x07;
+
+    const Function filterMap[8] = {
+            NULL,
+            (Function)&filter_red,
+            (Function)&filter_green,
+            (Function)&filter_red_green,
+            (Function)&filter_blue,
+            (Function)&filter_red_blue,
+            (Function)&filter_green_blue,
+            (Function)&filter_all,
+    };
+
+    return filterMap[index];
+}
+
+uint8_t handle_colour_filter_arg_parsing(const char* arg)
+{
+    const char allowed[] = {'r', 'R', 'g', 'G', 'b', 'B', EOS};
+    uint8_t colourBitVect = 0;
+
+    for (size_t i = 0; i < strlen(arg); i++) {
+
+        size_t j = 0;
+        while (1) {
+
+            // Character did not match any valid char.
+            if (allowed[j] == EOS) {
+                fprintf(stderr, invalidFilterColourMessage, arg);
+                return 0;
+            }
+
+            if ((char)(arg[i]) == allowed[j]) {
+
+                // Sets bit in bit vector to indicate presence of colour to
+                // filter. Both 'r' and 'R' are represented by the same bit,
+                // hence the division by two.
+                colourBitVect |= (1 << (j / 2));
+                break;
+            }
+            j++;
+        }
+    }
+
+    return colourBitVect;
 }
 
 int handle_combine(const UserInput* userInput, BMP* bmpImage)

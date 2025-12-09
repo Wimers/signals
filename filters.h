@@ -52,6 +52,11 @@ void filter_green(Image* image);
  */
 void filter_blue(Image* image);
 
+void filter_red_green(Image* image);
+void filter_red_blue(Image* image);
+void filter_green_blue(Image* image);
+void filter_all(Image* image);
+
 /* gray_filter()
  * -------------
  * Applies a gray scale filter to the image. Modifies each pixel based on

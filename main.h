@@ -47,6 +47,9 @@ extern const char* const readMode;
 extern const char* const writeMode;
 #define EOS '\0'
 
+typedef void (*ColourFilter)(Image* image);
+typedef void (*Function)(void);
+
 typedef enum {
     INVALID = -1,
     HELP = 'h',
@@ -72,12 +75,11 @@ typedef struct {
     char* inputFilePath;
     uint8_t output;
     char* outputFilePath;
-    char* filters;
     uint8_t help;
     uint8_t header;
     uint8_t print;
     uint8_t invert;
-    uint8_t filter;
+    uint8_t filters;
     uint8_t grayscale;
     uint8_t flip;
     uint8_t maxBrightness;
@@ -230,5 +232,8 @@ int ends_with(const char* const target, const char* arg);
  * Returns: EXIT_SUCCESS if file type is valid, else -1.
  */
 int check_valid_file_type(const char* const type, const char* filePath);
+
+uint8_t handle_colour_filter_arg_parsing(const char* arg);
+Function handle_colour_filters(const uint8_t filters);
 
 #endif

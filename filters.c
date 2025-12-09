@@ -72,6 +72,69 @@ void filter_blue(Image* image)
     }
 }
 
+void filter_red_green(Image* image)
+{
+    // For each row
+    for (size_t y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
+
+        // For each pixel in row
+        for (size_t x = 0; x < image->width; x++) {
+
+            // Disable the red and green components of the pixel
+            row[x].red = 0;
+            row[x].green = 0;
+        }
+    }
+}
+
+void filter_red_blue(Image* image)
+{
+    // For each row
+    for (size_t y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
+
+        // For each pixel in row
+        for (size_t x = 0; x < image->width; x++) {
+
+            // Disable the red and blue components of the pixel
+            row[x].red = 0;
+            row[x].blue = 0;
+        }
+    }
+}
+
+void filter_green_blue(Image* image)
+{
+    // For each row
+    for (size_t y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
+
+        // For each pixel in row
+        for (size_t x = 0; x < image->width; x++) {
+
+            // Disable the green and blue components of the pixel
+            row[x].blue = 0;
+            row[x].green = 0;
+        }
+    }
+}
+
+void filter_all(Image* image)
+{
+    // For each row
+    for (size_t y = 0; y < image->height; y++) {
+        Pixel* row = (image->pixels)[y];
+
+        // For each pixel in row
+        for (size_t x = 0; x < image->width; x++) {
+
+            // Set the pixel to pure black
+            memset(&(row[x]), 0, sizeof(Pixel));
+        }
+    }
+}
+
 void gray_filter(Image* image)
 {
     // For each row
