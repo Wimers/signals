@@ -427,7 +427,6 @@ Image* rotate_image(Image* image, const long nRotations)
 {
     // If rotation results in original image
     if ((nRotations % 4) == 0) {
-        flip_image(image);
         return image;
     }
 
@@ -448,10 +447,12 @@ Image* rotate_image(Image* image, const long nRotations)
             }
         }
 
+        flip_image(rotated);
         return rotated;
     }
 
     if ((nRotations % 4) == 2) {
+        flip_image(image);
         reverse_image(image);
         return image;
     }
@@ -474,7 +475,6 @@ Image* rotate_image(Image* image, const long nRotations)
         }
 
         reverse_image(rotated);
-        flip_image(rotated);
         return rotated;
     }
 

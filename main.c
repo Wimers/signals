@@ -370,7 +370,7 @@ int handle_commands(UserInput* userInput)
             break;
         }
 
-        if (!userInput->flip) { // If flip mode enabled
+        if (userInput->flip) { // If flip mode enabled
             flip_image(bmpImage.image);
         }
 
