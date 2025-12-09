@@ -61,7 +61,8 @@ const char* const helpMessage // Need to update FIX
 const char* const lineSeparator
         = "--------------------------------------------------\n";
 const char* const fileType = ".bmp";
-const char* const optstring = "i:o:b:c:l:t:dphfgvuas"; // Defined program flags
+const char* const optstring
+        = "i:o:b:c:l:t:r:dphfgvuas"; // Defined program flags
 
 // Assorted constant chars
 const char* const readMode = "rb";
@@ -84,6 +85,7 @@ static struct option const longOptions[] = {
         {"contrast", required_argument, NULL, CONTRAST},
         {"dim", required_argument, NULL, DIM},
         {"swap", no_argument, NULL, SWAP},
+        {"rotate", required_argument, NULL, ROTATE},
         {NULL, 0, NULL, 0},
 };
 
@@ -243,6 +245,23 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case SWAP:
             userInput->swap = 1;
             break;
+
+        case ROTATE: {
+            char* endptr;
+            errno = 0;
+
+            // Convert optarg string to a long.
+            userInput->rotations = strtol(optarg, &endptr, BASE_10);
+
+            if ((optarg == endptr) || (*endptr != EOS)) {
+                return EXIT_INVALID_PARAMETER;
+            }
+
+            if (errno == ERANGE) {
+                return EXIT_INVALID_PARAMETER;
+            }
+            break;
+        }
 
             // If valid command supplied, or none supplied at all
         default:
@@ -406,6 +425,20 @@ int handle_commands(UserInput* userInput)
 
         if (userInput->average) { // If pixel averaging mode enabled
             average_pixels(bmpImage.image);
+        }
+
+        if (userInput->rotations) {
+            bmpImage.image = rotate_image(bmpImage.image, userInput->rotations);
+            if (bmpImage.image == NULL) {
+                break; // FIX add specific error code
+            }
+
+            if (userInput->rotations % 2) {
+                const int32_t temp = bmpImage.infoHeader.bitmapWidth;
+                bmpImage.infoHeader.bitmapWidth
+                        = bmpImage.infoHeader.bitmapHeight;
+                bmpImage.infoHeader.bitmapHeight = temp;
+            }
         }
 
         if (userInput->output) { // If output file mode enabled

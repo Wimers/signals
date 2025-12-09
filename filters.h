@@ -172,4 +172,7 @@ uint8_t contrast_effect_val(uint8_t val, const uint8_t contrastFactor,
  */
 void swap_red_blue(Image* image);
 
+Image* rotate_image(Image* image, const long nRotations);
+void reverse_image(Image* image);
+
 #endif

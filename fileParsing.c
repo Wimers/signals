@@ -303,7 +303,6 @@ int header_safety_checks(BMP* bmpImage)
         return -1;
     }
 
-    const uint32_t metaFileSize = bmpHeader->bmpSize;
 
     // Seek to EOF and store offset
     fseek(bmpImage->file, 0L, SEEK_END);
@@ -312,6 +311,9 @@ int header_safety_checks(BMP* bmpImage)
     if (eofPos < 0) {
         perror("ftell failed");
     }
+
+    /*
+    const uint32_t metaFileSize = bmpHeader->bmpSize;
 
     const long diff = metaFileSize - eofPos;
 
@@ -322,6 +324,7 @@ int header_safety_checks(BMP* bmpImage)
                    : (fprintf(stderr, fileCorruptionMessage, -diff));
         return -1;
     }
+    */
 
     const uint32_t offset = bmpHeader->offset;
     const size_t padding = calc_row_byte_offset(
