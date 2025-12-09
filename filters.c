@@ -82,8 +82,7 @@ void gray_filter(Image* image)
         for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
-            // Calculate gray scaled value using weighted values based on how
-            // sensitive the human eye is to different wavelengths of light.
+            // Calculate gray scaled value
             const uint32_t temp = (uint32_t)(GS_RED_MAP * pixel->red
                     + GS_GREEN_MAP * pixel->green + GS_BLUE_MAP * pixel->blue);
 
@@ -205,6 +204,7 @@ int glitch_effect(Image* image, const size_t glitchOffset)
 
     Pixel* rowCopy = malloc(image->width * sizeof(Pixel));
     if (rowCopy == NULL) {
+        // Malloc failed
         return -1; // FIX Add unique exit code
     }
 
@@ -259,7 +259,8 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
     uint8_t lookupTable[UINT8_MAX + 1] = {0};
 
     for (int i = 0; i <= UINT8_MAX; i++) {
-        lookupTable[i] = min_val((uint8_t)i, contrastFactor, min, max);
+        lookupTable[i]
+                = contrast_effect_val((uint8_t)i, contrastFactor, min, max);
     }
 
     // For each row
@@ -305,7 +306,7 @@ void dim_effect(Image* image, const uint8_t dimmingFactor)
     }
 }
 
-uint8_t min_val(const uint8_t val, const uint8_t contrastFactor,
+uint8_t contrast_effect_val(const uint8_t val, const uint8_t contrastFactor,
         const uint8_t min, const uint8_t max)
 {
     if (val >= max) {

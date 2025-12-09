@@ -20,105 +20,151 @@
 extern const char* const fileDimensionMismatchMessage;
 extern const char* const imageBoundsMessage;
 
-/* invert_colour()
- * ---------------
- * image:
+/* invert_colours()
+ * ----------------
+ * Inverts the colour of each pixel.
+ *
+ * image: Pointer to struct containing the pixel data.
  */
 void invert_colours(Image* image);
 
 /* filter_red()
  * ------------
- * image:
+ * Sets the red component of each pixel to zero.
+ *
+ * image: Pointer to struct containing the pixel data.
  */
 void filter_red(Image* image);
 
 /* filter_green()
  * --------------
- * image:
+ * Sets the green component of each pixel to zero.
+ *
+ * image: Pointer to struct containing the pixel data.
  */
 void filter_green(Image* image);
 
 /* filter_blue()
  * -------------
- * image:
+ * Sets the green component of each pixel to zero.
+ *
+ * image: Pointer to struct containing the pixel data.
  */
 void filter_blue(Image* image);
 
 /* gray_filter()
  * -------------
- * image:
+ * Applies a gray scale filter to the image. Modifies each pixel based on
+ * weighted values for each pixel component based on how sensitive the human eye
+ * is to different wavelengths of light.
+ *
+ * image: Pointer to struct containing the pixel data.
  */
 void gray_filter(Image* image);
 
 /* average_pixels()
  * ----------------
- * image:
+ * Applies a pixel averaging filter to an image, which sets each pixel to the
+ * average intensity of the pixels components.
+ *
+ * image: Pointer to struct containing the pixel data.
  */
 void average_pixels(Image* image);
 
 /* brightness_cap_filter()
  * -----------------------
- * image:
- * maxBrightness:
+ * Applies a brightness cap filter, which sets the component of a pixel to zero,
+ * if its intensity is greater than the max brightness threshold.
+ *
+ * image: Pointer to struct containing the pixel data.
+ * maxBrightness: Maximum brightness threshold.
  */
 void brightness_cap_filter(Image* image, const uint8_t maxBrightness);
 
 /* combine_images()
  * ----------------
- * primary:
- * secondary:
+ * Combines two images together, updating the primary image with the pixels
+ * averaged from primary and secondary images.
  *
- * Returns:
+ * primary: Destination image to store combination.
+ * secondary: Image combined with primary.
+ *
+ * Returns: EXIT_SUCCESS on success.
+ *
+ * Errors: Returns EXIT_OUT_OF_BOUNDS, if the images dimensions do not match.
  */
 int combine_images(Image* restrict primary, const Image* restrict secondary);
 
 /* glitch_effect()
  * ---------------
- * image:
- * glitchOffset:
+ * Applies a "glitch" effect to an image, offsetting both the blue component and
+ * red component of each pixel left/right respectively by a given pixel offset.
  *
- * Returns:
+ * Offset values must be smaller than the image width.
+ *
+ * image: Pointer to struct containing the pixel data.
+ * glitchOffset: Pixel offset of glitch effect.
+ *
+ * Returns: EXIT_SUCCESS on successful image filtering.
+ *
+ * Errors: Returns -1 upon malloc failure, and if offset is out of bounds.
  */
 int glitch_effect(Image* image, const size_t glitchOffset);
 
 /* verify_offset_bounds()
  * ----------------------
- * image:
- * offset:
+ * Checks if the offset is less than the images width. Prints error messages to
+ * stderr if condition not met.
  *
- * Returns:
+ * image: Pointer to struct containing the pixel data.
+ * offset: Offset of glitch.
+ *
+ * Returns: EXIT_SUCCESS if within bounds, else returns -1.
  */
 int verify_offset_bounds(Image* image, const size_t offset);
 
 /* contrast_effect()
  * -----------------
- * image:
- * contrastFactor:
- * min:
- * max:
+ * Applies a rough contrasting filter to an image.
+ *
+ * image: Pointer to struct containing the pixel data.
+ * contrastFactor: Level of contrasting.
+ * min: Lower bound of colour intensity to be uneffected.
+ * max: Upper bound of colour intensity to be uneffected.
  */
 void contrast_effect(Image* image, const uint8_t contrastFactor,
         const uint8_t min, const uint8_t max);
 
 /* dim_effect()
  * ------------
- * image:
- * dimmingFactor:
+ * Reduces the indensity of every pixel by a constant dimming factor.
+ * Pixels are reduced to a minimum of zero to prevent integer underflow.
+ *
+ * image: Pointer to struct containing the pixel data.
+ * dimmingFactor: Factor each pixel component is reduced by.
  */
 void dim_effect(Image* image, const uint8_t dimmingFactor);
 
-/* min_val()
- * ---------
- * val:
- * contrastFactor:
- * min:
- * max:
+/* contrast_effect_val()
+ * ---------------------
+ * Calculates the resulting pixel intensity provided contrast effect parameters.
  *
- * Returns:
+ * val: Current intensity of a pixel component.
+ * contrastFactor: Level of contrasting.
+ * min: Lower bound of colour intensity to be uneffected.
+ * max: Upper bound of colour intensity to be uneffected.
+ *
+ * Returns: Colour intensity for a pixel component.
  */
-uint8_t min_val(uint8_t val, const uint8_t contrastFactor, const uint8_t min,
-        const uint8_t max);
+uint8_t contrast_effect_val(uint8_t val, const uint8_t contrastFactor,
+        const uint8_t min, const uint8_t max);
 
+/* swap_red_blue()
+ * ---------------
+ * Swaps the red and blue components of each pixel for a provided image.
+ *
+ * image: Pointer to struct containing the pixel data.
+ */
 void swap_red_blue(Image* image);
 
 #endif
