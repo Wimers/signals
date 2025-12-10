@@ -20,6 +20,21 @@
 extern const char* const fileDimensionMismatchMessage;
 extern const char* const imageBoundsMessage;
 
+static inline uint8_t calc_pixel_average(Pixel* pixel)
+{
+    return (uint8_t)(((pixel->red + pixel->green + pixel->blue) * DIV_3_CONST)
+            >> DIV_3_SHIFT);
+}
+
+static inline uint8_t calc_pixel_grayscale(Pixel* pixel)
+{
+    // Calculate gray scaled value
+    const uint32_t temp = (uint32_t)(GS_RED_MAP * pixel->red
+            + GS_GREEN_MAP * pixel->green + GS_BLUE_MAP * pixel->blue);
+
+    return (uint8_t)(temp >> GS_PIXEL_SCALING_FACTOR);
+}
+
 /* invert_colours()
  * ----------------
  * Inverts the colour of each pixel.

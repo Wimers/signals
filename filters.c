@@ -146,11 +146,7 @@ void gray_filter(Image* image)
             Pixel* pixel = &(row[x]);
 
             // Calculate gray scaled value
-            const uint32_t temp = (uint32_t)(GS_RED_MAP * pixel->red
-                    + GS_GREEN_MAP * pixel->green + GS_BLUE_MAP * pixel->blue);
-
-            const uint8_t grayScaled
-                    = (uint8_t)(temp >> GS_PIXEL_SCALING_FACTOR);
+            const uint8_t grayScaled = calc_pixel_grayscale(pixel);
 
             // Assign value to each pixel
             pixel->red = pixel->green = pixel->blue = grayScaled;
@@ -169,10 +165,8 @@ void average_pixels(Image* image)
             Pixel* pixel = &(row[x]);
 
             // Calculates the mean value of the pixel
-            uint8_t brightness
-                    = (uint8_t)(((pixel->red + pixel->green + pixel->blue)
-                                        * DIV_3_CONST)
-                            >> DIV_3_SHIFT);
+            const uint8_t brightness = calc_pixel_average(pixel);
+
             pixel->blue = brightness;
             pixel->green = brightness;
             pixel->red = brightness;
