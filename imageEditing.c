@@ -72,35 +72,3 @@ Image* rotate_image_anticlockwise(Image* image)
     reverse_image(rotated);
     return rotated;
 }
-
-Image* handle_image_rotation(Image* image, const long nRotations)
-{
-    long rotMode = (nRotations % 4);
-    rotMode = (rotMode < 0) ? (rotMode + 4) : rotMode;
-
-    switch (rotMode) {
-    case 0:
-        // If rotation results in original image
-        return image;
-        break;
-
-    case 1:
-        return rotate_image_clockwise(image);
-        break;
-
-    case 2:
-        flip_image(image);
-        reverse_image(image);
-        return image;
-        break;
-
-    case 3:
-        return rotate_image_anticlockwise(image);
-        break;
-
-    default:
-        break;
-    }
-
-    return NULL;
-}

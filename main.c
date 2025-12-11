@@ -449,8 +449,7 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->rotations) {
-            bmpImage.image = handle_image_rotation(
-                    bmpImage.image, userInput->rotations);
+            handle_image_rotation(&bmpImage, userInput->rotations);
             if (bmpImage.image == NULL) {
                 break; // FIX add specific error code
             }
@@ -606,4 +605,39 @@ int check_valid_file_type(const char* const type, const char* filePath)
     }
 
     return EXIT_SUCCESS;
+}
+
+void handle_image_rotation(BMP* bmpImage, const long nRotations)
+{
+    long rotMode = (nRotations % 4);
+    rotMode = (rotMode < 0) ? (rotMode + 4) : rotMode;
+
+    Image* output = NULL;
+
+    switch (rotMode) {
+    case 0:
+        break;
+
+    case 1:
+        output = rotate_image_clockwise(bmpImage->image);
+        break;
+
+    case 2:
+        flip_image(bmpImage->image);
+        reverse_image(bmpImage->image);
+        break;
+
+    case 3:
+        output = rotate_image_anticlockwise(bmpImage->image);
+        break;
+
+    default:
+        break;
+    }
+
+    // Free memory in cases where new image is created
+    if (output != NULL) {
+        free_image(&(bmpImage->image));
+        bmpImage->image = output;
+    }
 }

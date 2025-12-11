@@ -239,5 +239,6 @@ int check_valid_file_type(const char* const type, const char* filePath);
 
 uint8_t handle_colour_filter_arg_parsing(const char* arg);
 Function handle_colour_filters(const uint8_t filters);
+void handle_image_rotation(BMP* bmpImage, const long nRotations);
 
 #endif

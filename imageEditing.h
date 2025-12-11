@@ -13,8 +13,10 @@
  */
 void flip_image(Image* image);
 
-Image* rotate_image(Image* image, const long nRotations);
 void reverse_image(Image* image);
-Image* handle_image_rotation(Image* image, const long nRotations);
+
+Image* rotate_image(Image* image, const long nRotations);
+Image* rotate_image_clockwise(Image* image);
+Image* rotate_image_anticlockwise(Image* image);
 
 #endif
