@@ -68,7 +68,8 @@ typedef enum {
     CONTRAST = 't',
     DIM = 'm',
     SWAP = 's',
-    ROTATE = 'r',
+    ROTATE = 'w',
+    REVERSE = 'r',
 } Flag;
 
 typedef struct {
@@ -92,6 +93,7 @@ typedef struct {
     uint8_t dim;
     uint8_t swap; // FIX
     long rotations;
+    uint8_t reverse;
 } UserInput;
 
 /* check_for_empty_args()

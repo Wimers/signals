@@ -48,11 +48,26 @@ const char* const helpMessage // Need to update FIX
           "  -p, --print                 - Render image to terminal (ANSI)\n"
           "\n"
           "Image Filters:\n"
-          "  -g, --grayscale             - Convert image to grayscale\n"
+          "  -g, --grayscale             - Convert image to grayscale (Luma)\n"
+          "  -a, --average               - Convert to grayscale (Average "
+          "Intensity)\n"
           "  -v, --invert                - Invert image colours\n"
-          "  -f, --filter                - Apply red channel isolation\n"
+          "  -f, --filter <channels>     - Isolate specific channels (e.g. "
+          "'rb')\n"
+          "  -s, --swap                  - Swap Red and Blue color channels\n"
           "  -u, --flip                  - Flip image vertically\n"
-          "  -b, --brightness-cap <val>  - Cap pixel brightness (0-255)\n"
+          "\n"
+          "Geometry & Orientation:\n"
+          "  -r, --reverse               - Reverse image horizontally\n"
+          "  -u, --flip                  - Flip image vertically\n"
+          "  -w, --rotate <90s>          - Rotate image 90 degrees clockwise N "
+          "times\n"
+          "\n"
+          "Brightness & Contrast:\n"
+          "  -b, --brightness-cap <val>  - Cap maximum pixel brightness "
+          "(0-255)\n"
+          "  -m, --dim <val>             - Reduce brightness by value (0-255)\n"
+          "  -t, --contrast <val>        - Adjust contrast factor (0-255)\n"
           "\n"
           "Advanced Effects:\n"
           "  -l, --glitch <offset>       - Apply horizontal glitch effect\n"
@@ -63,7 +78,7 @@ const char* const lineSeparator
         = "--------------------------------------------------\n";
 const char* const fileType = ".bmp";
 const char* const optstring
-        = "i:o:b:c:l:t:r:dphfgvuas"; // Defined program flags
+        = "i:o:b:l:t:m:c:w:rdphfavgus"; // Defined program flags
 
 // Assorted constant chars
 const char* const readMode = "rb";
@@ -87,6 +102,7 @@ static struct option const longOptions[] = {
         {"dim", required_argument, NULL, DIM},
         {"swap", no_argument, NULL, SWAP},
         {"rotate", required_argument, NULL, ROTATE},
+        {"reverse", no_argument, NULL, REVERSE},
         {NULL, 0, NULL, 0},
 };
 
@@ -264,6 +280,10 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
         }
 
+        case REVERSE:
+            userInput->reverse = 1;
+            break;
+
             // If valid command supplied, or none supplied at all
         default:
             return EXIT_NO_COMMAND;
@@ -429,7 +449,8 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->rotations) {
-            bmpImage.image = handle_image_rotation(bmpImage.image, userInput->rotations);
+            bmpImage.image = handle_image_rotation(
+                    bmpImage.image, userInput->rotations);
             if (bmpImage.image == NULL) {
                 break; // FIX add specific error code
             }
@@ -440,6 +461,10 @@ int handle_commands(UserInput* userInput)
                         = bmpImage.infoHeader.bitmapHeight;
                 bmpImage.infoHeader.bitmapHeight = temp;
             }
+        }
+
+        if (userInput->reverse) {
+            reverse_image(bmpImage.image);
         }
 
         if (userInput->output) { // If output file mode enabled
