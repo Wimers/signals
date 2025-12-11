@@ -1,6 +1,7 @@
 // Included Libraries
 #include "fileParsing.h"
 #include "filters.h"
+#include "imageEditing.h"
 #include "main.h"
 #include <ctype.h>
 #include <stdint.h>
@@ -428,7 +429,7 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->rotations) {
-            bmpImage.image = rotate_image(bmpImage.image, userInput->rotations);
+            bmpImage.image = handle_image_rotation(bmpImage.image, userInput->rotations);
             if (bmpImage.image == NULL) {
                 break; // FIX add specific error code
             }

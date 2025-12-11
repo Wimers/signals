@@ -15,6 +15,8 @@ const char* const errorReadingHeaderMessage = "Error reading \"%s\".\n";
 const char* const errorReadingPixelsMessage
         = "Error reading pixels: (row %zu)\n";
 const char* const negativeWidthMessage = "Bitmap width cannot be negative!\n";
+const char* const invalidDimensionMessage
+        = "Invalid image dimensions \"%dx%d\".\n";
 const char* const bmpLoadFailMessage = "BMP could not be loaded.\n";
 const char* const headerReadFailMessage
         = "The header from \"%s\" could not be read.\n";
@@ -283,9 +285,15 @@ int header_safety_checks(BMP* bmpImage)
         return -1;
     }
 
-    if (info->bitmapWidth < 0) {
-        fputs(negativeWidthMessage, stderr);
-        fprintf(stderr, "Width is \"%d\".\n", info->bitmapWidth);
+    if (info->bitmapWidth <= 0) {
+        fprintf(stderr, invalidDimensionMessage, info->bitmapWidth,
+                info->bitmapHeight);
+        return -1;
+    }
+
+    if (info->bitmapHeight == 0) {
+        fprintf(stderr, invalidDimensionMessage, info->bitmapWidth,
+                info->bitmapHeight);
         return -1;
     }
 
@@ -303,7 +311,6 @@ int header_safety_checks(BMP* bmpImage)
         return -1;
     }
 
-
     // Seek to EOF and store offset
     fseek(bmpImage->file, 0L, SEEK_END);
     const long eofPos = ftell(bmpImage->file);
@@ -312,7 +319,6 @@ int header_safety_checks(BMP* bmpImage)
         perror("ftell failed");
     }
 
-    /*
     const uint32_t metaFileSize = bmpHeader->bmpSize;
 
     const long diff = metaFileSize - eofPos;
@@ -324,7 +330,6 @@ int header_safety_checks(BMP* bmpImage)
                    : (fprintf(stderr, fileCorruptionMessage, -diff));
         return -1;
     }
-    */
 
     const uint32_t offset = bmpHeader->offset;
     const size_t padding = calc_row_byte_offset(
@@ -500,23 +505,6 @@ void print_image_to_terminal(const Image* image)
     }
 }
 
-int read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file)
-{
-    // For each colour (RGB)
-    for (int colour = 1; colour <= RGB_PIXEL_BYTE_SIZE; colour++) {
-
-        // Reads intensity of colour and stores into pixel
-        if (fread(&((*pixel)[RGB_PIXEL_BYTE_SIZE - colour]), sizeof(uint8_t), 1,
-                    file)
-                != 1) {
-            fputs(bmpLoadFailMessage, stderr);
-            return -1;
-        }
-    }
-
-    return EXIT_SUCCESS;
-}
-
 size_t calc_row_byte_offset(
         const uint16_t bitsPerPixel, const int32_t bitmapWidth)
 {
@@ -564,19 +552,6 @@ Image* create_image(const int32_t width, const int32_t height)
     }
 
     return img;
-}
-
-void flip_image(Image* image)
-{
-    const size_t last = image->height >> 1;
-    for (size_t y = 0; y < last; y++) {
-
-        Pixel* tempRow = (image->pixels)[y];
-        const size_t bottomRow = image->height - y - 1;
-
-        (image->pixels)[y] = (image->pixels)[bottomRow];
-        (image->pixels)[bottomRow] = tempRow;
-    }
 }
 
 void write_padding(FILE* file, const size_t gapSize)

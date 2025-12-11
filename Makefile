@@ -24,6 +24,9 @@ performance:
 clean:
 	rm -f bmp *.o
 
+imageEditing.o: imageEditing.c
+	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
+
 filters.o: filters.c
 	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
 
@@ -33,5 +36,5 @@ fileParsing.o: fileParsing.c
 main.o: main.c
 	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
 
-bmp: main.o fileParsing.o filters.o
+bmp: main.o fileParsing.o filters.o imageEditing.o
 	$(CC) $(CFLAGS) $(WARNINGS) $^ -o $@

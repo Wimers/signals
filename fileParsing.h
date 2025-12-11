@@ -211,18 +211,6 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
  */
 void print_image_to_terminal(const Image* image);
 
-/* read_pixel()
- * ------------
- * Reads a single pixels RGB data from the provided file, and stores it in the
- * pixel array.
- *
- * pixel: Pointer to a buffer capable of holding RGB_PIXEL_BYTE_SIZE bytes.
- * file: File stream to the open file.
- *
- * Returns:
- */
-int read_pixel(uint8_t (*pixel)[RGB_PIXEL_BYTE_SIZE], FILE* file);
-
 /* calc_row_byte_offset()
  * ----------------------
  * Calculates the number of padding bytes required for BMP allignment.
@@ -246,18 +234,6 @@ size_t calc_row_byte_offset(
  * Returns: Pointer to the newly allocated Image structure.
  */
 Image* create_image(const int32_t width, const int32_t height);
-
-/* flip_image()
- * ------------
- * Flips the input image upside down by replacing top pixel rows moving down,
- * with their corresponding pixel row from the bottom moving up. This requires
- * duplicating all data from the input image, creating a new image with the
- * rows flipped, freeing the old image, and returning a pointer to the new
- * image.
- *
- * image: Pointer to the image struct to be flipped.
- */
-void flip_image(Image* image);
 
 /* write_bmp_with_header_provided()
  * --------------------------------
