@@ -1,40 +1,31 @@
 CC = gcc
 
-WARNINGS = -Wall -Wextra -Werror -Wshadow -Wconversion -Wformat=2 -Wnull-dereference -Wunreachable-code -Wcast-align -pedantic -pedantic-errors
+WARNINGS = -Wall -Wextra -Werror -Wshadow \
+	   -Wconversion -Wformat=2 -Wnull-dereference \
+	   -Wunreachable-code -Wcast-align -pedantic \
+	   -pedantic-errors
+
 CFLAGS = -std=gnu99 -march=native
 PFLAGS = -O3 -flto -funroll-loops
 DEBUG = -g -fsanitize=address -fsanitize=undefined
 
-.DEFAULT_GOAL := all
-
+.DEFAULT_GOAL := performance
 .PHONY: debug performance clean
 
 all: bmp
 
 debug:
-	clear
 	$(MAKE) clean
-	$(MAKE) all CFLAGS="$(CFLAGS) $(DEBUG)"
+	clear
+	$(MAKE) bmp CFLAGS="$(CFLAGS) $(DEBUG)"
 
 performance:
-	clear
 	$(MAKE) clean
-	$(MAKE) all CFLAGS="$(CFLAGS) $(PFLAGS)"
+	clear
+	$(MAKE) bmp CFLAGS="$(CFLAGS) $(PFLAGS)"
 
 clean:
 	rm -f bmp *.o
 
-imageEditing.o: imageEditing.c
-	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
-
-filters.o: filters.c
-	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
-
-fileParsing.o: fileParsing.c
-	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
-
-main.o: main.c
-	$(CC) $(CFLAGS) $(WARNINGS) -c $^ -o $@
-
-bmp: main.o fileParsing.o filters.o imageEditing.o
+bmp: src/*.[ch]
 	$(CC) $(CFLAGS) $(WARNINGS) $^ -o $@
