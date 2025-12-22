@@ -3,6 +3,8 @@
 [![Arch Linux](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff)](https://archlinux.org/)
 [![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=white)](https://ubuntu.com/download)
 [![C](https://img.shields.io/badge/C-00599C?logo=c&logoColor=white)](#)
+[![Dependencies](https://img.shields.io/badge/Dependencies-zero-2EA44F)](#)
+[![Size](https://img.shields.io/github/repo-size/Wimers/signals?color=blue)](#)
 
 </div>
 
