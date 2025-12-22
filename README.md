@@ -27,11 +27,11 @@ Currently supports 24-bit Windows bitmaps.
 
 ---
 
-## Imagees
-
-## 📸 Images
+## Images
 
 ### Heart
 
-![Heart](images/heart.bmp)
-
+<p align="center">
+  <img src="images/original/heartOriginal.bmp" width="47%" />
+  <img src="images/modified/heart.bmp" width="47%" /> 
+</p>
