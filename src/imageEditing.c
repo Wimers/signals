@@ -1,4 +1,5 @@
 #include "fileParsing.h"
+#include "imageEditing.h"
 
 void flip_image(Image* image)
 {

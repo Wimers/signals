@@ -1,6 +1,8 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+#include "fileParsing.h"
+
 /* flip_image()
  * ------------
  * Flips the input image upside down by replacing top pixel rows moving down,

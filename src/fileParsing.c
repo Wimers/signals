@@ -11,7 +11,6 @@ const char* const invalidColourPlanesMessage
         = "The number of colour planes must be 1, got \"%u\".\n";
 const char* const fileOpeningErrorMessage
         = "Error opening file \"%s\" for reading.\n";
-const char* const errorReadingHeaderMessage = "Error reading \"%s\".\n";
 const char* const errorReadingPixelsMessage
         = "Error reading pixels: (row %zu)\n";
 const char* const negativeWidthMessage = "Bitmap width cannot be negative!\n";

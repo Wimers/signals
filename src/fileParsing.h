@@ -35,7 +35,6 @@
 // Program constant strings
 extern const char* const invalidColourPlanesMessage;
 extern const char* const fileOpeningErrorMessage;
-extern const char* const errorReadingHeaderMessage;
 extern const char* const negativeWidthMessage;
 extern const char* const errorReadingPixelsMessage;
 extern const char* const resettingIntValueMessage;
@@ -53,7 +52,7 @@ extern const char newlineChar;
 #define READ_HEADER_SAFE(dest, size, file, parameterName)                      \
     (void)sizeof(char[(sizeof(*(dest)) == (size)) ? 1 : -1]);                  \
     if (fread(dest, size, 1, file) != 1) {                                     \
-        fprintf(stderr, errorReadingHeaderMessage, parameterName);             \
+        fprintf(stderr, "Error reading \"%s\".\n", parameterName);             \
         return -1;                                                             \
     }
 

@@ -174,7 +174,7 @@ void average_pixels(Image* image)
     }
 }
 
-void brightness_cap_filter(Image* image, const uint8_t maxBrightness)
+void brightness_cut_filter(Image* image, const uint8_t cutoff)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
@@ -184,19 +184,19 @@ void brightness_cap_filter(Image* image, const uint8_t maxBrightness)
         for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = &(row[x]);
 
-            if (pixel->blue > maxBrightness) {
+            if (pixel->blue > cutoff) {
 
                 // Disable blue component of pixel
                 pixel->blue = 0;
             }
 
-            if (pixel->green > maxBrightness) {
+            if (pixel->green > cutoff) {
 
                 // Disable green component of pixel
                 pixel->green = 0;
             }
 
-            if (pixel->red > maxBrightness) {
+            if (pixel->red > cutoff) {
 
                 // Disable red component of pixel
                 pixel->red = 0;
@@ -336,7 +336,8 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
     }
 }
 
-void dim_effect(Image* image, const uint8_t dimmingFactor)
+void dim_effect(Image* image, const uint8_t redDim, const uint8_t greenDim,
+        const uint8_t blueDim)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
@@ -348,17 +349,17 @@ void dim_effect(Image* image, const uint8_t dimmingFactor)
 
             // Reduce value of each pixel component by the dimming factor.
             // Zero is the minimum value components can be reduced to.
-            pixel->blue = (pixel->blue <= dimmingFactor)
+            pixel->blue = (pixel->blue <= blueDim)
                     ? (0)
-                    : ((uint8_t)(pixel->blue - dimmingFactor));
+                    : ((uint8_t)(pixel->blue - blueDim));
 
-            pixel->green = (pixel->green <= dimmingFactor)
+            pixel->green = (pixel->green <= greenDim)
                     ? (0)
-                    : ((uint8_t)(pixel->green - dimmingFactor));
+                    : ((uint8_t)(pixel->green - greenDim));
 
-            pixel->red = (pixel->red <= dimmingFactor)
+            pixel->red = (pixel->red <= redDim)
                     ? (0)
-                    : ((uint8_t)(pixel->red - dimmingFactor));
+                    : ((uint8_t)(pixel->red - redDim));
         }
     }
 }

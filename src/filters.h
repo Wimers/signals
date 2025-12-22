@@ -91,15 +91,15 @@ void gray_filter(Image* image);
  */
 void average_pixels(Image* image);
 
-/* brightness_cap_filter()
+/* brightness_cut_filter()
  * -----------------------
- * Applies a brightness cap filter, which sets the component of a pixel to zero,
- * if its intensity is greater than the max brightness threshold.
+ * Applies a brightness cut filter, which sets the component of a pixel to zero,
+ * if its intensity is greater than the brightness cutoff.
  *
  * image: Pointer to struct containing the pixel data.
  * maxBrightness: Maximum brightness threshold.
  */
-void brightness_cap_filter(Image* image, const uint8_t maxBrightness);
+void brightness_cut_filter(Image* image, const uint8_t cutoff);
 
 /* combine_images()
  * ----------------
@@ -163,7 +163,8 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
  * image: Pointer to struct containing the pixel data.
  * dimmingFactor: Factor each pixel component is reduced by.
  */
-void dim_effect(Image* image, const uint8_t dimmingFactor);
+void dim_effect(Image* image, const uint8_t redDim, const uint8_t greenDim,
+        const uint8_t blueDim);
 
 /* contrast_effect_val()
  * ---------------------

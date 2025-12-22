@@ -61,7 +61,7 @@ typedef enum {
     GRAY_SCALE = 'g',
     INVERT = 'v',
     FLIP = 'u',
-    BRIGHTNESS_CAP = 'b',
+    BRIGHTNESS_CUT = 'b',
     COMBINE = 'c',
     GLITCH = 'l',
     AVE = 'a',
@@ -84,7 +84,7 @@ typedef struct {
     uint8_t filters;
     uint8_t grayscale;
     uint8_t flip;
-    uint8_t maxBrightness;
+    uint8_t cutoff;
     uint8_t combine;
     char* combineFilePath;
     size_t glitch;

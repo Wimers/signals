@@ -64,8 +64,8 @@ const char* const helpMessage // Need to update FIX
           "times\n"
           "\n"
           "Brightness & Contrast:\n"
-          "  -b, --brightness-cap <val>  - Cap maximum pixel brightness "
-          "(0-255)\n"
+          "  -b, --brightness-cut <val>  - Cuts pixel component if value "
+          "exceeds cutoff (0-255)\n"
           "  -m, --dim <val>             - Reduce brightness by value (0-255)\n"
           "  -t, --contrast <val>        - Adjust contrast factor (0-255)\n"
           "\n"
@@ -94,7 +94,7 @@ static struct option const longOptions[] = {
         {"grayscale", no_argument, NULL, GRAY_SCALE},
         {"invert", no_argument, NULL, INVERT},
         {"flip", no_argument, NULL, FLIP},
-        {"brightness-cap", required_argument, NULL, BRIGHTNESS_CAP},
+        {"brightness-cut", required_argument, NULL, BRIGHTNESS_CUT},
         {"combine", required_argument, NULL, COMBINE},
         {"glitch", required_argument, NULL, GLITCH},
         {"average", no_argument, NULL, AVE},
@@ -208,14 +208,14 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->flip = 1;
             break;
 
-        case BRIGHTNESS_CAP: { // If brightness cap flag used, verify the
+        case BRIGHTNESS_CUT: { // If brightness cut flag used, verify the
                                // required argument
-            long cap;
-            if ((cap = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
+            long cut;
+            if ((cut = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
                     == -1) {
                 return EXIT_INVALID_PARAMETER;
             }
-            userInput->maxBrightness = (uint8_t)cap;
+            userInput->cutoff = (uint8_t)cut;
             break;
         }
 
@@ -405,8 +405,8 @@ int handle_commands(UserInput* userInput)
             filter(bmpImage.image);
         }
 
-        if (userInput->maxBrightness) {
-            brightness_cap_filter(bmpImage.image, userInput->maxBrightness);
+        if (userInput->cutoff) {
+            brightness_cut_filter(bmpImage.image, userInput->cutoff);
         }
 
         if (userInput->grayscale) { // If grayscale mode enabled
@@ -425,12 +425,13 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->contrast) { // If contrast mode enabled
-            contrast_effect(
-                    bmpImage.image, userInput->contrast, 100, 160); // Fix Magic
+            contrast_effect( // Prev 100 160
+                    bmpImage.image, userInput->contrast, 80, 200); // FIX Magic
         }
 
         if (userInput->dim) { // If dim mode enabled
-            dim_effect(bmpImage.image, userInput->dim);
+            dim_effect(bmpImage.image, userInput->dim, userInput->dim,
+                    userInput->dim); // FIX Update docs
         }
 
         if (userInput->combine) { // If image combination mode enabled
@@ -476,6 +477,7 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->print) { // If terminal printing mode enabled
+            flip_image(bmpImage.image);
             print_image_to_terminal(bmpImage.image);
         }
 
