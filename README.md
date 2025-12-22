@@ -1,3 +1,11 @@
+<div align="center">
+
+[![Arch Linux](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff)](https://archlinux.org/)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?logo=ubuntu&logoColor=white)](https://ubuntu.com/download)
+[![C](https://img.shields.io/badge/C-00599C?logo=c&logoColor=white)](#)
+
+</div>
+
 # BMP Image Processor
 
 BMP image processor built with zero dependencies for Linux/Unix systems. Featuring a range of custom filters and effects, ANSI terminal rendering, and image exporting.
