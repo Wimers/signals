@@ -612,7 +612,7 @@ int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
         }
 
     } else {
-        fwrite(&((image->pixelData)[0]), writeSize, image->height, output);
+        fwrite(image->pixelData, writeSize, image->height, output);
     }
 
     safely_close_file(output);
