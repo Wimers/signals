@@ -13,11 +13,11 @@ void invert_colours(Image* image)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = &(row[x]);
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Invert pixel colour value
             pixel->red = (uint8_t)(UINT8_MAX - pixel->red);
@@ -31,13 +31,14 @@ void filter_red(Image* image)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Disable the red component of the pixel
-            row[x].red = 0;
+            pixel->red = 0;
         }
     }
 }
@@ -46,13 +47,14 @@ void filter_green(Image* image)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
-            // Disable the red component of the pixel
-            row[x].green = 0;
+            // Disable the green component of the pixel
+            pixel->green = 0;
         }
     }
 }
@@ -61,13 +63,14 @@ void filter_blue(Image* image)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
-            // Disable the red component of the pixel
-            row[x].blue = 0;
+            // Disable the blue component of the pixel
+            pixel->blue = 0;
         }
     }
 }
@@ -76,14 +79,15 @@ void filter_red_green(Image* image)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Disable the red and green components of the pixel
-            row[x].red = 0;
-            row[x].green = 0;
+            pixel->red = 0;
+            pixel->green = 0;
         }
     }
 }
@@ -92,14 +96,15 @@ void filter_red_blue(Image* image)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Disable the red and blue components of the pixel
-            row[x].red = 0;
-            row[x].blue = 0;
+            pixel->red = 0;
+            pixel->blue = 0;
         }
     }
 }
@@ -108,42 +113,35 @@ void filter_green_blue(Image* image)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Disable the green and blue components of the pixel
-            row[x].blue = 0;
-            row[x].green = 0;
+            pixel->blue = 0;
+            pixel->green = 0;
         }
     }
 }
 
 void filter_all(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-
-            // Set the pixel to pure black
-            memset(&(row[x]), 0, sizeof(Pixel));
-        }
-    }
+    // Zero everything
+    memset(&((image->pixelData)[0]), 0,
+            sizeof(Pixel) * image->width * image->height);
 }
 
 void gray_filter(Image* image)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = image->pixels[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = &(row[x]);
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Calculate gray scaled value
             const uint8_t grayScaled = calc_pixel_grayscale(pixel);
@@ -158,11 +156,11 @@ void average_pixels(Image* image)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = &(row[x]);
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Calculates the mean value of the pixel
             const uint8_t brightness = calc_pixel_average(pixel);
@@ -178,11 +176,11 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = image->pixels[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = &(row[x]);
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             if (pixel->blue > cutoff) {
 
@@ -221,17 +219,14 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
 
     // For each row
     for (size_t y = 0; y < height; y++) {
-
-        // For reduced cpu cycles
-        Pixel* pRow = (primary->pixels)[y];
-        Pixel* sRow = (secondary->pixels)[y];
+        size_t rowOffset = y * primary->width;
 
         // For each pixel in row
         for (size_t x = 0; x < width; x++) {
 
             // For reduced cpu cycles
-            Pixel* pPixel = &(pRow[x]);
-            Pixel* sPixel = &(sRow[x]);
+            Pixel* pPixel = get_pixel_fast(primary, x, rowOffset);
+            Pixel* sPixel = get_pixel_fast(secondary, x, rowOffset);
 
             // Average the each colour value from each image and update value in
             // primary image.
@@ -259,7 +254,9 @@ int glitch_effect(Image* image, const size_t glitchOffset)
         return -1;
     }
 
-    Pixel* rowCopy = malloc(image->width * sizeof(Pixel));
+    const size_t rowSize = image->width * sizeof(Pixel);
+
+    Pixel* rowCopy = malloc(rowSize);
     if (rowCopy == NULL) {
         // Malloc failed
         return -1; // FIX Add unique exit code
@@ -267,25 +264,27 @@ int glitch_effect(Image* image, const size_t glitchOffset)
 
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = image->width * y;
+        Pixel* row = &((image->pixelData)[rowOffset]);
 
         // Copy data from the row to allow glitch pixel values to be calculated
         // based on original image appearance.
-        memcpy(rowCopy, row, image->width * sizeof(Pixel));
+        memcpy(rowCopy, row, rowSize);
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Update pixel value if data access region is within image bounds,
             // else set component to zero.
             const size_t accessRedRegion = x + glitchOffset;
             (accessRedRegion < image->width)
-                    ? (row[x].red = rowCopy[accessRedRegion].red)
+                    ? (pixel->red = rowCopy[accessRedRegion].red)
                     : 0;
 
             const size_t accessBlueRegion = x - glitchOffset;
             (accessBlueRegion < image->width)
-                    ? (row[x].blue = rowCopy[accessBlueRegion].blue)
+                    ? (pixel->blue = rowCopy[accessBlueRegion].blue)
                     : 0;
         }
     }
@@ -322,11 +321,11 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
 
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = &(row[x]);
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Apply contrast filter to each colour
             pixel->blue = lookupTable[pixel->blue];
@@ -341,11 +340,11 @@ void dim_effect(Image* image, const uint8_t redDim, const uint8_t greenDim,
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = &(row[x]);
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Reduce value of each pixel component by the dimming factor.
             // Zero is the minimum value components can be reduced to.
@@ -388,11 +387,11 @@ void swap_red_blue(Image* image)
 {
     // For each row
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = y * image->width;
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = &(row[x]);
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Swap red and blue values
             const uint8_t temp = pixel->red;

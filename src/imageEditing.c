@@ -1,31 +1,52 @@
+#include <stdlib.h>
+#include <string.h>
 #include "fileParsing.h"
 #include "imageEditing.h"
 
 void flip_image(Image* image)
 {
+    const size_t rowSize = image->width * sizeof(Pixel);
+    Pixel* rowBuffer = malloc(rowSize);
+
+    if (rowBuffer == NULL) {
+        perror("malloc failed while flipping..");
+        return;
+    }
+
     const size_t last = image->height >> 1;
     for (size_t y = 0; y < last; y++) {
 
-        Pixel* tempRow = (image->pixels)[y];
-        const size_t bottomRow = image->height - y - 1;
+        size_t topOffset = image->width * y;
+        size_t bottomOffset = (image->height - y - 1) * image->width;
 
-        (image->pixels)[y] = (image->pixels)[bottomRow];
-        (image->pixels)[bottomRow] = tempRow;
+        Pixel* topRow = &(image->pixelData)[topOffset];
+        Pixel* bottomRow = &(image->pixelData)[bottomOffset];
+
+        memcpy(rowBuffer, topRow, rowSize);
+        memcpy(topRow, bottomRow, rowSize);
+        memcpy(bottomRow, rowBuffer, rowSize);
     }
+
+    free(rowBuffer);
 }
 
 void reverse_image(Image* image)
 {
+    const size_t iterBound = image->width >> 1;
+
     for (size_t y = 0; y < image->height; y++) {
-        Pixel* row = (image->pixels)[y];
+        size_t rowOffset = image->width * y;
 
         // For each pixel in row
-        for (size_t x = 0; x < (image->width >> 1); x++) {
+        for (size_t x = 0; x < iterBound; x++) {
+            size_t last = image->width - x - 1;
 
-            const size_t last = image->width - x - 1;
-            Pixel temp = row[x];
-            row[x] = row[last];
-            row[last] = temp;
+            Pixel* pixel1 = get_pixel_fast(image, x, rowOffset);
+            Pixel* pixel2 = get_pixel_fast(image, last, rowOffset);
+
+            Pixel temp = *pixel1;
+            *pixel1 = *pixel2;
+            *pixel2 = temp;
         }
     }
 }
@@ -39,10 +60,13 @@ Image* rotation_helper(Image* image)
 
         // For each row of pixels
         for (size_t y = 0; y < image->height; y++) {
-            Pixel* row = (image->pixels)[y];
+            size_t rowOffset = image->width * y;
 
             for (size_t x = 0; x < image->width; x++) {
-                (rotated->pixels)[x][y] = row[x];
+                size_t innerRowOffset = rotated->width * x;
+
+                Pixel* pixel = get_pixel_fast(image, x, rowOffset);
+                (rotated->pixelData)[innerRowOffset + y] = *pixel;
             }
         }
     }

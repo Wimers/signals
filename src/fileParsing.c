@@ -83,11 +83,6 @@ void free_image(Image** image)
         (*image)->pixelData = NULL;
     }
 
-    if ((*image)->pixels != NULL) {
-        free((void*)(*image)->pixels);
-        (*image)->pixels = NULL;
-    }
-
     free(*image);
     *image = NULL;
 }
@@ -410,7 +405,8 @@ int read_pixel_row(FILE* file, Image* image, const size_t rowNumber,
     const size_t numPixels = image->width;
 
     // Read row of pixels
-    if (fread((image->pixels)[rowNumber], sizeof(Pixel), numPixels, file)
+    if (fread(&((image->pixelData)[rowNumber * image->width]), sizeof(Pixel),
+                numPixels, file)
             != numPixels) {
 
         // Print message upon read error
@@ -472,8 +468,10 @@ void print_image_to_terminal(const Image* image)
     size_t bufferPosition = 0;
 
     // For each pixel (RGB)
-    for (size_t height = 0; height < image->height; height++) {
-        for (size_t width = 0; width < image->width; width++) {
+    for (size_t y = 0; y < image->height; y++) {
+        size_t rowOffset = image->width * y;
+
+        for (size_t x = 0; x < image->width; x++) {
 
             // If buffer does not have room for pixel, write buffer to
             // terminal and reset buffer position.
@@ -482,11 +480,13 @@ void print_image_to_terminal(const Image* image)
                 fwrite(buffer, 1, bufferPosition, stdout);
                 bufferPosition = 0;
             }
-            Pixel p = (image->pixels)[height][width];
+
+            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
             // Append pixel to buffer
             bufferPosition += (size_t)sprintf(&buffer[bufferPosition],
-                    colouredBlockFormatter, p.red, p.green, p.blue);
+                    colouredBlockFormatter, pixel->red, pixel->green,
+                    pixel->blue);
         }
 
         // If buffer full, write to terminal, and newline terminate
@@ -528,26 +528,12 @@ Image* create_image(const int32_t width, const int32_t height)
     img->width = (width < 0) ? (size_t)(-width) : (size_t)(width);
     img->height = (height < 0) ? (size_t)(-height) : (size_t)(height);
 
-    // Allocate memory for array of row pointers
-    img->pixels = (Pixel**)malloc(img->height * sizeof(Pixel*));
-
-    if (img->pixels == NULL) { // Malloc failed
-        free(img);
-        return NULL;
-    }
-
     // Allocate memory for all pixel data
     img->pixelData = malloc(img->height * img->width * sizeof(Pixel));
 
     if (img->pixelData == NULL) { // If malloc fails
-        free((void*)img->pixels);
         free(img);
         return NULL;
-    }
-
-    // Link the pixel data to each row
-    for (size_t i = 0; i < img->height; i++) {
-        (img->pixels)[i] = &(img->pixelData)[img->width * i];
     }
 
     return img;
@@ -603,12 +589,18 @@ int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     const size_t byteOffset
             = calc_row_byte_offset(info->bitsPerPixel, info->bitmapWidth);
 
-    for (size_t row = 0; row < image->height; row++) {
-        fwrite((image->pixels)[row], image->width * sizeof(Pixel), 1, output);
+    const size_t writeSize = image->width * sizeof(Pixel);
 
-        if (byteOffset) {
+    if (byteOffset) {
+
+        for (size_t row = 0; row < image->height; row++) {
+            fwrite(&((image->pixelData)[row * image->width]), writeSize, 1,
+                    output);
             write_padding(output, byteOffset);
         }
+
+    } else {
+        fwrite(&((image->pixelData)[0]), writeSize, image->height, output);
     }
 
     safely_close_file(output);

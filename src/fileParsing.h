@@ -89,8 +89,18 @@ typedef struct {
     size_t width;
     size_t height;
     Pixel* pixelData;
-    Pixel** pixels;
 } Image;
+
+static inline Pixel* get_pixel_fast(
+        const Image* restrict image, const size_t x, const size_t rowOffset)
+{
+    return &((image->pixelData)[x + rowOffset]);
+}
+
+static inline Pixel* get_pixel(Image* image, const size_t x, const size_t y)
+{
+    return &((image->pixelData)[y * image->width + x]);
+}
 
 typedef struct {
     FILE* file;
