@@ -550,10 +550,10 @@ Image* create_image(const int32_t width, const int32_t height)
 
 void write_padding(FILE* file, const size_t gapSize)
 {
-    const uint8_t zero = 0;
+    const uint8_t zeros[4] = {0, 0, 0, 0};
 
-    for (size_t i = 0; i < gapSize; i++) {
-        fwrite(&zero, 1, 1, file);
+    if (0 < gapSize && gapSize <= 3) {
+        fwrite(zeros, 1, gapSize, file);
     }
 }
 
