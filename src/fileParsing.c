@@ -439,9 +439,21 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     // Seek to start of pixel data
     fseek(file, header->offset, SEEK_SET);
 
-    // For each row of pixels
-    for (size_t height = 0; height < (size_t)abs(bmp->bitmapHeight); height++) {
-        if (read_pixel_row(file, image, height, byteOffset) == -1) {
+    if (byteOffset) {
+        // For each row of pixels
+        for (size_t height = 0; height < (size_t)abs(bmp->bitmapHeight);
+                height++) {
+            if (read_pixel_row(file, image, height, byteOffset) == -1) {
+                free_image(&image);
+                fputs(bmpLoadFailMessage, stderr);
+                return NULL;
+            }
+        }
+
+    } else {
+        size_t nmemb = image->height * image->width;
+        size_t result = fread(image->pixelData, sizeof(Pixel), nmemb, file);
+        if (result != nmemb) {
             free_image(&image);
             fputs(bmpLoadFailMessage, stderr);
             return NULL;
