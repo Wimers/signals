@@ -462,9 +462,6 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
 
     const long endAddr = ftell(file); // Could check for error
 
-    // Print offset of file pointer after iterating all pixels
-    printf(eofAddrMessage, endAddr);
-
     if ((int64_t)endAddr != (int64_t)(header->bmpSize)) {
         fprintf(stderr, eofMismatchMessage, endAddr, header->bmpSize);
         // Could add error return value
