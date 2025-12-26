@@ -48,7 +48,6 @@ const char* const resettingIntValueMessage = "Resetting value to \"%d\".\n";
 // Constant program strings
 const char* const windowsBmpID = "BM";
 const char* const eofAddrMessage = "End of File Addr: %ld\n";
-const char* const colouredBlockFormatter = "\033[38;2;%d;%d;%dm██\033[0m";
 const char* const newlineStr = "\n";
 
 // Assorted constant chars
@@ -470,11 +469,37 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     return image;
 }
 
+static inline size_t fast_u8_to_buf(char* buf, const uint8_t val)
+{
+    if (val >= 100) {
+        buf[0] = (char)('0' + (val / 100));
+        buf[1] = (char)('0' + ((val / 10) % 10));
+        buf[2] = (char)('0' + (val % 10));
+        return 3;
+
+    } else if (val >= 10) {
+        buf[0] = (char)('0' + (val / 10));
+        buf[1] = (char)('0' + (val % 10));
+        return 2;
+
+    } else {
+        buf[0] = (char)('0' + val);
+        return 1;
+    }
+}
+
 void print_image_to_terminal(const Image* image)
 {
     // Initialise
     char buffer[OUTPUT_BUFFER_CAPACITY];
     size_t bufferPosition = 0;
+
+    // Constant parts of the ANSI escape sequence
+    const char* const prefix = "\033[38;2;";
+    const size_t prefixLen = 7;
+
+    const char* const suffix = "m██\033[0m";
+    const size_t suffixLen = 9;
 
     // For each pixel (RGB)
     for (size_t y = 0; y < image->height; y++) {
@@ -492,10 +517,27 @@ void print_image_to_terminal(const Image* image)
 
             Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
-            // Append pixel to buffer
-            bufferPosition += (size_t)sprintf(&buffer[bufferPosition],
-                    colouredBlockFormatter, pixel->red, pixel->green,
-                    pixel->blue);
+            // Write prefix
+            memcpy(&buffer[bufferPosition], prefix, prefixLen);
+            bufferPosition += prefixLen;
+
+            // Write red + ';'
+            bufferPosition
+                    += fast_u8_to_buf(&buffer[bufferPosition], pixel->red);
+            buffer[bufferPosition++] = ';';
+
+            // Write green + ';'
+            bufferPosition
+                    += fast_u8_to_buf(&buffer[bufferPosition], pixel->green);
+            buffer[bufferPosition++] = ';';
+
+            // Write blue
+            bufferPosition
+                    += fast_u8_to_buf(&buffer[bufferPosition], pixel->blue);
+
+            // Write suffix
+            memcpy(&buffer[bufferPosition], suffix, suffixLen);
+            bufferPosition += suffixLen;
         }
 
         // If buffer full, write to terminal, and newline terminate
