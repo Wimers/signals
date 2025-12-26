@@ -469,17 +469,26 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     return image;
 }
 
-static inline size_t fast_u8_to_buf(char* buf, const uint8_t val)
+static inline size_t fast_u8_to_buf(char* buf, uint8_t val)
 {
     if (val >= 100) {
-        buf[0] = (char)('0' + (val / 100));
-        buf[1] = (char)('0' + ((val / 10) % 10));
-        buf[2] = (char)('0' + (val % 10));
+        uint8_t d1 = val / 100;
+        buf[0] = (char)('0' + d1);
+
+        val = val - (uint8_t)(d1 * 100);
+        uint8_t d2 = val / 10;
+        buf[1] = (char)('0' + d2);
+
+        val = val - (uint8_t)(d2 * 10);
+        buf[2] = (char)('0' + val);
         return 3;
 
     } else if (val >= 10) {
-        buf[0] = (char)('0' + (val / 10));
-        buf[1] = (char)('0' + (val % 10));
+        uint8_t d2 = val / 10;
+        buf[0] = (char)('0' + d2);
+
+        val = val - (uint8_t)(d2 * 10);
+        buf[1] = (char)('0' + val);
         return 2;
 
     } else {
