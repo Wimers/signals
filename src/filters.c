@@ -11,119 +11,63 @@ const char* const imageBoundsMessage = "Image bounds (%zux%zu)\n";
 
 void invert_colours(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Invert pixel colour value
-            pixel->red = (uint8_t)(UINT8_MAX - pixel->red);
-            pixel->green = (uint8_t)(UINT8_MAX - pixel->green);
-            pixel->blue = (uint8_t)(UINT8_MAX - pixel->blue);
-        }
-    }
+    FX_TEMPLATE(image,
+            { // Invert pixel colour value
+                pixel->red = (uint8_t)(UINT8_MAX - pixel->red);
+                pixel->green = (uint8_t)(UINT8_MAX - pixel->green);
+                pixel->blue = (uint8_t)(UINT8_MAX - pixel->blue);
+            });
 }
 
 void filter_red(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Disable the red component of the pixel
-            pixel->red = 0;
-        }
-    }
+    FX_TEMPLATE(image,
+            { // Disable the red component of the pixel
+                pixel->red = 0;
+            });
 }
 
 void filter_green(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Disable the green component of the pixel
-            pixel->green = 0;
-        }
-    }
+    FX_TEMPLATE(image,
+            { // Disable the green component of the pixel
+                pixel->green = 0;
+            });
 }
 
 void filter_blue(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Disable the blue component of the pixel
-            pixel->blue = 0;
-        }
-    }
+    FX_TEMPLATE(image,
+            { // Disable the blue component of the pixel
+                pixel->blue = 0;
+            });
 }
 
 void filter_red_green(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Disable the red and green components of the pixel
-            pixel->red = 0;
-            pixel->green = 0;
-        }
-    }
+    FX_TEMPLATE(image,
+            { // Disable the red and green components of the pixel
+                pixel->red = 0;
+                pixel->green = 0;
+            });
 }
 
 void filter_red_blue(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Disable the red and blue components of the pixel
-            pixel->red = 0;
-            pixel->blue = 0;
-        }
-    }
+    FX_TEMPLATE(image,
+            { // Disable the red and blue components of the pixel
+                pixel->red = 0;
+                pixel->blue = 0;
+            });
 }
 
 void filter_green_blue(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Disable the green and blue components of the pixel
-            pixel->blue = 0;
-            pixel->green = 0;
-        }
-    }
+    FX_TEMPLATE(image,
+            { // Disable the green and blue components of the pixel
+                pixel->green = 0;
+                pixel->blue = 0;
+            });
 }
 
 void filter_all(Image* image)
@@ -135,72 +79,46 @@ void filter_all(Image* image)
 
 void gray_filter(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
+    FX_TEMPLATE(image, { // Calculate gray scaled value
+        const uint8_t grayScaled = calc_pixel_grayscale(pixel);
 
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Calculate gray scaled value
-            const uint8_t grayScaled = calc_pixel_grayscale(pixel);
-
-            // Assign value to each pixel
-            pixel->red = pixel->green = pixel->blue = grayScaled;
-        }
-    }
+        // Assign value to each pixel
+        pixel->red = pixel->green = pixel->blue = grayScaled;
+    });
 }
 
 void average_pixels(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Calculates the mean value of the pixel
-            const uint8_t brightness = calc_pixel_average(pixel);
-
-            pixel->blue = brightness;
-            pixel->green = brightness;
-            pixel->red = brightness;
-        }
-    }
+    FX_TEMPLATE(image,
+            { // Calculates the mean value of the pixel
+                const uint8_t brightness = calc_pixel_average(pixel);
+                pixel->blue = brightness;
+                pixel->green = brightness;
+                pixel->red = brightness;
+            });
 }
 
 void brightness_cut_filter(Image* image, const uint8_t cutoff)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
+    FX_TEMPLATE(image, {
+        if (pixel->blue > cutoff) {
 
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            if (pixel->blue > cutoff) {
-
-                // Disable blue component of pixel
-                pixel->blue = 0;
-            }
-
-            if (pixel->green > cutoff) {
-
-                // Disable green component of pixel
-                pixel->green = 0;
-            }
-
-            if (pixel->red > cutoff) {
-
-                // Disable red component of pixel
-                pixel->red = 0;
-            }
+            // Disable blue component of pixel
+            pixel->blue = 0;
         }
-    }
+
+        if (pixel->green > cutoff) {
+
+            // Disable green component of pixel
+            pixel->green = 0;
+        }
+
+        if (pixel->red > cutoff) {
+
+            // Disable red component of pixel
+            pixel->red = 0;
+        }
+    });
 }
 
 int combine_images(Image* restrict primary, const Image* restrict secondary)
@@ -228,8 +146,8 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
             Pixel* pPixel = get_pixel_fast(primary, x, rowOffset);
             Pixel* sPixel = get_pixel_fast(secondary, x, rowOffset);
 
-            // Average the each colour value from each image and update value in
-            // primary image.
+            // Average the each colour value from each image and update
+            // value in primary image.
 
             const uint8_t newRed = (uint8_t)((pPixel->red + sPixel->red) >> 1);
             pPixel->red = newRed;
@@ -267,16 +185,16 @@ int glitch_effect(Image* image, const size_t glitchOffset)
         size_t rowOffset = image->width * y;
         Pixel* row = &((image->pixelData)[rowOffset]);
 
-        // Copy data from the row to allow glitch pixel values to be calculated
-        // based on original image appearance.
+        // Copy data from the row to allow glitch pixel values to be
+        // calculated based on original image appearance.
         memcpy(rowCopy, row, rowSize);
 
         // For each pixel in row
         for (size_t x = 0; x < image->width; x++) {
             Pixel* pixel = get_pixel_fast(image, x, rowOffset);
 
-            // Update pixel value if data access region is within image bounds,
-            // else set component to zero.
+            // Update pixel value if data access region is within image
+            // bounds, else set component to zero.
             const size_t accessRedRegion = x + glitchOffset;
             (accessRedRegion < image->width)
                     ? (pixel->red = rowCopy[accessRedRegion].red)
@@ -319,48 +237,31 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
                 = contrast_effect_val((uint8_t)i, contrastFactor, min, max);
     }
 
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Apply contrast filter to each colour
-            pixel->blue = lookupTable[pixel->blue];
-            pixel->green = lookupTable[pixel->green];
-            pixel->red = lookupTable[pixel->red];
-        }
-    }
+    FX_TEMPLATE(image, { // Apply contrast filter to each colour
+        pixel->blue = lookupTable[pixel->blue];
+        pixel->green = lookupTable[pixel->green];
+        pixel->red = lookupTable[pixel->red];
+    });
 }
 
 void dim_effect(Image* image, const uint8_t redDim, const uint8_t greenDim,
         const uint8_t blueDim)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
+    FX_TEMPLATE(image,
+            { // Reduce value of each pixel component by the dimming factor
+              // Zero is the minimum value components can be reduced to.
+                pixel->blue = (pixel->blue <= blueDim)
+                        ? (0)
+                        : ((uint8_t)(pixel->blue - blueDim));
 
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
+                pixel->green = (pixel->green <= greenDim)
+                        ? (0)
+                        : ((uint8_t)(pixel->green - greenDim));
 
-            // Reduce value of each pixel component by the dimming factor.
-            // Zero is the minimum value components can be reduced to.
-            pixel->blue = (pixel->blue <= blueDim)
-                    ? (0)
-                    : ((uint8_t)(pixel->blue - blueDim));
-
-            pixel->green = (pixel->green <= greenDim)
-                    ? (0)
-                    : ((uint8_t)(pixel->green - greenDim));
-
-            pixel->red = (pixel->red <= redDim)
-                    ? (0)
-                    : ((uint8_t)(pixel->red - redDim));
-        }
-    }
+                pixel->red = (pixel->red <= redDim)
+                        ? (0)
+                        : ((uint8_t)(pixel->red - redDim));
+            });
 }
 
 uint8_t contrast_effect_val(const uint8_t val, const uint8_t contrastFactor,
@@ -385,18 +286,9 @@ uint8_t contrast_effect_val(const uint8_t val, const uint8_t contrastFactor,
 
 void swap_red_blue(Image* image)
 {
-    // For each row
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = y * image->width;
-
-        // For each pixel in row
-        for (size_t x = 0; x < image->width; x++) {
-            Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-
-            // Swap red and blue values
-            const uint8_t temp = pixel->red;
-            pixel->red = pixel->blue;
-            pixel->blue = temp;
-        }
-    }
+    FX_TEMPLATE(image, { // Swap red and blue values
+        const uint8_t temp = pixel->red;
+        pixel->red = pixel->blue;
+        pixel->blue = temp;
+    });
 }

@@ -5,7 +5,7 @@ WARNINGS = -Wall -Wextra -Werror -Wshadow \
 	   -Wunreachable-code -Wcast-align -pedantic \
 	   -pedantic-errors
 
-CFLAGS = -std=gnu99 -march=native
+CFLAGS = -std=gnu99 -march=native -fopenmp
 PFLAGS = -O3 -flto -funroll-loops
 DEBUG = -g -fsanitize=address -fsanitize=undefined
 
@@ -16,12 +16,10 @@ all: bmp
 
 debug:
 	$(MAKE) clean
-	clear
 	$(MAKE) bmp CFLAGS="$(CFLAGS) $(DEBUG)"
 
 performance:
 	$(MAKE) clean
-	clear
 	$(MAKE) bmp CFLAGS="$(CFLAGS) $(PFLAGS)"
 
 clean:

@@ -20,6 +20,18 @@
 extern const char* const fileDimensionMismatchMessage;
 extern const char* const imageBoundsMessage;
 
+#define FX_TEMPLATE(image, function)                                           \
+    for (size_t y = 0; y < image->height; y++) {                               \
+        size_t rowOffset = y * image->width;                                   \
+        Pixel* rowPtr = get_pixel_fast(image, 0, rowOffset);                   \
+                                                                               \
+        _Pragma("omp simd") for (size_t x = 0; x < image->width; x++)          \
+        {                                                                      \
+            Pixel* pixel = rowPtr + x;                                         \
+            function;                                                          \
+        }                                                                      \
+    }
+
 static inline uint8_t calc_pixel_average(Pixel* pixel)
 {
     return (uint8_t)(((pixel->red + pixel->green + pixel->blue) * DIV_3_CONST)
