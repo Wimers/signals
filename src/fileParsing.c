@@ -107,7 +107,7 @@ void free_image_resources(BMP* bmpImage)
     safely_close_file(bmpImage->file);
 }
 
-int open_bmp(BMP* bmpImage, const char* const filePath)
+[[nodiscard]] int open_bmp(BMP* bmpImage, const char* const filePath)
 {
     bmpImage->file = fopen(filePath, readMode);
 
@@ -123,7 +123,7 @@ int open_bmp(BMP* bmpImage, const char* const filePath)
     return EXIT_SUCCESS;
 }
 
-int handle_bmp_loading(BMP* bmpImage)
+[[nodiscard]] int handle_bmp_loading(BMP* bmpImage)
 {
     if (header_safety_checks(bmpImage) == -1) {
         return EXIT_HEADER_SAFETY;
@@ -140,7 +140,7 @@ int handle_bmp_loading(BMP* bmpImage)
     return EXIT_SUCCESS;
 }
 
-int read_headers(BMP* bmpImage)
+[[nodiscard]] int read_headers(BMP* bmpImage)
 {
     if (parse_bmp_header(bmpImage) == -1) {
         return -1;
@@ -185,7 +185,7 @@ int is_str_in_const_str_array(const void* restrict arg,
     return -1;
 }
 
-int parse_bmp_header(BMP* bmpImage)
+[[nodiscard]] int parse_bmp_header(BMP* bmpImage)
 {
     FILE* file = bmpImage->file;
     BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
@@ -212,7 +212,7 @@ int parse_bmp_header(BMP* bmpImage)
     return EXIT_SUCCESS;
 }
 
-int parse_bmp_info_header(BMP* bmpImage)
+[[nodiscard]] int parse_bmp_info_header(BMP* bmpImage)
 {
     FILE* file = bmpImage->file;
     BmpInfoHeader* info = &(bmpImage->infoHeader);
@@ -262,7 +262,7 @@ int parse_bmp_info_header(BMP* bmpImage)
     return EXIT_SUCCESS;
 }
 
-int header_safety_checks(BMP* bmpImage)
+[[nodiscard]] int header_safety_checks(BMP* bmpImage)
 {
     const BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
     const BmpInfoHeader* info = &(bmpImage->infoHeader);
@@ -400,8 +400,8 @@ void print_bmp_info_header(const BmpInfoHeader* bmp)
             bmp->importantColours);
 }
 
-int read_pixel_row(FILE* file, Image* image, const size_t rowNumber,
-        const size_t byteOffset)
+[[nodiscard]] int read_pixel_row(FILE* file, Image* image,
+        const size_t rowNumber, const size_t byteOffset)
 {
     const size_t numPixels = image->width;
 
@@ -669,7 +669,7 @@ int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     return EXIT_SUCCESS;
 }
 
-int check_file_opened(FILE* file, const char* const filePath)
+[[nodiscard]] int check_file_opened(FILE* file, const char* const filePath)
 {
     if (file == NULL) { // Check if file can be opened
         fprintf(stderr, fileOpeningErrorMessage, filePath);

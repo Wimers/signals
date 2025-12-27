@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "fileParsing.h"
+#include "filters.h"
 #include "imageEditing.h"
 
 void flip_image(Image* image)
@@ -51,24 +52,17 @@ void reverse_image(Image* image)
     }
 }
 
-Image* rotation_helper(Image* image)
+static inline Image* rotation_helper(Image* image)
 {
     Image* rotated = create_image((int32_t)(image->height),
             (int32_t)(image->width)); // FIX type casts
 
     if (rotated != NULL) {
 
-        // For each row of pixels
-        for (size_t y = 0; y < image->height; y++) {
-            size_t rowOffset = image->width * y;
-
-            for (size_t x = 0; x < image->width; x++) {
-                size_t innerRowOffset = rotated->width * x;
-
-                Pixel* pixel = get_pixel_fast(image, x, rowOffset);
-                (rotated->pixelData)[innerRowOffset + y] = *pixel;
-            }
-        }
+        FX_TEMPLATE(image, {
+            size_t innerRowOffset = rotated->width * x;
+            (rotated->pixelData)[innerRowOffset + y] = *pixel;
+        });
     }
 
     return rotated;
