@@ -251,10 +251,9 @@ int check_file_opened(FILE* file, const char* const filePath);
  */
 void write_padding(FILE* file, const size_t gapSize);
 
-int is_str_in_const_str_array(const void* restrict arg,
-        const char* const strArray[], const size_t nread);
 int header_safety_checks(BMP* bmpImage);
 int handle_bmp_loading(BMP* bmpImage);
 void check_image_resolution(BmpInfoHeader* info);
+void safely_close_file(FILE* file);
 
 #endif

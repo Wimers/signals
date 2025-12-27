@@ -20,7 +20,6 @@
 #define EXIT_SAME_FILE 91
 
 #define MIN_CMD_ARGS 2
-#define BASE_10 10
 
 #define gotIntMessage "    Got \"%d\".\n"
 
@@ -31,8 +30,6 @@ extern const char* const glitchUsageMessage;
 // Assorted constant chars
 extern const char* const readMode;
 extern const char* const writeMode;
-
-#define EOS '\0'
 
 typedef void (*ColourFilter)(Image* image);
 typedef void (*Function)(void);
@@ -124,48 +121,6 @@ int early_argument_checks(const int argc, char** argv);
  */
 int parse_user_commands(const int argc, char** argv, UserInput* userInput);
 
-/* check_each_char_is_digit()
- * --------------------------
- * Checks each character in a string is a digit (0 <-> 9).
- *
- * argv: String argument input.
- *
- * Returns: EXIT_SUCCESS if each character is a digit, else returns -1 on
- *          error.
- */
-int check_each_char_is_digit(const char* arg);
-
-/* check_long_within_bounds()
- * --------------------------
- * Checks if a number is between a minimum and maximum value. The boundry
- * includes the boarder values.
- *
- * num: Number to check.
- * min: Minimum bound on number.
- * max: Maximum bound on number.
- *
- * Returns: EXIT_SUCCESS if within bounds.
- *
- * Errors: Returns -1.
- */
-int check_long_within_bounds(const long num, const long min, const long max);
-
-/* verify_int_arg_with_bounds()
- * ----------------------------
- * Checks whether an input string represents a base 10 number, within specified
- * upper and lower bounds.
- *
- * arg: String argument input.
- * min: Minimum bound on number.
- * max: Maximum bound on number.
- *
- * Returns: EXIT_SUCCESS if within bounds.
- *
- * Errors: Returns -1.
- */
-long verify_long_arg_with_bounds(
-        const char* arg, const long min, const long max);
-
 /* glitch_offset_invalid_message()
  * -------------------------------
  * Prints messages to stderr indicating the command line argument provided with
@@ -200,18 +155,6 @@ int handle_commands(UserInput* userInput);
  * Returns: EXIT_SUCCESS on success, or a specific error code.
  */
 int handle_combine(const UserInput* userInput, BMP* bmpImage);
-
-/* ends_with()
- * -----------
- * Checks if an input string ends in a target string.
- *
- * target: String expected at end of arg string.
- * arg: Input string.
- *
- * Returns: 1 if the string does end with target, -1 if the input target string
- *          is larger than the arg string, and 0 otherwise.
- */
-int ends_with(const char* const target, const char* arg);
 
 /* check_valid_file_type()
  * -----------------------

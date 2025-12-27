@@ -1,5 +1,6 @@
 // Included Libraries
 #include "fileParsing.h"
+#include "utils.h"
 #include "main.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -43,17 +44,16 @@ const char* const negVertResMessage
 const char* const negHorzResMessage
         = "Warning: Horizontal resolution is negative (%d).\n";
 const char* const resettingIntValueMessage = "Resetting value to \"%d\".\n";
+const char* const eofAddrMessage = "End of File Addr: %ld\n";
 
 // Constant program strings
-const char windowsBmpID[] = "BM";
-const char* const eofAddrMessage = "End of File Addr: %ld\n";
-const char newlineStr[] = "\n";
+constexpr char windowsBmpID[] = "BM";
+constexpr char newlineStr[] = "\n";
+constexpr char lineSeparator[]
+        = "--------------------------------------------------\n";
 
 // Assorted constant chars
 constexpr char newlineChar = '\n';
-
-constexpr char lineSeparator[]
-        = "--------------------------------------------------\n";
 
 static const char* const bmpIdentifier[]
         = {"BM", "BA", "CI", "CP", "IC", "PT", NULL};
@@ -71,40 +71,6 @@ void initialise_bmp(BMP* bmpImage)
     // Assign to the bmpImage
     bmpImage->bmpHeader = header;
     bmpImage->infoHeader = infoHeader;
-}
-
-void free_image(Image** image)
-{
-    if ((image == NULL) || (*image == NULL)) {
-        return;
-    }
-
-    if ((*image)->pixelData != NULL) {
-        free((*image)->pixelData);
-        (*image)->pixelData = NULL;
-    }
-
-    free(*image);
-    *image = NULL;
-}
-
-void safely_close_file(FILE* file)
-{
-    if (file != NULL) {
-        fclose(file);
-        file = NULL;
-    }
-}
-
-void free_image_resources(BMP* bmpImage)
-{
-    // Safely free allocated memory for storing pixel data
-    if (bmpImage->image != NULL) {
-        free_image(&(bmpImage->image));
-    }
-
-    // Safely close the BMP image file stream
-    safely_close_file(bmpImage->file);
 }
 
 [[nodiscard]] int open_bmp(BMP* bmpImage, const char* const filePath)
@@ -151,38 +117,6 @@ void free_image_resources(BMP* bmpImage)
     }
 
     return EXIT_SUCCESS;
-}
-
-void dump_headers(const BMP* bmpImage)
-{
-    print_bmp_header(&(bmpImage->bmpHeader));
-    print_bmp_info_header(&(bmpImage->infoHeader));
-}
-
-int is_str_in_const_str_array(const void* restrict arg,
-        const char* const strArray[], const size_t nread)
-{
-    // Initialise
-    const int breakPoint = 1000;
-    int i = 0;
-
-    // For each string in string array
-    while (strArray[i] != NULL) {
-
-        // Check if arg is equal to this string
-        if ((strlen(strArray[i]) >= nread)
-                && (!memcmp(arg, strArray[i], nread))) {
-
-            return EXIT_SUCCESS; // Arg found
-        }
-
-        if (++i > breakPoint) {
-            return -1;
-        }
-    }
-
-    // Arg is not an element of the string array
-    return -1;
 }
 
 [[nodiscard]] int parse_bmp_header(BMP* bmpImage)
@@ -365,6 +299,12 @@ void check_image_resolution(BmpInfoHeader* info)
     }
 }
 
+void dump_headers(const BMP* bmpImage)
+{
+    print_bmp_header(&(bmpImage->bmpHeader));
+    print_bmp_info_header(&(bmpImage->infoHeader));
+}
+
 void print_bmp_header(const BmpHeader* bmp)
 {
     fprintf(stdout, sssFormat, "BMP Header", "Data", "Hex");
@@ -471,34 +411,6 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
     return image;
 }
 
-static inline size_t fast_u8_to_buf(char* buf, uint8_t val)
-{
-    if (val >= 100) {
-        uint8_t d1 = val / 100;
-        buf[0] = (char)('0' + d1);
-
-        val = val - (uint8_t)(d1 * 100);
-        uint8_t d2 = val / 10;
-        buf[1] = (char)('0' + d2);
-
-        val = val - (uint8_t)(d2 * 10);
-        buf[2] = (char)('0' + val);
-        return 3;
-
-    } else if (val >= 10) {
-        uint8_t d2 = val / 10;
-        buf[0] = (char)('0' + d2);
-
-        val = val - (uint8_t)(d2 * 10);
-        buf[1] = (char)('0' + val);
-        return 2;
-
-    } else {
-        buf[0] = (char)('0' + val);
-        return 1;
-    }
-}
-
 void print_image_to_terminal(const Image* image)
 {
     // Initialise
@@ -506,10 +418,10 @@ void print_image_to_terminal(const Image* image)
     size_t bufferPosition = 0;
 
     // Constant parts of the ANSI escape sequence
-    const char* const prefix = "\033[38;2;";
+    constexpr char prefix[] = "\033[38;2;";
     const size_t prefixLen = 7;
 
-    const char* const suffix = "m██\033[0m";
+    constexpr char suffix[] = "m██\033[0m";
     const size_t suffixLen = 9;
 
     // For each pixel (RGB)
@@ -677,4 +589,38 @@ int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     }
 
     return EXIT_SUCCESS;
+}
+
+void safely_close_file(FILE* file)
+{
+    if (file != NULL) {
+        fclose(file);
+        file = NULL;
+    }
+}
+
+void free_image_resources(BMP* bmpImage)
+{
+    // Safely free allocated memory for storing pixel data
+    if (bmpImage->image != NULL) {
+        free_image(&(bmpImage->image));
+    }
+
+    // Safely close the BMP image file stream
+    safely_close_file(bmpImage->file);
+}
+
+void free_image(Image** image)
+{
+    if ((image == NULL) || (*image == NULL)) {
+        return;
+    }
+
+    if ((*image)->pixelData != NULL) {
+        free((*image)->pixelData);
+        (*image)->pixelData = NULL;
+    }
+
+    free(*image);
+    *image = NULL;
 }

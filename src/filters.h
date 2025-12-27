@@ -17,9 +17,6 @@ constexpr int div3Shift = 11;
 // Used for division by 1024 (more efficient than dividing by 1000)
 constexpr int pixScaleMultGS = 10;
 
-extern const char* const fileDimensionMismatchMessage;
-extern const char* const imageBoundsMessage;
-
 #define FX_TEMPLATE(image, function)                                           \
     for (size_t y = 0; y < image->height; y++) {                               \
         size_t rowOffset = y * image->width;                                   \

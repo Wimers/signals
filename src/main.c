@@ -3,6 +3,7 @@
 #include "filters.h"
 #include "imageEditing.h"
 #include "main.h"
+#include "utils.h"
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -126,7 +127,7 @@ int main(const int argc, char* argv[])
 int check_for_empty_args(const int argc, char** argv)
 {
     for (int i = 0; i < argc; i++) {
-        if (argv[i][0] == EOS) {
+        if (argv[i][0] == eos) {
             fputs(emptyArgsMessage, stderr);
             fputs(usageMessage, stderr);
             return -1;
@@ -266,9 +267,9 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             errno = 0;
 
             // Convert optarg string to a long.
-            userInput->rotations = strtol(optarg, &endptr, BASE_10);
+            userInput->rotations = strtol(optarg, &endptr, base10);
 
-            if ((optarg == endptr) || (*endptr != EOS)) {
+            if ((optarg == endptr) || (*endptr != eos)) {
                 return EXIT_INVALID_PARAMETER;
             }
 
@@ -290,57 +291,6 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
     // All options parses successfully
     return EXIT_SUCCESS;
-}
-
-int check_each_char_is_digit(const char* arg)
-{
-    const size_t len = strlen(arg);
-
-    // For each character in input string
-    for (size_t i = 0; i < len; i++) {
-
-        // If char is not a digit
-        if (!isdigit((unsigned char)arg[i])) {
-            return -1;
-        }
-    }
-
-    return EXIT_SUCCESS;
-}
-
-int check_long_within_bounds(const long num, const long min, const long max)
-{
-    // Check number within specified bounds
-    if ((num < min) || (num > max)) {
-        return -1;
-    }
-
-    return EXIT_SUCCESS;
-}
-
-long verify_long_arg_with_bounds(
-        const char* arg, const long min, const long max)
-{
-    char* endptr;
-    errno = 0;
-
-    // Convert arg string to a long.
-    const long val = strtol(arg, &endptr, BASE_10);
-
-    if ((arg == endptr) || (*endptr != EOS)) {
-        return -1;
-    }
-
-    if (errno == ERANGE) {
-        return -1;
-    }
-
-    // Check number within specified bounds
-    if (check_long_within_bounds(val, min, max) == -1) { // Returns -1 on error
-        return -1;
-    }
-
-    return val;
 }
 
 void glitch_offset_invalid_message(const char* arg)
@@ -507,7 +457,7 @@ Function handle_colour_filters(const uint8_t filters)
 
 uint8_t handle_colour_filter_arg_parsing(const char* arg)
 {
-    const char allowed[] = {'r', 'R', 'g', 'G', 'b', 'B', EOS};
+    const char allowed[] = {'r', 'R', 'g', 'G', 'b', 'B', eos};
     uint8_t colourBitVect = 0;
 
     for (size_t i = 0; i < strlen(arg); i++) {
@@ -516,7 +466,7 @@ uint8_t handle_colour_filter_arg_parsing(const char* arg)
         while (1) {
 
             // Character did not match any valid char.
-            if (allowed[j] == EOS) {
+            if (allowed[j] == eos) {
                 fprintf(stderr, invalidFilterColourMessage, arg);
                 return 0;
             }
@@ -576,21 +526,6 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
     // Cleanup and exit
     free_image_resources(&combinedImage);
     return status;
-}
-
-int ends_with(const char* const target, const char* arg)
-{
-    // Initialise
-    const size_t lenArg = strlen(arg);
-    const size_t lenTarget = strlen(target);
-
-    // Check argument isn't smaller than the target
-    if (lenArg < lenTarget) {
-        return -1;
-    }
-
-    // Returns 1 if arg does end with the target, else returns 0.
-    return !(strcmp(target, &(arg[lenArg - lenTarget])));
 }
 
 int check_valid_file_type(const char* const type, const char* filePath)
