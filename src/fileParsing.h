@@ -32,23 +32,6 @@
 #define ssdFormat "%-25s %-15.2s %d\n"
 #define sudFormat "%-25s %-15u %d\n"
 
-// Program constant strings
-extern const char* const invalidColourPlanesMessage;
-extern const char* const fileOpeningErrorMessage;
-extern const char* const negativeWidthMessage;
-extern const char* const errorReadingPixelsMessage;
-extern const char* const resettingIntValueMessage;
-extern const char* const bmpLoadFailMessage;
-extern const char* const eofMismatchMessage;
-extern const char* const bitMap;
-extern const char* const eofAddrMessage;
-extern const char* const colouredBlockFormatter;
-extern const char* const newlineStr;
-
-// Assorted constant chars
-extern const char newlineChar;
-#define EOS '\0'
-
 #define READ_HEADER_SAFE(dest, size, file, parameterName)                      \
     (void)sizeof(char[(sizeof(*(dest)) == (size)) ? 1 : -1]);                  \
     if (fread(dest, size, 1, file) != 1) {                                     \

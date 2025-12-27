@@ -12,29 +12,9 @@
 #include <getopt.h>
 #include <errno.h>
 
-// Error messages
-const char* const fileTypeMessage = "Input file must be \".bmp\"\n";
-const char* const invalidArgsMessage = "Invalid arguments supplied.\n";
-const char* const emptyArgsMessage = "Arguments must not be empty.\n";
-const char* const noArgsProvidedMessage = "An argument must be supplied.\n";
-const char* const userHelpPrompt
-        = "Enter: \"./bmp --help\" for available commands\n";
-const char* const unexpectedArgMessage = "Got \"%s\", expected \"%s\"\n";
-const char* const glitchOffsetValMessage
-        = "\nOffset must be a positive integer, within input image "
-          "bounds.\n";
-const char* const gotStrMessage = "    Got \"%s\".\n";
-const char* const glitchUsageMessage
-        = "Glitch Effect\nUsage:  -l, --glitch <offset>  "
-          "    - Apply horizontal glitch effect\n";
-const char* const nonUniquePathsMessage
-        = "Input and combine file paths must be unique!\n";
-const char* const invalidFilterColourMessage
-        = "Filter colour/s invalid \"%s\", must be RGB characters.\n";
-
 // Program constant strings
-const char* const usageMessage = "Usage: ./bmp <option> [--input <file>] ...\n";
-const char* const helpMessage // Need to update FIX
+constexpr char usageMessage[] = "Usage: ./bmp <option> [--input <file>] ...\n";
+constexpr char helpMessage[] // Need to update FIX
         = "Usage: ./bmp <option> [--input <file>] ...\n"
           "\n"
           "Help:\n"
@@ -74,11 +54,26 @@ const char* const helpMessage // Need to update FIX
           "  -c, --combine <file>        - Overlay another BMP image onto "
           "input\n";
 
-const char* const lineSeparator
-        = "--------------------------------------------------\n";
-const char* const fileType = ".bmp";
-const char* const optstring
-        = "i:o:b:l:t:m:c:w:rdphfavgus"; // Defined program flags
+constexpr char fileTypeMessage[] = "Input file must be \".bmp\"\n";
+constexpr char emptyArgsMessage[] = "Arguments must not be empty.\n";
+constexpr char noArgsProvidedMessage[] = "An argument must be supplied.\n";
+constexpr char userHelpPrompt[]
+        = "Enter: \"./bmp --help\" for available commands\n";
+constexpr char nonUniquePathsMessage[]
+        = "Input and combine file paths must be unique!\n";
+constexpr char fileType[] = ".bmp";
+
+// Error messages
+const char* const unexpectedArgMessage = "Got \"%s\", expected \"%s\"\n";
+const char* const glitchOffsetValMessage
+        = "\nOffset must be a positive integer, within input image "
+          "bounds.\n";
+const char* const gotStrMessage = "    Got \"%s\".\n";
+const char* const glitchUsageMessage
+        = "Glitch Effect\nUsage:  -l, --glitch <offset>  "
+          "    - Apply horizontal glitch effect\n";
+const char* const invalidFilterColourMessage
+        = "Filter colour/s invalid \"%s\", must be RGB characters.\n";
 
 // Assorted constant chars
 const char* const readMode = "rb";
@@ -105,6 +100,9 @@ static struct option const longOptions[] = {
         {"reverse", no_argument, NULL, REVERSE},
         {NULL, 0, NULL, 0},
 };
+
+constexpr char optstring[]
+        = "i:o:b:l:t:m:c:w:rdphfavgus"; // Defined program flags
 
 int main(const int argc, char* argv[])
 {

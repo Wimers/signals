@@ -6,16 +6,16 @@
 
 // Constants to best map RGB values to grayscale
 // Each multiplied by 1024 to avoid floats
-#define GS_RED_MAP 306 // 0.299
-#define GS_GREEN_MAP 601 // 0.587
-#define GS_BLUE_MAP 117 // 0.114
+constexpr int rMapGS = 306; // 0.299
+constexpr int gMapGS = 601; // 0.587
+constexpr int bMapGS = 117; // 0.114
 
 // Used to optimise division by 3 (for positive integers less than 765)
-#define DIV_3_CONST 683
-#define DIV_3_SHIFT 11
+constexpr int div3Const = 683;
+constexpr int div3Shift = 11;
 
 // Used for division by 1024 (more efficient than dividing by 1000)
-#define GS_PIXEL_SCALING_FACTOR 10
+constexpr int pixScaleMultGS = 10;
 
 extern const char* const fileDimensionMismatchMessage;
 extern const char* const imageBoundsMessage;
@@ -34,17 +34,17 @@ extern const char* const imageBoundsMessage;
 
 static inline uint8_t calc_pixel_average(Pixel* pixel)
 {
-    return (uint8_t)(((pixel->red + pixel->green + pixel->blue) * DIV_3_CONST)
-            >> DIV_3_SHIFT);
+    return (uint8_t)(((pixel->red + pixel->green + pixel->blue) * div3Const)
+            >> div3Shift);
 }
 
 static inline uint8_t calc_pixel_grayscale(Pixel* pixel)
 {
     // Calculate gray scaled value
-    const uint32_t temp = (uint32_t)(GS_RED_MAP * pixel->red
-            + GS_GREEN_MAP * pixel->green + GS_BLUE_MAP * pixel->blue);
+    const uint32_t temp = (uint32_t)(rMapGS * pixel->red + gMapGS * pixel->green
+            + bMapGS * pixel->blue);
 
-    return (uint8_t)(temp >> GS_PIXEL_SCALING_FACTOR);
+    return (uint8_t)(temp >> pixScaleMultGS);
 }
 
 /* invert_colours()

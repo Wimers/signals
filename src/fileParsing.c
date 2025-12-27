@@ -13,10 +13,9 @@ const char* const fileOpeningErrorMessage
         = "Error opening file \"%s\" for reading.\n";
 const char* const errorReadingPixelsMessage
         = "Error reading pixels: (row %zu)\n";
-const char* const negativeWidthMessage = "Bitmap width cannot be negative!\n";
 const char* const invalidDimensionMessage
         = "Invalid image dimensions \"%dx%d\".\n";
-const char* const bmpLoadFailMessage = "BMP could not be loaded.\n";
+constexpr char bmpLoadFailMessage[] = "BMP could not be loaded.\n";
 const char* const headerReadFailMessage
         = "The header from \"%s\" could not be read.\n";
 const char* const eofMismatchMessage
@@ -46,12 +45,15 @@ const char* const negHorzResMessage
 const char* const resettingIntValueMessage = "Resetting value to \"%d\".\n";
 
 // Constant program strings
-const char* const windowsBmpID = "BM";
+const char windowsBmpID[] = "BM";
 const char* const eofAddrMessage = "End of File Addr: %ld\n";
-const char* const newlineStr = "\n";
+const char newlineStr[] = "\n";
 
 // Assorted constant chars
-const char newlineChar = '\n';
+constexpr char newlineChar = '\n';
+
+constexpr char lineSeparator[]
+        = "--------------------------------------------------\n";
 
 static const char* const bmpIdentifier[]
         = {"BM", "BA", "CI", "CP", "IC", "PT", NULL};

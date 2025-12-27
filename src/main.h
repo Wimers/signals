@@ -25,26 +25,13 @@
 #define gotIntMessage "    Got \"%d\".\n"
 
 // Program constant strings
-extern const char* const usageMessage;
-extern const char* const commandHelpMessage;
-extern const char* const fileTypeMessage;
-extern const char* const fileOpeningErrorMessage;
-extern const char* const invalidArgsMessage;
-extern const char* const lineSeparator;
-extern const char* const nonUniquePathsMessage;
-extern const char* const fileType;
-extern const char* const optstring;
-extern const char* const gotStrMessage;
-extern const char* const emptyArgsMessage;
-extern const char* const noArgsProvidedMessage;
-extern const char* const userHelpPrompt;
-extern const char* const unexpectedArgMessage;
 extern const char* const glitchOffsetValMessage;
 extern const char* const glitchUsageMessage;
 
 // Assorted constant chars
 extern const char* const readMode;
 extern const char* const writeMode;
+
 #define EOS '\0'
 
 typedef void (*ColourFilter)(Image* image);

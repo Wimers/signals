@@ -5,7 +5,7 @@ WARNINGS = -Wall -Wextra -Werror -Wshadow \
 	   -Wunreachable-code -Wcast-align -pedantic \
 	   -pedantic-errors
 
-CFLAGS = -std=gnu99 -march=native -fopenmp
+CFLAGS = -std=c2x -march=native -fopenmp
 PFLAGS = -O3 -flto -funroll-loops
 DEBUG = -g -fsanitize=address -fsanitize=undefined
 
