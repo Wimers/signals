@@ -74,6 +74,31 @@ constexpr char invalidFilterColourMessage[]
 const char* const readMode = "rb";
 const char* const writeMode = "wb";
 
+typedef enum {
+    INVALID = -1,
+    HELP = 'h',
+    DUMP_HEADER = 'd',
+    PRINT_IMAGE = 'p',
+    INPUT_FILE = 'i',
+    OUTPUT_FILE = 'o',
+    FILTERS = 'f',
+    GRAY_SCALE = 'g',
+    INVERT = 'v',
+    FLIP = 'u',
+    BRIGHTNESS_CUT = 'b',
+    COMBINE = 'c',
+    GLITCH = 'l',
+    AVE = 'a',
+    CONTRAST = 't',
+    DIM = 'm',
+    SWAP = 's',
+    ROTATE = 'w',
+    REVERSE = 'r',
+    MELT = 'M',
+    SCALE = 'S',
+    MERGE = 'G',
+} Flag;
+
 static struct option const longOptions[] = {
         {"input", required_argument, NULL, INPUT_FILE},
         {"output", required_argument, NULL, OUTPUT_FILE},
@@ -93,11 +118,14 @@ static struct option const longOptions[] = {
         {"swap", no_argument, NULL, SWAP},
         {"rotate", required_argument, NULL, ROTATE},
         {"reverse", no_argument, NULL, REVERSE},
+        {"melt", required_argument, NULL, MELT},
+        {"scale", required_argument, NULL, SCALE},
+        {"merge", required_argument, NULL, MERGE},
         {NULL, 0, NULL, 0},
 };
 
 constexpr char optstring[]
-        = "i:o:b:l:t:m:c:w:rdphfavgus"; // Defined program flags
+        = "i:o:b:l:t:m:c:w:S:rG:dphfavgusM:"; // Defined program flags
 
 int main(const int argc, char* argv[])
 {
@@ -161,24 +189,24 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         switch (opt) {
 
         case HELP:
-            userInput->help = 1;
+            userInput->help = true;
             break;
 
         case DUMP_HEADER:
-            userInput->header = 1;
+            userInput->header = true;
             break;
 
         case PRINT_IMAGE:
-            userInput->print = 1;
+            userInput->print = true;
             break;
 
         case INPUT_FILE:
-            userInput->input = 1;
+            userInput->input = true;
             userInput->inputFilePath = optarg;
             break;
 
         case OUTPUT_FILE:
-            userInput->output = 1;
+            userInput->output = true;
             userInput->outputFilePath = optarg;
             break;
 
@@ -190,15 +218,15 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
 
         case GRAY_SCALE:
-            userInput->grayscale = 1;
+            userInput->grayscale = true;
             break;
 
         case INVERT:
-            userInput->invert = 1;
+            userInput->invert = true;
             break;
 
         case FLIP:
-            userInput->flip = 1;
+            userInput->flip = true;
             break;
 
         case BRIGHTNESS_CUT: { // If brightness cut flag used, verify the
@@ -213,8 +241,13 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         }
 
         case COMBINE:
-            userInput->combine = 1;
+            userInput->combine = true;
             userInput->combineFilePath = optarg;
+            break;
+
+        case MERGE:
+            userInput->merge = true;
+            userInput->mergeFilePath = optarg;
             break;
 
         case GLITCH: { // If glitch flag used, verify the glitch offset
@@ -229,7 +262,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         }
 
         case AVE:
-            userInput->average = 1;
+            userInput->average = true;
             break;
 
         case CONTRAST: { // If contrast flag set, verify the required argument
@@ -253,7 +286,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         }
 
         case SWAP:
-            userInput->swap = 1;
+            userInput->swap = true;
             break;
 
         case ROTATE: {
@@ -274,7 +307,24 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         }
 
         case REVERSE:
-            userInput->reverse = 1;
+            userInput->reverse = true;
+            break;
+
+        case MELT: {
+            int val = atoi(optarg);
+            if (val) {
+                userInput->meltOffset = val;
+                userInput->melt = true;
+
+            } else {
+                return EXIT_INVALID_PARAMETER;
+            }
+
+            break;
+        }
+
+        case SCALE:
+            userInput->scale = atof(optarg);
             break;
 
             // If valid command supplied, or none supplied at all
@@ -334,7 +384,9 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->flip) { // If flip mode enabled
-            flip_image(bmpImage.image);
+            if (flip_image(bmpImage.image) == -1) {
+                break;
+            }
         }
 
         if (userInput->filters) {
@@ -345,6 +397,11 @@ int handle_commands(UserInput* userInput)
             }
 
             filter(bmpImage.image);
+        }
+
+        if (userInput->scale) {
+            colour_scaler(bmpImage.image, userInput->scale, userInput->scale,
+                    userInput->scale);
         }
 
         if (userInput->cutoff) {
@@ -376,9 +433,24 @@ int handle_commands(UserInput* userInput)
                     userInput->dim); // FIX Update docs
         }
 
+        if (userInput->melt) {
+            if (melt(&bmpImage, userInput->meltOffset) == -1) {
+                puts("Melt failed"); // FIX
+                break;
+            }
+        }
+
         if (userInput->combine) { // If image combination mode enabled
             if ((status = handle_combine(userInput, &bmpImage))
                     != EXIT_SUCCESS) {
+                fprintf(stderr, "Combine failed\n");
+                break;
+            }
+        }
+
+        if (userInput->merge) { // If image combination mode enabled
+            if ((status = handle_merge(userInput, &bmpImage)) != EXIT_SUCCESS) {
+                fprintf(stderr, "Merge failed\n");
                 break;
             }
         }
@@ -419,7 +491,10 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->print) { // If terminal printing mode enabled
-            flip_image(bmpImage.image);
+            if (flip_image(bmpImage.image) == -1) {
+                break;
+            }
+
             print_image_to_terminal(bmpImage.image);
         }
 
@@ -470,7 +545,7 @@ uint8_t handle_colour_filter_arg_parsing(const char* arg)
                 // Sets bit in bit vector to indicate presence of colour to
                 // filter. Both 'r' and 'R' are represented by the same bit,
                 // hence the division by two.
-                colourBitVect |= (1 << (j / 2));
+                colourBitVect |= (uint8_t)(1 << (j / 2));
                 break;
             }
             j++;
@@ -494,20 +569,17 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
 
     BMP combinedImage;
     initialise_bmp(&combinedImage);
-
     int status = EXIT_SUCCESS;
+
     while (1) {
         if ((status = open_bmp(&combinedImage, userInput->combineFilePath))
                 != EXIT_SUCCESS) {
             break;
         }
 
-        if ((status = handle_bmp_loading(bmpImage)) != EXIT_SUCCESS) {
+        if ((status = handle_bmp_loading(&combinedImage)) != EXIT_SUCCESS) {
             break;
         }
-
-        // Flip in upside down to correct for BMP pixel storage format
-        flip_image(combinedImage.image);
 
         if ((status = combine_images(bmpImage->image, combinedImage.image))
                 != EXIT_SUCCESS) {
@@ -519,6 +591,45 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage)
 
     // Cleanup and exit
     free_image_resources(&combinedImage);
+    return status;
+}
+
+int handle_merge(const UserInput* userInput, BMP* bmpImage)
+{
+    if (check_valid_file_type(fileType, userInput->mergeFilePath) == -1) {
+        return EXIT_INVALID_FILE_TYPE;
+    }
+
+    // Exit if input and merge file paths match
+    if (!strcmp(userInput->inputFilePath, userInput->mergeFilePath)) {
+        fputs(nonUniquePathsMessage, stderr);
+        return EXIT_SAME_FILE;
+    }
+
+    BMP mergedImage;
+    initialise_bmp(&mergedImage);
+    int status = EXIT_SUCCESS;
+
+    while (1) {
+        if ((status = open_bmp(&mergedImage, userInput->mergeFilePath))
+                != EXIT_SUCCESS) {
+            break;
+        }
+
+        if ((status = handle_bmp_loading(&mergedImage)) != EXIT_SUCCESS) {
+            break;
+        }
+
+        if ((status = merge_images(bmpImage->image, mergedImage.image))
+                != EXIT_SUCCESS) {
+            break;
+        }
+
+        break;
+    }
+
+    // Cleanup and exit
+    free_image_resources(&mergedImage);
     return status;
 }
 
@@ -552,7 +663,9 @@ void handle_image_rotation(BMP* bmpImage, const long nRotations)
         break;
 
     case 2:
-        flip_image(bmpImage->image);
+        if (flip_image(bmpImage->image) == -1) {
+            break;
+        }
         reverse_image(bmpImage->image);
         break;
 

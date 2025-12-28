@@ -267,9 +267,26 @@ void initialise_bmp(BMP* bmpImage)
     if (diff != 0) {
         fprintf(stderr, fileSizeCompareMessage, eofPos, metaFileSize);
 
-        (diff > 0) ? (fprintf(stderr, fileTooSmallMessage, diff))
-                   : (fprintf(stderr, fileCorruptionMessage, -diff));
-        return -1;
+        if (diff > 0) {
+            fprintf(stderr, fileTooSmallMessage, diff);
+            return -1;
+        }
+
+        fprintf(stderr, fileCorruptionMessage, -diff);
+        printf("Continue anyway? [Y/n]\n");
+        printf(">> ");
+        char c;
+
+        while (1) {
+            c = (char)(fgetc(stdin));
+            if (c == EOF || c == 'n') {
+                return -1;
+            }
+
+            if (c == 'Y') {
+                break;
+            }
+        }
     }
 
     const uint32_t offset = bmpHeader->offset;
@@ -417,7 +434,8 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
 
     if ((int64_t)endAddr != (int64_t)(header->bmpSize)) {
         fprintf(stderr, eofMismatchMessage, endAddr, header->bmpSize);
-        // Could add error return value
+        // free_image(&image);
+        // return NULL; // Could add error return value
     }
 
     return image;

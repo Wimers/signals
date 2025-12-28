@@ -34,54 +34,37 @@ constexpr char glitchUsageMessage[]
 extern const char* const readMode;
 extern const char* const writeMode;
 
-typedef void (*ColourFilter)(Image* image);
-typedef void (*Function)(void);
-
-typedef enum {
-    INVALID = -1,
-    HELP = 'h',
-    DUMP_HEADER = 'd',
-    PRINT_IMAGE = 'p',
-    INPUT_FILE = 'i',
-    OUTPUT_FILE = 'o',
-    FILTERS = 'f',
-    GRAY_SCALE = 'g',
-    INVERT = 'v',
-    FLIP = 'u',
-    BRIGHTNESS_CUT = 'b',
-    COMBINE = 'c',
-    GLITCH = 'l',
-    AVE = 'a',
-    CONTRAST = 't',
-    DIM = 'm',
-    SWAP = 's',
-    ROTATE = 'w',
-    REVERSE = 'r',
-} Flag;
-
 typedef struct {
     uint8_t input;
     char* inputFilePath;
     uint8_t output;
     char* outputFilePath;
     uint8_t help;
-    uint8_t header;
-    uint8_t print;
-    uint8_t invert;
+    bool header;
+    bool print;
+    bool invert;
     uint8_t filters;
     uint8_t grayscale;
-    uint8_t flip;
+    bool flip;
     uint8_t cutoff;
-    uint8_t combine;
+    bool combine;
     char* combineFilePath;
     size_t glitch;
     uint8_t average;
     uint8_t contrast;
     uint8_t dim;
-    uint8_t swap; // FIX
+    bool swap; // FIX
     long rotations;
-    uint8_t reverse;
+    bool reverse;
+    bool melt;
+    int32_t meltOffset;
+    double scale;
+    bool merge;
+    char* mergeFilePath;
 } UserInput;
+
+typedef void (*ColourFilter)(Image* image);
+typedef void (*Function)(void);
 
 /* check_for_empty_args()
  * ----------------------
@@ -173,5 +156,6 @@ int check_valid_file_type(const char* const type, const char* filePath);
 uint8_t handle_colour_filter_arg_parsing(const char* arg);
 Function handle_colour_filters(const uint8_t filters);
 void handle_image_rotation(BMP* bmpImage, const long nRotations);
+int handle_merge(const UserInput* userInput, BMP* bmpImage);
 
 #endif

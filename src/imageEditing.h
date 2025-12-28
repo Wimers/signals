@@ -13,12 +13,12 @@
  *
  * image: Pointer to the image struct to be flipped.
  */
-void flip_image(Image* image);
+[[nodiscard]] int flip_image(Image* image);
 
 void reverse_image(Image* image);
 
 Image* rotate_image(Image* image, const long nRotations);
-Image* rotate_image_clockwise(Image* image);
-Image* rotate_image_anticlockwise(Image* image);
+Image* rotate_image_clockwise(const Image* restrict image);
+Image* rotate_image_anticlockwise(const Image* restrict image);
 
 #endif

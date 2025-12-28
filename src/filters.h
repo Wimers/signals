@@ -122,7 +122,8 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff);
  *
  * Errors: Returns EXIT_OUT_OF_BOUNDS, if the images dimensions do not match.
  */
-int combine_images(Image* restrict primary, const Image* restrict secondary);
+[[nodiscard]] int combine_images(
+        Image* restrict primary, const Image* restrict secondary);
 
 /* glitch_effect()
  * ---------------
@@ -138,7 +139,7 @@ int combine_images(Image* restrict primary, const Image* restrict secondary);
  *
  * Errors: Returns -1 upon malloc failure, and if offset is out of bounds.
  */
-int glitch_effect(Image* image, const size_t glitchOffset);
+[[nodiscard]] int glitch_effect(Image* image, const size_t glitchOffset);
 
 /* verify_offset_bounds()
  * ----------------------
@@ -150,7 +151,7 @@ int glitch_effect(Image* image, const size_t glitchOffset);
  *
  * Returns: EXIT_SUCCESS if within bounds, else returns -1.
  */
-int verify_offset_bounds(Image* image, const size_t offset);
+[[nodiscard]] int verify_offset_bounds(Image* image, const size_t offset);
 
 /* contrast_effect()
  * -----------------
@@ -196,5 +197,13 @@ uint8_t contrast_effect_val(uint8_t val, const uint8_t contrastFactor,
  * image: Pointer to struct containing the pixel data.
  */
 void swap_red_blue(Image* image);
+
+[[nodiscard]] int melt(BMP* bmp, const int32_t startPoint);
+
+void colour_scaler(
+        Image* image, const double red, const double green, const double blue);
+
+[[nodiscard]] int merge_images(
+        Image* restrict primary, const Image* restrict secondary);
 
 #endif

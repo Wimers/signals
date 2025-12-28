@@ -4,6 +4,7 @@
 #include "fileParsing.h"
 #include "filters.h"
 #include "main.h"
+#include "imageEditing.h"
 
 constexpr char fileDimensionMismatchMessage[]
         = "File dimension mismatch: \"%zux%zu\" is not \"%zux%zu\"\n";
@@ -131,6 +132,7 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff)
         // Print error message
         fprintf(stderr, fileDimensionMismatchMessage, height, width,
                 secondary->height, secondary->width);
+        fflush(stderr);
         return EXIT_OUT_OF_BOUNDS;
     }
 
@@ -150,6 +152,44 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff)
             pPixel->blue = average_channel(pPixel->blue, sPixel->blue);
             pPixel->green = average_channel(pPixel->green, sPixel->green);
             pPixel->red = average_channel(pPixel->red, sPixel->red);
+        }
+    }
+
+    return EXIT_SUCCESS;
+}
+
+[[nodiscard]] int merge_images(
+        Image* restrict primary, const Image* restrict secondary)
+{
+    const size_t height = primary->height;
+    const size_t width = primary->width;
+
+    // Check images share the same physical dimensions
+    if ((secondary->height != height) || (secondary->width != width)) {
+
+        // Print error message
+        fprintf(stderr, fileDimensionMismatchMessage, height, width,
+                secondary->height, secondary->width);
+        fflush(stderr);
+        return EXIT_OUT_OF_BOUNDS;
+    }
+
+    // For each row
+    for (size_t y = 0; y < height; y++) {
+        size_t rowOffset = y * primary->width;
+
+        // For each pixel in row
+        for (size_t x = 0; x < width; x++) {
+
+            // For reduced cpu cycles
+            Pixel* pPixel = get_pixel_fast(primary, x, rowOffset);
+            Pixel* sPixel = get_pixel_fast(secondary, x, rowOffset);
+
+            // Average the each colour value from each image and update
+            // value in primary image.
+            pPixel->blue = clamp_ceil_u8(pPixel->blue, sPixel->blue);
+            pPixel->green = clamp_ceil_u8(pPixel->green, sPixel->green);
+            pPixel->red = clamp_ceil_u8(pPixel->red, sPixel->red);
         }
     }
 
@@ -267,5 +307,87 @@ void swap_red_blue(Image* image)
         const uint8_t temp = pixel->red;
         pixel->red = pixel->blue;
         pixel->blue = temp;
+    });
+}
+
+int cmp_pixels(const void* a, const void* b)
+{
+    const Pixel* p1 = (const Pixel*)a;
+    const Pixel* p2 = (const Pixel*)b;
+
+    int s1 = p1->blue + p1->green + p1->red;
+    int s2 = p2->blue + p2->green + p2->red;
+
+    return (s1 - s2);
+}
+
+[[nodiscard]] int melt(BMP* bmp, const int32_t startPoint)
+{
+    Image* image = bmp->image;
+    bool inv = false;
+
+    size_t norm = 0;
+    if (startPoint == 0) {
+        return -1; // FIX
+    }
+
+    if (startPoint < 0) {
+        norm = (size_t)(-startPoint);
+        inv = true;
+    } else {
+        norm = (size_t)startPoint;
+    }
+    norm--;
+
+    if (norm > image->height) {
+        norm = 1;
+    }
+
+    Image* rotated = NULL;
+
+    if (inv) {
+        rotated = rotate_image_clockwise(image);
+    } else {
+        rotated = rotate_image_anticlockwise(image);
+    }
+    if (rotated == NULL) {
+        return -1;
+    }
+
+    const size_t nmembPix = rotated->width - norm;
+
+    for (size_t y = 0; y < rotated->height; y++) {
+        size_t rowOffset = y * rotated->width;
+        Pixel* rowPtr = get_pixel_fast(rotated, norm, rowOffset);
+
+        qsort(rowPtr, nmembPix, sizeof(Pixel), cmp_pixels);
+    }
+
+    Image* unRotated = NULL;
+
+    if (inv) {
+        unRotated = rotate_image_anticlockwise(rotated);
+    } else {
+        unRotated = rotate_image_clockwise(rotated);
+    }
+
+    free_image(&rotated);
+
+    if (unRotated == NULL) {
+        return -1;
+    }
+
+    free_image(&image);
+    bmp->image = unRotated;
+    return EXIT_SUCCESS;
+}
+
+void colour_scaler(
+        Image* image, const double red, const double green, const double blue)
+{
+    FX_TEMPLATE(image, { // Swap red and blue values
+        pixel->blue = (uint8_t)(pixel->blue * blue);
+        pixel->green = (uint8_t)(pixel->green * green);
+        pixel->red = (uint8_t)(pixel->red * red);
     });
 }

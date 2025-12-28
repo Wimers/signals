@@ -4,14 +4,18 @@
 #include "filters.h"
 #include "imageEditing.h"
 
-void flip_image(Image* image)
+[[nodiscard]] int flip_image(Image* image)
 {
+    if (image == NULL) {
+        return -1;
+    }
+
     const size_t rowSize = image->width * sizeof(Pixel);
     Pixel* rowBuffer = malloc(rowSize);
 
     if (rowBuffer == NULL) {
         perror("malloc failed while flipping..");
-        return;
+        return -1;
     }
 
     const size_t last = image->height >> 1;
@@ -29,6 +33,8 @@ void flip_image(Image* image)
     }
 
     free(rowBuffer);
+
+    return EXIT_SUCCESS;
 }
 
 void reverse_image(Image* image)
@@ -52,7 +58,7 @@ void reverse_image(Image* image)
     }
 }
 
-static inline Image* rotation_helper(Image* image)
+static inline Image* rotation_helper(const Image* restrict image)
 {
     Image* rotated = create_image((int32_t)(image->height),
             (int32_t)(image->width)); // FIX type casts
@@ -68,7 +74,7 @@ static inline Image* rotation_helper(Image* image)
     return rotated;
 }
 
-Image* rotate_image_clockwise(Image* image)
+Image* rotate_image_clockwise(const Image* restrict image)
 {
     Image* rotated = rotation_helper(image);
 
@@ -76,11 +82,15 @@ Image* rotate_image_clockwise(Image* image)
         return NULL;
     }
 
-    flip_image(rotated);
+    if (flip_image(rotated) == -1) {
+        free_image(&rotated);
+        return NULL;
+    }
+
     return rotated;
 }
 
-Image* rotate_image_anticlockwise(Image* image)
+Image* rotate_image_anticlockwise(const Image* restrict image)
 {
     Image* rotated = rotation_helper(image);
 
