@@ -37,11 +37,9 @@ Currently supports 24-bit Windows bitmaps.
 
 ---
 
-
-
 # Heart
 ```console
-$ ./bmp --input images/original/heartOriginal.bmp --output=heart.bmp --glitch 60 --brightness-cap 245
+$ ./bmp --input images/original/heartOriginal.bmp --output=heart.bmp --glitch 60 --brightness-cut 245
 ```
 
 <p align="center">
@@ -58,3 +56,43 @@ $ ./bmp --input images/modified/heart.bmp --output dbmelt.bmp --merge temp.bmp -
 <p align="center">
   <img src="images/modified/dbmelt.bmp" />
 </p>
+
+---
+
+# Usage
+
+### I/O
+| Flag | Long Flag | Argument | Description |
+| :--- | :--- | :--- | :--- |
+| `-h` | `--help` | | Shows a helpful program usage message. |
+| `-i` | `--input` | `<file>` | Input BMP file path. |
+| `-o` | `--output` | `<file>` | Output file path. |
+| `-d` | `--dump` | | Dumps the BMP header data to the terminal. |
+| `-p` | `--print` | | Renders the image to the terminal. |
+
+### **Filters**
+| Flag | Long Flag | Argument | Description |
+| :--- | :--- | :--- | :--- |
+| `-g` | `--grayscale` | | Converts to black & white (Luma). |
+| `-a` | `--average` | | Convert to grayscale (Average Intensity). |
+| `-s` | `--swap` | | Swaps the red and blue color channels. |
+| `-v` | `--invert` | | Inverts all colors (Negative effect). |
+| `-S` | `--scale` | `<val>` | Colour intensity multiplier |
+| `-t` | `--contrast` | `<val>` | Adjusts contrast intensity (0-255). |
+| `-m` | `--dim` | `<val>` | Reduce pixel intensity (0-255). |
+| `-b` | `--brightness-cut` | `<val>` | Zeros pixel colour if value exceeds cutoff (0-255). |
+
+### Effects
+| Flag | Long Flag | Argument | Description |
+| :--- | :--- | :--- | :--- |
+| `-M` | `--melt` | `[offset]` | Pixel Sorting Effect (negative input to invert). |
+| `-l` | `--glitch` | `<offset>` | Apply horizontal shift effect ored and blue channels. |
+| `-G` | `--merge` | `<file>` | Overlays a second image onto the input. |
+| `-c` | `--combine` | `<file>` | Averages the pixel data of two images together. |
+
+### **Geometry**
+| Flag | Long Flag | Argument | Description |
+| :--- | :--- | :--- | :--- |
+| `-u` | `--flip` | | Flips image vertically. |
+| `-r` | `--reverse` | | Reverse image horizontally. |
+| `-w` | `--rotate` | `<90s>` | Rotates image 90° clockwise N times. |
