@@ -28,7 +28,7 @@ constexpr char helpMessage[] // Need to update FIX
           "terminal\n"
           "  -p, --print                 - Render image to terminal (ANSI)\n"
           "\n"
-          "Image Filters:\n"
+          "Colours & Channels:\n"
           "  -g, --grayscale             - Convert image to grayscale (Luma)\n"
           "  -a, --average               - Convert to grayscale (Average "
           "Intensity)\n"
@@ -36,7 +36,7 @@ constexpr char helpMessage[] // Need to update FIX
           "  -f, --filter <channels>     - Isolate specific channels (e.g. "
           "'rb')\n"
           "  -s, --swap                  - Swap Red and Blue color channels\n"
-          "  -u, --flip                  - Flip image vertically\n"
+          "  -S, --scale <val>           - Scale color intensity (multiplier)\n"
           "\n"
           "Geometry & Orientation:\n"
           "  -r, --reverse               - Reverse image horizontally\n"
@@ -52,8 +52,12 @@ constexpr char helpMessage[] // Need to update FIX
           "\n"
           "Advanced Effects:\n"
           "  -l, --glitch <offset>       - Apply horizontal glitch effect\n"
+          "  -M, --melt <offset>         - Pixel sorting effect (negative to "
+          "invert)\n"
           "  -c, --combine <file>        - Overlay another BMP image onto "
-          "input\n";
+          "input\n"
+          "  -G, --merge <file>          - Average blend with another BMP "
+          "image\n";
 
 constexpr char fileTypeMessage[] = "Input file must be \".bmp\"\n";
 constexpr char emptyArgsMessage[] = "Arguments must not be empty.\n";
