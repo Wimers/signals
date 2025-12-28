@@ -23,9 +23,12 @@
 
 #define gotIntMessage "    Got \"%d\".\n"
 
-// Program constant strings
-extern const char* const glitchOffsetValMessage;
-extern const char* const glitchUsageMessage;
+constexpr char glitchOffsetValMessage[]
+        = "\nOffset must be a positive integer, within input image "
+          "bounds.\n";
+constexpr char glitchUsageMessage[]
+        = "Glitch Effect\nUsage:  -l, --glitch <offset>  "
+          "    - Apply horizontal glitch effect\n";
 
 // Assorted constant chars
 extern const char* const readMode;

@@ -65,15 +65,9 @@ constexpr char nonUniquePathsMessage[]
 constexpr char fileType[] = ".bmp";
 
 // Error messages
-const char* const unexpectedArgMessage = "Got \"%s\", expected \"%s\"\n";
-const char* const glitchOffsetValMessage
-        = "\nOffset must be a positive integer, within input image "
-          "bounds.\n";
-const char* const gotStrMessage = "    Got \"%s\".\n";
-const char* const glitchUsageMessage
-        = "Glitch Effect\nUsage:  -l, --glitch <offset>  "
-          "    - Apply horizontal glitch effect\n";
-const char* const invalidFilterColourMessage
+constexpr char unexpectedArgMessage[] = "Got \"%s\", expected \"%s\"\n";
+constexpr char gotStrMessage[] = "    Got \"%s\".\n";
+constexpr char invalidFilterColourMessage[]
         = "Filter colour/s invalid \"%s\", must be RGB characters.\n";
 
 // Assorted constant chars

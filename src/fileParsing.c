@@ -8,43 +8,43 @@
 #include <string.h>
 
 // Error messages
-const char* const invalidColourPlanesMessage
+constexpr char invalidColourPlanesMessage[]
         = "The number of colour planes must be 1, got \"%u\".\n";
-const char* const fileOpeningErrorMessage
+constexpr char fileOpeningErrorMessage[]
         = "Error opening file \"%s\" for reading.\n";
-const char* const errorReadingPixelsMessage
+constexpr char errorReadingPixelsMessage[]
         = "Error reading pixels: (row %zu)\n";
-const char* const invalidDimensionMessage
+constexpr char invalidDimensionMessage[]
         = "Invalid image dimensions \"%dx%d\".\n";
 constexpr char bmpLoadFailMessage[] = "BMP could not be loaded.\n";
-const char* const headerReadFailMessage
+constexpr char headerReadFailMessage[]
         = "The header from \"%s\" could not be read.\n";
-const char* const eofMismatchMessage
+constexpr char eofMismatchMessage[]
         = "Location of EOF mismatch: Got \'%ld\', expected \'%d\'.\n";
-const char* const invalidCompressionMessage
+constexpr char invalidCompressionMessage[]
         = "Invalid compression method \"%u\", expected result between 0 <-> 13 "
           "(inclusive).\n";
-const char* const unsupportedCompressionMessage
+constexpr char unsupportedCompressionMessage[]
         = "Compression method not supported (code: \"%u\").\n";
-const char* const invalidBmpTypeMessage
+constexpr char invalidBmpTypeMessage[]
         = "Invalid compression method \"%.2s\".\n";
-const char* const unsupportedBmpTypeMessage
+constexpr char unsupportedBmpTypeMessage[]
         = "Unsupported BMP format \"%.2s\".\n";
-const char* const fileSizeCompareMessage
+constexpr char fileSizeCompareMessage[]
         = "File contains \"%ld\" bytes: metadata asserts \"%u\" "
           "bytes.\n";
-const char* const fileTooSmallMessage
+constexpr char fileTooSmallMessage[]
         = "File size is too small, %ld less bytes than expected.\n";
-const char* const fileCorruptionMessage
+constexpr char fileCorruptionMessage[]
         = "File may be corrupted, or contain hidden data (%ld bytes).\n";
-const char* const pixelOffsetInvalidMessage
+constexpr char pixelOffsetInvalidMessage[]
         = "Pixel data offset invalid (%u).\n";
-const char* const negVertResMessage
+constexpr char negVertResMessage[]
         = "Warning: Vertical resolution is negative (%d).\n";
-const char* const negHorzResMessage
+constexpr char negHorzResMessage[]
         = "Warning: Horizontal resolution is negative (%d).\n";
-const char* const resettingIntValueMessage = "Resetting value to \"%d\".\n";
-const char* const eofAddrMessage = "End of File Addr: %ld\n";
+constexpr char resettingIntValueMessage[] = "Resetting value to \"%d\".\n";
+// constexpr char eofAddrMessage[] = "End of File Addr: %ld\n";
 
 // Constant program strings
 constexpr char windowsBmpID[] = "BM";
@@ -57,6 +57,18 @@ constexpr char newlineChar = '\n';
 
 static const char* const bmpIdentifier[]
         = {"BM", "BA", "CI", "CP", "IC", "PT", NULL};
+
+// File constants
+constexpr int BMP_HEADER_SIZE = 14;
+constexpr int DIB_HEADER_SIZE = 40;
+
+// BMP compression modes, BI_RGB (none) is the default compression method
+constexpr int BI_RGB = 0;
+constexpr int comprMax = 13; // (BMP standard allows values range from 0 <-> 13)
+
+constexpr size_t p24bit_t = 3;
+constexpr size_t maxLenANSI = 32;
+constexpr size_t terminalBufferLen = 8192;
 
 void initialise_bmp(BMP* bmpImage)
 {
@@ -231,7 +243,7 @@ void initialise_bmp(BMP* bmpImage)
         return -1;
     }
 
-    if (info->compression > COMP_METH_VAL_MAX) {
+    if (info->compression > comprMax) {
         fprintf(stderr, invalidCompressionMessage, info->compression);
         return -1;
     }
@@ -264,7 +276,7 @@ void initialise_bmp(BMP* bmpImage)
     const size_t padding = calc_row_byte_offset(
             info->bitsPerPixel, (size_t)info->bitmapWidth);
     const size_t minRequiredBytes
-            = (((size_t)abs(info->bitmapWidth) * RGB_PIXEL_BYTE_SIZE + padding)
+            = (((size_t)abs(info->bitmapWidth) * p24bit_t + padding)
                     * (size_t)abs(info->bitmapHeight));
 
     if ((info->imageSize != minRequiredBytes)
@@ -414,7 +426,7 @@ Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
 void print_image_to_terminal(const Image* image)
 {
     // Initialise
-    char buffer[OUTPUT_BUFFER_CAPACITY];
+    char buffer[terminalBufferLen];
     size_t bufferPosition = 0;
 
     // Constant parts of the ANSI escape sequence
@@ -432,8 +444,7 @@ void print_image_to_terminal(const Image* image)
 
             // If buffer does not have room for pixel, write buffer to
             // terminal and reset buffer position.
-            if ((bufferPosition + MAX_ANSI_PIXEL_LEN)
-                    >= OUTPUT_BUFFER_CAPACITY) {
+            if ((bufferPosition + maxLenANSI) >= terminalBufferLen) {
                 fwrite(buffer, 1, bufferPosition, stdout);
                 bufferPosition = 0;
             }
@@ -464,7 +475,7 @@ void print_image_to_terminal(const Image* image)
         }
 
         // If buffer full, write to terminal, and newline terminate
-        if (bufferPosition == OUTPUT_BUFFER_CAPACITY) {
+        if (bufferPosition == terminalBufferLen) {
             fwrite(buffer, 1, bufferPosition, stdout);
             bufferPosition = 0;
         }
@@ -482,12 +493,11 @@ size_t calc_row_byte_offset(
         const uint16_t bitsPerPixel, const int32_t bitmapWidth)
 {
     // Calculate offset required due to row padding (32-bit DWORD len)
-    const size_t byteOffset
-            = (BMP_ROW_DWORD_LEN
-                      - (((size_t)bitsPerPixel * (size_t)bitmapWidth)
-                              % BMP_ROW_DWORD_LEN))
-            % BMP_ROW_DWORD_LEN;
-    return byteOffset / SIZE_BYTE;
+    const size_t bitsPerRow = (size_t)bitsPerPixel * (size_t)bitmapWidth;
+
+    // Padding is 32 bit
+    // 3 is log2(SIZE_BYTE)
+    return (size_t)(((-bitsPerRow) & (31)) >> 3);
 }
 
 Image* create_image(const int32_t width, const int32_t height)
@@ -513,11 +523,15 @@ Image* create_image(const int32_t width, const int32_t height)
     return img;
 }
 
-void write_padding(FILE* file, const size_t gapSize)
+void write_padding(FILE* file, size_t gapSize)
 {
-    const uint8_t zeros[4] = {0, 0, 0, 0};
+    static const uint8_t zeros[32] = {0};
 
-    if (0 < gapSize && gapSize <= 3) {
+    while (gapSize > 32) {
+        fwrite(zeros, 1, 32, file);
+        gapSize -= 32;
+    }
+    if (gapSize > 0) {
         fwrite(zeros, 1, gapSize, file);
     }
 }

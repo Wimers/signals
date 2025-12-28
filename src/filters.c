@@ -5,17 +5,33 @@
 #include "filters.h"
 #include "main.h"
 
-const char* const fileDimensionMismatchMessage
+constexpr char fileDimensionMismatchMessage[]
         = "File dimension mismatch: \"%zux%zu\" is not \"%zux%zu\"\n";
-const char* const imageBoundsMessage = "Image bounds (%zux%zu)\n";
+constexpr char imageBoundsMessage[] = "Image bounds (%zux%zu)\n";
+
+static inline uint8_t clamp_floor_u8(const uint8_t val, const uint8_t sub)
+{
+    return (uint8_t)((val > sub) ? (val - sub) : (0));
+}
+
+static inline uint8_t clamp_ceil_u8(const uint8_t val, const uint8_t add)
+{
+    const int sum = val + add;
+    return (uint8_t)((sum >= UINT8_MAX) ? (UINT8_MAX) : (sum));
+}
+
+static inline uint8_t average_channel(const uint8_t a, const uint8_t b)
+{
+    return (uint8_t)((a + b) >> 1);
+}
 
 void invert_colours(Image* image)
 {
     FX_TEMPLATE(image,
             { // Invert pixel colour value
-                pixel->red = (uint8_t)(UINT8_MAX - pixel->red);
-                pixel->green = (uint8_t)(UINT8_MAX - pixel->green);
-                pixel->blue = (uint8_t)(UINT8_MAX - pixel->blue);
+                pixel->blue ^= -1;
+                pixel->green ^= -1;
+                pixel->red ^= -1;
             });
 }
 
@@ -47,8 +63,8 @@ void filter_red_green(Image* image)
 {
     FX_TEMPLATE(image,
             { // Disable the red and green components of the pixel
-                pixel->red = 0;
                 pixel->green = 0;
+                pixel->red = 0;
             });
 }
 
@@ -56,8 +72,8 @@ void filter_red_blue(Image* image)
 {
     FX_TEMPLATE(image,
             { // Disable the red and blue components of the pixel
-                pixel->red = 0;
                 pixel->blue = 0;
+                pixel->red = 0;
             });
 }
 
@@ -65,16 +81,15 @@ void filter_green_blue(Image* image)
 {
     FX_TEMPLATE(image,
             { // Disable the green and blue components of the pixel
-                pixel->green = 0;
                 pixel->blue = 0;
+                pixel->green = 0;
             });
 }
 
 void filter_all(Image* image)
 {
     // Zero everything
-    memset(&((image->pixelData)[0]), 0,
-            sizeof(Pixel) * image->width * image->height);
+    memset(image->pixelData, 0, sizeof(Pixel) * image->width * image->height);
 }
 
 void gray_filter(Image* image)
@@ -89,39 +104,23 @@ void gray_filter(Image* image)
 
 void average_pixels(Image* image)
 {
-    FX_TEMPLATE(image,
-            { // Calculates the mean value of the pixel
-                const uint8_t brightness = calc_pixel_average(pixel);
-                pixel->blue = brightness;
-                pixel->green = brightness;
-                pixel->red = brightness;
-            });
+    FX_TEMPLATE(image, { // Calculates the mean value of the pixel
+        const uint8_t brightness = calc_pixel_average(pixel);
+        pixel->red = pixel->green = pixel->blue = brightness;
+    });
 }
 
 void brightness_cut_filter(Image* image, const uint8_t cutoff)
 {
-    FX_TEMPLATE(image, {
-        if (pixel->blue > cutoff) {
-
-            // Disable blue component of pixel
-            pixel->blue = 0;
-        }
-
-        if (pixel->green > cutoff) {
-
-            // Disable green component of pixel
-            pixel->green = 0;
-        }
-
-        if (pixel->red > cutoff) {
-
-            // Disable red component of pixel
-            pixel->red = 0;
-        }
+    FX_TEMPLATE(image, { // Disable colour
+        pixel->blue = (uint8_t)(pixel->blue * (pixel->blue <= cutoff));
+        pixel->green = (uint8_t)(pixel->green * (pixel->green <= cutoff));
+        pixel->red = (uint8_t)(pixel->red * (pixel->red <= cutoff));
     });
 }
 
-int combine_images(Image* restrict primary, const Image* restrict secondary)
+[[nodiscard]] int combine_images(
+        Image* restrict primary, const Image* restrict secondary)
 {
     const size_t height = primary->height;
     const size_t width = primary->width;
@@ -148,24 +147,16 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
 
             // Average the each colour value from each image and update
             // value in primary image.
-
-            const uint8_t newRed = (uint8_t)((pPixel->red + sPixel->red) >> 1);
-            pPixel->red = newRed;
-
-            const uint8_t newGreen
-                    = (uint8_t)((pPixel->green + sPixel->green) >> 1);
-            pPixel->green = newGreen;
-
-            const uint8_t newBlue
-                    = (uint8_t)((pPixel->blue + sPixel->blue) >> 1);
-            pPixel->blue = newBlue;
+            pPixel->blue = average_channel(pPixel->blue, sPixel->blue);
+            pPixel->green = average_channel(pPixel->green, sPixel->green);
+            pPixel->red = average_channel(pPixel->red, sPixel->red);
         }
     }
 
     return EXIT_SUCCESS;
 }
 
-int glitch_effect(Image* image, const size_t glitchOffset)
+[[nodiscard]] int glitch_effect(Image* image, const size_t glitchOffset)
 {
     // Check if offset is out of image bounds
     if (verify_offset_bounds(image, glitchOffset) == -1) {
@@ -212,7 +203,7 @@ int glitch_effect(Image* image, const size_t glitchOffset)
     return EXIT_SUCCESS;
 }
 
-int verify_offset_bounds(Image* image, const size_t offset) // FIX
+[[nodiscard]] int verify_offset_bounds(Image* image, const size_t offset) // FIX
 {
     if (offset >= image->width) {
         fputs(glitchUsageMessage, stderr);
@@ -250,17 +241,9 @@ void dim_effect(Image* image, const uint8_t redDim, const uint8_t greenDim,
     FX_TEMPLATE(image,
             { // Reduce value of each pixel component by the dimming factor
               // Zero is the minimum value components can be reduced to.
-                pixel->blue = (pixel->blue <= blueDim)
-                        ? (0)
-                        : ((uint8_t)(pixel->blue - blueDim));
-
-                pixel->green = (pixel->green <= greenDim)
-                        ? (0)
-                        : ((uint8_t)(pixel->green - greenDim));
-
-                pixel->red = (pixel->red <= redDim)
-                        ? (0)
-                        : ((uint8_t)(pixel->red - redDim));
+                pixel->blue = clamp_floor_u8(pixel->blue, blueDim);
+                pixel->green = clamp_floor_u8(pixel->green, greenDim);
+                pixel->red = clamp_floor_u8(pixel->red, redDim);
             });
 }
 
@@ -268,17 +251,11 @@ uint8_t contrast_effect_val(const uint8_t val, const uint8_t contrastFactor,
         const uint8_t min, const uint8_t max)
 {
     if (val >= max) {
-        const int sumMax = val + contrastFactor;
-        return (sumMax <= UINT8_MAX) ? ((uint8_t)sumMax) : ((uint8_t)UINT8_MAX);
+        return clamp_ceil_u8(val, contrastFactor);
     }
 
     if (val <= min) {
-        const int sumMin = val - contrastFactor;
-
-        if (sumMin <= 0) {
-            return (uint8_t)0;
-        }
-        return (sumMin < UINT8_MAX) ? ((uint8_t)sumMin) : ((uint8_t)UINT8_MAX);
+        return clamp_floor_u8(val, contrastFactor);
     }
 
     return val;

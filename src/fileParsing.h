@@ -11,20 +11,7 @@
 #define EXIT_OUT_OF_BOUNDS 10
 #define EXIT_HEADER_SAFETY 22
 
-// File constants
-#define BMP_HEADER_SIZE 14
-#define DIB_HEADER_SIZE 40
-#define OFFSET_ADDR_SIZE 4
-
-// BMP compression modes, BI_RGB (none) is the default compression method
-#define BI_RGB 0
-#define COMP_METH_VAL_MAX 13 // (BMP standard allows values range from 0 <-> 13)
-
-#define RGB_PIXEL_BYTE_SIZE 3
 #define SIZE_BYTE 8
-#define BMP_ROW_DWORD_LEN 32
-#define MAX_ANSI_PIXEL_LEN 32
-#define OUTPUT_BUFFER_CAPACITY 8192
 
 #define suXFormat "%-25s %-15u %X\n"
 #define sdXFormat "%-25s %-15d %X\n"
