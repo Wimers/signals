@@ -37,11 +37,24 @@ Currently supports 24-bit Windows bitmaps.
 
 ---
 
-## Images
 
-### Heart
+
+# Heart
+```console
+$ ./bmp --input images/original/heartOriginal.bmp --output=heart.bmp --glitch 60 --brightness-cap 245
+```
 
 <p align="center">
   <img src="images/original/heartOriginal.bmp" width="47%" />
   <img src="images/modified/heart.bmp" width="47%" /> 
+</p>
+
+# Melt </3
+```console
+$ ./bmp --input images/original/heartOriginal.bmp --output temp.bmp --reverse  --melt -1 --contrast 30
+$ ./bmp --input images/modified/heart.bmp --output dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
+```
+
+<p align="center">
+  <img src="images/modified/dbmelt.bmp" />
 </p>
