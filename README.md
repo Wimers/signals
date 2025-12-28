@@ -10,19 +10,18 @@
 
 # BMP Image Processor
 
-BMP image processor built with zero dependencies for Linux/Unix systems. Featuring a range of custom filters and effects, ANSI terminal rendering, and image exporting.
+<img src="images/modified/dbmelt.bmp" align="right" width="420" height="260" />
 
-Currently supports 24-bit Windows bitmaps.
+A BMP image processor built with zero dependencies for Linux/Unix systems. Features a range of image editing tools, custom filters/effects, ANSI terminal rendering, and image exporting.
 
-## Features
+**Features:**
+- **Effects:** Channel isolation, colour scaling, contrast, inversion, and more!
+- **Transformations:** Image rotation, reversing, and flipping.
+- **Blending:** Combine and merge images.
 
-- Parse and process BMP image files.
-- Render images directly to the terminal.
-- Export processed images.
-- Zero external dependencies (pure C implementation).
-- Fine-grained control over image manipulation via:
-  - Custom signal processing filters and effects.
-  - Image rotation, flipping, and reversal.
+> Currently only supports 24-bit Windows BMP's.
+
+<div style="clear: both;"></div>
 
 ---
 
@@ -30,38 +29,38 @@ Currently supports 24-bit Windows bitmaps.
 
 - Terminal Rendering:
   - For the best viewing experience, zoom out in your terminal.
-  - Useful for checking parameters without saving to disk
+  - Useful for checking parameters without saving to disk.
 
 - Cascading Operations:
-  - You can combine flags to process and preview simultaneously.
+  - You can combine flags to process multiple effects simultaneously.
 
 ---
 
 # Heart
 ```console
-$ ./bmp --input images/original/heartOriginal.bmp --output=heart.bmp --glitch 60 --brightness-cut 245
+$ ./bmp -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightness-cut 245
 ```
 
 <p align="center">
-  <img src="images/original/heartOriginal.bmp" width="47%" />
-  <img src="images/modified/heart.bmp" width="47%" /> 
+  <img src="images/original/heartOriginal.bmp" width="500"/>
+  <img src="images/modified/heart.bmp" width="500"/> 
 </p>
 
 # Melt </3
 ```console
-$ ./bmp --input images/original/heartOriginal.bmp --output temp.bmp --reverse  --melt -1 --contrast 30
-$ ./bmp --input images/modified/heart.bmp --output dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
+$ ./bmp -i images/original/heartOriginal.bmp -o temp.bmp --reverse  --melt -1 --contrast 30
+$ ./bmp -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
 ```
 
 <p align="center">
-  <img src="images/modified/dbmelt.bmp" />
+  <img src="images/modified/dbmelt.bmp" width="1000" height="400" />
 </p>
 
 ---
 
 # Usage
 
-### I/O
+### **I/O**
 | Flag | Long Flag | Argument | Description |
 | :--- | :--- | :--- | :--- |
 | `-h` | `--help` | | Shows a helpful program usage message. |
@@ -82,11 +81,11 @@ $ ./bmp --input images/modified/heart.bmp --output dbmelt.bmp --merge temp.bmp -
 | `-m` | `--dim` | `<val>` | Reduce pixel intensity (0-255). |
 | `-b` | `--brightness-cut` | `<val>` | Zeros pixel colour if value exceeds cutoff (0-255). |
 
-### Effects
+### **Effects**
 | Flag | Long Flag | Argument | Description |
 | :--- | :--- | :--- | :--- |
-| `-M` | `--melt` | `[offset]` | Pixel Sorting Effect (negative input to invert). |
-| `-l` | `--glitch` | `<offset>` | Apply horizontal shift effect ored and blue channels. |
+| `-M` | `--melt` | `<offset>` | Pixel Sorting Effect (negative input to invert). |
+| `-l` | `--glitch` | `<offset>` | Apply horizontal shift effect to red and blue channels. |
 | `-G` | `--merge` | `<file>` | Overlays a second image onto the input. |
 | `-c` | `--combine` | `<file>` | Averages the pixel data of two images together. |
 
@@ -95,4 +94,4 @@ $ ./bmp --input images/modified/heart.bmp --output dbmelt.bmp --merge temp.bmp -
 | :--- | :--- | :--- | :--- |
 | `-u` | `--flip` | | Flips image vertically. |
 | `-r` | `--reverse` | | Reverse image horizontally. |
-| `-w` | `--rotate` | `<90s>` | Rotates image 90° clockwise N times. |
+| `-w` | `--rotate` | `<N>` | Rotates image 90° clockwise `N` times. |
