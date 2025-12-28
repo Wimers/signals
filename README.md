@@ -8,18 +8,32 @@
 
 </div>
 
+
+
 # BMP Image Processor
 
-<img src="images/modified/dbmelt.bmp" align="right" width="420" height="260" />
 
-A BMP image processor built with zero dependencies for Linux/Unix systems. Features a range of image editing tools, custom filters/effects, ANSI terminal rendering, and image exporting.
-
-**Features:**
-- **Effects:** Channel isolation, colour scaling, contrast, inversion, and more!
-- **Transformations:** Image rotation, reversing, and flipping.
-- **Blending:** Combine and merge images.
-
-> Currently only supports 24-bit Windows BMP's.
+<table border="0" style="width: 100%; border-collapse: collapse; border: none;">
+  <tr style="border: none;">
+    <td width="55%" valign="top" style="border: none;">
+      <p>
+        A BMP image processor built with zero dependencies for Linux/Unix systems.
+        Features a range of image editing tools, custom filters/effects, ANSI terminal
+        rendering, and image exporting.
+      </p>
+      <strong>Features:</strong>
+      <ul>
+        <li><strong>Effects:</strong> Channel isolation, colour scaling, contrast, inversion, and more!</li>
+        <li><strong>Transformations:</strong> Image rotation, reversing, and flipping.</li>
+        <li><strong>Blending:</strong> Combine and merge images.</li>
+      </ul>
+      <blockquote>Currently only supports 24-bit Windows BMP's.</blockquote>
+    </td>
+    <td width="45%" valign="top" style="border: none;">
+      <img src="images/modified/dbmelt.bmp" align="right"width="440" height="260" />
+    </td>
+  </tr>
+</table>
 
 <div style="clear: both;"></div>
 
