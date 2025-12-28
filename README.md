@@ -42,8 +42,8 @@ $ ./bmp -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightne
 ```
 
 <p align="center">
-  <img src="images/original/heartOriginal.bmp" width="500"/>
-  <img src="images/modified/heart.bmp" width="500"/> 
+  <img src="images/original/heartOriginal.bmp" width="49%"/>
+  <img src="images/modified/heart.bmp" width="49%"/> 
 </p>
 
 # Melt </3
