@@ -61,6 +61,7 @@ typedef struct {
     double scale;
     bool merge;
     char* mergeFilePath;
+    uint32_t blur;
 } UserInput;
 
 typedef void (*ColourFilter)(Image* image);

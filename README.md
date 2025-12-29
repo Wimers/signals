@@ -82,6 +82,7 @@ $ ./bmp -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --
 | `-t` | `--contrast` | `<val>` | Adjusts contrast intensity (0-255). |
 | `-m` | `--dim` | `<val>` | Reduce pixel intensity (0-255). |
 | `-b` | `--brightness-cut` | `<val>` | Zeros pixel colour if value exceeds cutoff (0-255). |
+| `-B`,| `--blur` | `<radius>`| Blurs the image using the set radius. |
 
 ### **Effects**
 | Flag | Long Flag | Argument | Description |

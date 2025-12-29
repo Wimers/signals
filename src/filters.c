@@ -394,42 +394,54 @@ void colour_scaler(
 
 Image* image_blur(Image* image, uint32_t radius)
 {
-    Pixel* buffer[9] = {0};
+    size_t perimeter = (radius << 1) + 1;
+    size_t volume = perimeter * perimeter;
 
-    size_t diff = radius >> 1;
+    Pixel** buffer = malloc(volume * sizeof(Pixel*));
+    size_t* rowBuff = malloc(perimeter * sizeof(size_t));
 
     Image* new = create_image((int32_t)image->width, (int32_t)image->height);
 
-    for (size_t y = diff; y < image->height - diff; y++) {
-        size_t prev = image->width * (y - diff);
-        size_t cur = image->width * y;
-        size_t next = image->width * (y + diff);
+    for (size_t y = radius; y < image->height - radius; y++) {
+        size_t ggVal = y - radius;
 
-        for (size_t x = diff; x < image->width - diff; x++) {
+        for (size_t j = 0; j < perimeter; j++) {
+            rowBuff[j] = image->width * (ggVal + j);
+        }
 
-            for (size_t z = 0; z < 3; z++) {
+        for (size_t x = radius; x < image->width - radius; x++) {
+            const size_t val = x - radius;
 
-                buffer[0 + z] = get_pixel_fast(image, x - diff + z, prev);
-                buffer[3 + z] = get_pixel_fast(image, x - diff + z, cur);
-                buffer[6 + z] = get_pixel_fast(image, x - diff + z, next);
+            for (size_t w = 0; w < perimeter; w++) {
+
+                for (size_t z = 0; z < perimeter; z++) {
+                    const size_t newVal = val + z;
+
+                    buffer[perimeter * w + z]
+                            = get_pixel_fast(image, newVal, rowBuff[w]);
+                }
             }
 
-            int bSum = 0;
-            int gSum = 0;
-            int rSum = 0;
+            size_t bSum = 0;
+            size_t gSum = 0;
+            size_t rSum = 0;
 
-            for (int i = 0; i < 9; i++) {
+            for (size_t i = 0; i < volume; i++) {
                 bSum += (buffer[i])->blue;
                 gSum += (buffer[i])->green;
                 rSum += (buffer[i])->red;
             }
 
-            Pixel* pPixel = get_pixel_fast(new, x, cur);
-            pPixel->blue = (uint8_t)(bSum / 9);
-            pPixel->green = (uint8_t)(gSum / 9);
-            pPixel->red = (uint8_t)(rSum / 9);
+            Pixel* pPixel = get_pixel(new, x, y);
+            pPixel->blue = (uint8_t)(bSum / volume);
+            pPixel->green = (uint8_t)(gSum / volume);
+            pPixel->red = (uint8_t)(rSum / volume);
         }
     }
+
+    // Free temporary resources
+    free(buffer);
+    free(rowBuff);
 
     return new;
 }

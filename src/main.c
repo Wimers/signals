@@ -57,7 +57,9 @@ constexpr char helpMessage[] // Need to update FIX
           "  -c, --combine <file>        - Overlay another BMP image onto "
           "input\n"
           "  -G, --merge <file>          - Average blend with another BMP "
-          "image\n";
+          "image\n"
+          "  -B, --blur <radius>         - Blurs the image using the set "
+          "radius\n";
 
 constexpr char fileTypeMessage[] = "Input file must be \".bmp\"\n";
 constexpr char emptyArgsMessage[] = "Arguments must not be empty.\n";
@@ -101,6 +103,7 @@ typedef enum {
     MELT = 'M',
     SCALE = 'S',
     MERGE = 'G',
+    BLUR = 'B',
 } Flag;
 
 static struct option const longOptions[] = {
@@ -125,11 +128,12 @@ static struct option const longOptions[] = {
         {"melt", required_argument, NULL, MELT},
         {"scale", required_argument, NULL, SCALE},
         {"merge", required_argument, NULL, MERGE},
+        {"blur", required_argument, NULL, BLUR},
         {NULL, 0, NULL, 0},
 };
 
 constexpr char optstring[]
-        = "i:o:b:l:t:m:c:w:S:rG:dphfavgusM:"; // Defined program flags
+        = "i:o:b:l:t:m:c:w:S:rG:B:dphfavgusM:"; // Defined program flags
 
 int main(const int argc, char* argv[])
 {
@@ -331,6 +335,15 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->scale = atof(optarg);
             break;
 
+        case BLUR:
+            int blur = atoi(optarg);
+            if (blur > 0) {
+                userInput->blur = (uint32_t)blur;
+                break;
+            } else {
+                return EXIT_INVALID_PARAMETER;
+            }
+
             // If valid command supplied, or none supplied at all
         default:
             return EXIT_NO_COMMAND;
@@ -432,11 +445,12 @@ int handle_commands(UserInput* userInput)
                     bmpImage.image, userInput->contrast, 80, 200); // FIX Magic
         }
 
-        /*
-        Image* blurred = image_blur(bmpImage.image, 400);
-        free_image(&(bmpImage.image));
-        bmpImage.image = blurred;
-        */
+        if (userInput->blur) {
+            // FIX add error
+            Image* blurred = image_blur(bmpImage.image, userInput->blur);
+            free_image(&(bmpImage.image));
+            bmpImage.image = blurred;
+        }
 
         if (userInput->dim) { // If dim mode enabled
             dim_effect(bmpImage.image, userInput->dim, userInput->dim,
