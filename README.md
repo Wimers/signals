@@ -21,6 +21,7 @@
 ## Key Features
 - **Effects:** Channel isolation, colour scaling, contrast, inversion, and more!
 - **Transformations:** Image rotation, reversing, and flipping.
+- **Steganography**: Encode secret messages for later decoding.
 - **Blending:** Combine and merge images.
 
 > Currently only supports 24-bit Windows BMP's.
