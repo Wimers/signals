@@ -8,35 +8,37 @@
 
 </div>
 
-# BMP Image Processor
+<p align="center">
+  <img src="images/graphics/bannerCompr.png" width="100%" />
+</p>
 
-<img src="images/modified/dbmelt.bmp" align="right" width="420" height="260" />
+---
 
-A BMP image processor built with zero dependencies for Linux/Unix systems. Features a range of image editing tools, custom filters/effects, ANSI terminal rendering, and image exporting.
+# Overview
 
-**Features:**
+**Signals** is a BMP image processor built with zero dependencies for Linux/Unix systems and features a range of image editing tools, custom filters/effects, ANSI terminal rendering, and image exporting.
+
+## Key Features
 - **Effects:** Channel isolation, colour scaling, contrast, inversion, and more!
 - **Transformations:** Image rotation, reversing, and flipping.
 - **Blending:** Combine and merge images.
 
 > Currently only supports 24-bit Windows BMP's.
 
-<div style="clear: both;"></div>
-
----
-
 ## Visual Tuning Tips
 
-- Terminal Rendering:
+- **Terminal Rendering**:
   - For the best viewing experience, zoom out in your terminal.
   - Useful for checking parameters without saving to disk.
 
-- Cascading Operations:
+- **Cascading Operations**:
   - You can combine flags to process multiple effects simultaneously.
 
 ---
 
-# Heart
+# Examples
+
+## Heart
 ```console
 $ ./bmp -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightness-cut 245
 ```
@@ -46,7 +48,7 @@ $ ./bmp -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightne
   <img src="images/modified/heart.bmp" width="49%"/> 
 </p>
 
-# Melt </3
+## Melt </3
 ```console
 $ ./bmp -i images/original/heartOriginal.bmp -o temp.bmp --reverse  --melt -1 --contrast 30
 $ ./bmp -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
