@@ -104,6 +104,7 @@ typedef enum {
     SCALE = 'S',
     MERGE = 'G',
     BLUR = 'B',
+    ENCODE = 'e',
 } Flag;
 
 static struct option const longOptions[] = {
@@ -129,11 +130,12 @@ static struct option const longOptions[] = {
         {"scale", required_argument, NULL, SCALE},
         {"merge", required_argument, NULL, MERGE},
         {"blur", required_argument, NULL, BLUR},
+	{"encode", required_argument, NULL, ENCODE},
         {NULL, 0, NULL, 0},
 };
 
 constexpr char optstring[]
-        = "i:o:b:l:t:m:c:w:S:rG:B:dphfavgusM:"; // Defined program flags
+        = "i:o:b:l:t:m:c:w:S:rG:B:e:dphfavgusM:"; // Defined program flags
 
 int main(const int argc, char* argv[])
 {
@@ -256,6 +258,10 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case MERGE:
             userInput->merge = true;
             userInput->mergeFilePath = optarg;
+            break;
+
+        case ENCODE:
+            userInput->encodeFilePath = optarg;
             break;
 
         case GLITCH: { // If glitch flag used, verify the glitch offset
@@ -507,7 +513,7 @@ int handle_commands(UserInput* userInput)
 
         if (userInput->output) { // If output file mode enabled
             if (write_bmp_with_header_provided(
-                        &bmpImage, userInput->outputFilePath)
+                        &bmpImage, userInput->outputFilePath, userInput->encodeFilePath)
                     == -1) {
                 status = EXIT_OUTPUT_FILE_ERROR;
                 break;

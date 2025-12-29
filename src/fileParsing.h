@@ -222,7 +222,8 @@ Image* create_image(const int32_t width, const int32_t height);
  * filename:
  *
  */
-int write_bmp_with_header_provided(BMP* bmpImage, const char* filename);
+int write_bmp_with_header_provided(
+        BMP* bmpImage, const char* filename, const char* messagePath);
 
 /* check_file_opened()
  * -------------------
@@ -242,5 +243,9 @@ int header_safety_checks(BMP* bmpImage);
 int handle_bmp_loading(BMP* bmpImage);
 void check_image_resolution(BmpInfoHeader* info);
 void safely_close_file(FILE* file);
+void write_pixel_data(FILE* output, FILE* message, BmpHeader* bmpHeader,
+        BmpInfoHeader* info, Image* image);
+[[nodiscard]] bool write_padding_message(FILE* dest, FILE* src, size_t gapSize);
+void write_padding_zeros(FILE* file, size_t gapSize);
 
 #endif

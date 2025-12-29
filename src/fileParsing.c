@@ -208,6 +208,26 @@ void initialise_bmp(BMP* bmpImage)
     return EXIT_SUCCESS;
 }
 
+[[nodiscard]] int confirm_choice(void)
+{
+    printf("Continue anyway? [Y/n]\n");
+    printf(">> ");
+    char c;
+
+    while (1) {
+        c = (char)(fgetc(stdin));
+        if (c == EOF || c == 'n') {
+            return -1;
+        }
+
+        if (c == 'Y') {
+            break;
+        }
+    }
+
+    return EXIT_SUCCESS;
+}
+
 [[nodiscard]] int header_safety_checks(BMP* bmpImage)
 {
     const BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
@@ -269,23 +289,12 @@ void initialise_bmp(BMP* bmpImage)
 
         if (diff > 0) {
             fprintf(stderr, fileTooSmallMessage, diff);
-            //return -1; // FIX
+            // return -1; // FIX
         }
 
         fprintf(stderr, fileCorruptionMessage, -diff);
-        printf("Continue anyway? [Y/n]\n");
-        printf(">> ");
-        char c;
-
-        while (1) {
-            c = (char)(fgetc(stdin));
-            if (c == EOF || c == 'n') {
-                return -1;
-            }
-
-            if (c == 'Y') {
-                break;
-            }
+        if (confirm_choice() == -1) {
+            return -1;
         }
     }
 
@@ -369,6 +378,8 @@ void print_bmp_info_header(const BmpInfoHeader* bmp)
             bmp->importantColours);
 }
 
+int globalDecode = 0;
+
 [[nodiscard]] int read_pixel_row(FILE* file, Image* image,
         const size_t rowNumber, const size_t byteOffset)
 {
@@ -385,7 +396,41 @@ void print_bmp_info_header(const BmpInfoHeader* bmp)
     }
 
     if (byteOffset) { // If offset non-zero update file pointer
-        fseek(file, (long)byteOffset, SEEK_CUR);
+        char c = 0;
+
+        for (size_t i = 0; i < byteOffset; i++) {
+            c = (char)fgetc(file);
+
+            if ((c != 0) && (globalDecode == 0)) {
+
+                fprintf(stderr,
+                        "Non zero padding detected, file may be corrupted, or "
+                        "contain hidden data.\n");
+                fprintf(stderr, "Would you like to view the data as text?\n");
+                if (confirm_choice() == -1) {
+                    globalDecode = -1;
+
+                    fprintf(stderr, "Ignoring padding...\n");
+                    fseek(file, (long)(byteOffset - 1), SEEK_CUR);
+                    return EXIT_SUCCESS;
+                }
+
+                globalDecode = 1;
+
+                printf("Reading data...\n");
+                printf(lineSeparator);
+                printf("\n");
+            }
+
+            if (c == 0) {
+                continue;
+            }
+
+            if (globalDecode == 1) {
+                printf("%c", c);
+            }
+        }
+        // fseek(file, (long)byteOffset, SEEK_CUR);
     }
 
     return EXIT_SUCCESS;
@@ -541,7 +586,36 @@ Image* create_image(const int32_t width, const int32_t height)
     return img;
 }
 
-void write_padding(FILE* file, size_t gapSize)
+[[nodiscard]] bool write_padding_message(FILE* dest, FILE* src, size_t gapSize)
+{
+    if (src == NULL) {
+        write_padding_zeros(dest, gapSize);
+        return true;
+    }
+
+    char* buffer = malloc(sizeof(char) * gapSize);
+    size_t bytesRead = fread(buffer, sizeof(char), gapSize, src);
+
+    if (bytesRead <= 0) {
+        free(buffer);
+        write_padding_zeros(dest, gapSize);
+        return true;
+    }
+
+    if (bytesRead < gapSize) {
+        fwrite(buffer, sizeof(char), bytesRead, dest);
+        write_padding_zeros(dest, gapSize - bytesRead);
+        free(buffer);
+        return true;
+    }
+
+    fwrite(buffer, sizeof(char), gapSize, dest);
+    free(buffer);
+
+    return false;
+}
+
+void write_padding_zeros(FILE* file, size_t gapSize)
 {
     static const uint8_t zeros[32] = {0};
 
@@ -554,7 +628,8 @@ void write_padding(FILE* file, size_t gapSize)
     }
 }
 
-int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
+int write_bmp_with_header_provided(
+        BMP* bmpImage, const char* filename, const char* messagePath)
 {
     BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
     BmpInfoHeader* info = &(bmpImage->infoHeader);
@@ -562,6 +637,11 @@ int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
 
     FILE* output = fopen(filename, writeMode);
     if (check_file_opened(output, filename) == -1) {
+        return -1;
+    }
+
+    FILE* message = fopen(messagePath, readMode);
+    if (check_file_opened(message, filename) == -1) {
         return -1;
     }
 
@@ -585,32 +665,49 @@ int write_bmp_with_header_provided(BMP* bmpImage, const char* filename)
     fwrite(&info->coloursInPalette, sizeof(info->coloursInPalette), 1, output);
     fwrite(&info->importantColours, sizeof(info->importantColours), 1, output);
 
+    write_pixel_data(output, message, bmpHeader, info, image);
+
+    safely_close_file(output);
+    safely_close_file(message);
+    return EXIT_SUCCESS;
+}
+
+void write_pixel_data(FILE* output, FILE* message, BmpHeader* bmpHeader,
+        BmpInfoHeader* info, Image* image)
+{
     const long currentPosition = ftell(output);
-
-    if (!(currentPosition < 0) && (currentPosition < bmpHeader->offset)) {
-        const size_t gapSize = (size_t)(bmpHeader->offset - currentPosition);
-        write_padding(output, gapSize);
-    }
-
     const size_t byteOffset
             = calc_row_byte_offset(info->bitsPerPixel, info->bitmapWidth);
-
     const size_t writeSize = image->width * sizeof(Pixel);
+
+    if (!(currentPosition < 0) && (currentPosition < bmpHeader->offset)) {
+        size_t gapSize = (size_t)(bmpHeader->offset - currentPosition);
+        write_padding_zeros(output, gapSize);
+    }
 
     if (byteOffset) {
 
-        for (size_t row = 0; row < image->height; row++) {
-            fwrite(&((image->pixelData)[row * image->width]), writeSize, 1,
-                    output);
-            write_padding(output, byteOffset);
+        if (message == NULL) {
+            for (size_t row = 0; row < image->height; row++) {
+                fwrite(&((image->pixelData)[row * image->width]), writeSize, 1,
+                        output);
+                write_padding_zeros(output, byteOffset);
+            }
+        } else {
+            bool flag = false;
+            for (size_t row = 0; row < image->height; row++) {
+                fwrite(&((image->pixelData)[row * image->width]), writeSize, 1,
+                        output);
+                if (flag) {
+                    write_padding_zeros(output, byteOffset);
+                } else {
+                    flag = write_padding_message(output, message, byteOffset);
+                }
+            }
         }
-
     } else {
         fwrite(image->pixelData, writeSize, image->height, output);
     }
-
-    safely_close_file(output);
-    return EXIT_SUCCESS;
 }
 
 [[nodiscard]] int check_file_opened(FILE* file, const char* const filePath)
