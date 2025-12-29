@@ -205,5 +205,6 @@ void colour_scaler(
 
 [[nodiscard]] int merge_images(
         Image* restrict primary, const Image* restrict secondary);
+Image* image_blur(Image* image, uint32_t radius);
 
 #endif

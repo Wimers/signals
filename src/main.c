@@ -432,6 +432,12 @@ int handle_commands(UserInput* userInput)
                     bmpImage.image, userInput->contrast, 80, 200); // FIX Magic
         }
 
+        /*
+        Image* blurred = image_blur(bmpImage.image, 400);
+        free_image(&(bmpImage.image));
+        bmpImage.image = blurred;
+        */
+
         if (userInput->dim) { // If dim mode enabled
             dim_effect(bmpImage.image, userInput->dim, userInput->dim,
                     userInput->dim); // FIX Update docs

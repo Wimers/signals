@@ -269,7 +269,7 @@ void initialise_bmp(BMP* bmpImage)
 
         if (diff > 0) {
             fprintf(stderr, fileTooSmallMessage, diff);
-            return -1;
+            //return -1; // FIX
         }
 
         fprintf(stderr, fileCorruptionMessage, -diff);

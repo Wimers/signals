@@ -391,3 +391,45 @@ void colour_scaler(
         pixel->red = (uint8_t)(pixel->red * red);
     });
 }
+
+Image* image_blur(Image* image, uint32_t radius)
+{
+    Pixel* buffer[9] = {0};
+
+    size_t diff = radius >> 1;
+
+    Image* new = create_image((int32_t)image->width, (int32_t)image->height);
+
+    for (size_t y = diff; y < image->height - diff; y++) {
+        size_t prev = image->width * (y - diff);
+        size_t cur = image->width * y;
+        size_t next = image->width * (y + diff);
+
+        for (size_t x = diff; x < image->width - diff; x++) {
+
+            for (size_t z = 0; z < 3; z++) {
+
+                buffer[0 + z] = get_pixel_fast(image, x - diff + z, prev);
+                buffer[3 + z] = get_pixel_fast(image, x - diff + z, cur);
+                buffer[6 + z] = get_pixel_fast(image, x - diff + z, next);
+            }
+
+            int bSum = 0;
+            int gSum = 0;
+            int rSum = 0;
+
+            for (int i = 0; i < 9; i++) {
+                bSum += (buffer[i])->blue;
+                gSum += (buffer[i])->green;
+                rSum += (buffer[i])->red;
+            }
+
+            Pixel* pPixel = get_pixel_fast(new, x, cur);
+            pPixel->blue = (uint8_t)(bSum / 9);
+            pPixel->green = (uint8_t)(gSum / 9);
+            pPixel->red = (uint8_t)(rSum / 9);
+        }
+    }
+
+    return new;
+}
