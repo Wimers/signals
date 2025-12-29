@@ -70,7 +70,7 @@ $ ./bmp -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --
 | `-o` | `--output` | `<file>` | Output file path. |
 | `-d` | `--dump` | | Dumps the BMP header data to the terminal. |
 | `-p` | `--print` | | Renders the image to the terminal. |
-| `-e` | `--encode` | `<file>` | Reads contents of <file>, and embeds into image. |
+| `-e` | `--encode` | `<file>` | Embeds contents of a file into an image. |
 
 ### **Filters**
 | Flag | Long Flag | Argument | Description |
