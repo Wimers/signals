@@ -27,6 +27,8 @@ constexpr char helpMessage[] // Need to update FIX
           "  -d, --dump                  - Dump BMP header information to "
           "terminal\n"
           "  -p, --print                 - Render image to terminal (ANSI)\n"
+          "  -e, --encode <file>         - Reads contents of <file>, and "
+          "embeds into image\n"
           "\n"
           "Colours & Channels:\n"
           "  -g, --grayscale             - Convert image to grayscale (Luma)\n"
@@ -130,7 +132,7 @@ static struct option const longOptions[] = {
         {"scale", required_argument, NULL, SCALE},
         {"merge", required_argument, NULL, MERGE},
         {"blur", required_argument, NULL, BLUR},
-	{"encode", required_argument, NULL, ENCODE},
+        {"encode", required_argument, NULL, ENCODE},
         {NULL, 0, NULL, 0},
 };
 
@@ -512,8 +514,8 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->output) { // If output file mode enabled
-            if (write_bmp_with_header_provided(
-                        &bmpImage, userInput->outputFilePath, userInput->encodeFilePath)
+            if (write_bmp_with_header_provided(&bmpImage,
+                        userInput->outputFilePath, userInput->encodeFilePath)
                     == -1) {
                 status = EXIT_OUTPUT_FILE_ERROR;
                 break;
