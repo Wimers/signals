@@ -71,8 +71,7 @@ int check_long_within_bounds(const long num, const long min, const long max)
     return EXIT_SUCCESS;
 }
 
-long verify_long_arg_with_bounds(
-        const char* arg, const long min, const long max)
+bool vlongB_check(long* output, const char* arg, const long min, const long max)
 {
     char* endptr;
     errno = 0;
@@ -81,17 +80,18 @@ long verify_long_arg_with_bounds(
     const long val = strtol(arg, &endptr, base10);
 
     if ((arg == endptr) || (*endptr != eos)) {
-        return -1;
+        return false;
     }
 
     if (errno == ERANGE) {
-        return -1;
+        return false;
     }
 
     // Check number within specified bounds
     if (check_long_within_bounds(val, min, max) == -1) { // Returns -1 on error
-        return -1;
+        return false;
     }
 
-    return val;
+    *output = val;
+    return true;
 }

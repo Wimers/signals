@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <errno.h>
+#include <limits.h>
 
 // Program constant strings
 constexpr char usageMessage[] = "Usage: ./bmp <option> [--input <file>] ...\n";
@@ -222,12 +223,12 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->outputFilePath = optarg;
             break;
 
-        case FILTERS:
-            userInput->filters = handle_colour_filter_arg_parsing(optarg);
-            if (userInput->filters == 0) {
+        case FILTERS: {
+            if (filtr_col_check(&(userInput->filters), optarg) == -1) {
                 return EXIT_INVALID_PARAMETER;
             }
             break;
+        }
 
         case GRAY_SCALE:
             userInput->grayscale = true;
@@ -243,12 +244,10 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
         case BRIGHTNESS_CUT: { // If brightness cut flag used, verify the
                                // required argument
-            long cut;
-            if ((cut = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
-                    == -1) {
+            if (!(vlongB(
+                        &(userInput->cutoff), optarg, 0, UINT8_MAX, uint8_t))) {
                 return EXIT_INVALID_PARAMETER;
             }
-            userInput->cutoff = (uint8_t)cut;
             break;
         }
 
@@ -267,13 +266,10 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
 
         case GLITCH: { // If glitch flag used, verify the glitch offset
-            long glitchOff;
-            if ((glitchOff = verify_long_arg_with_bounds(optarg, 1, INT32_MAX))
-                    == -1) {
+            if (!(vlongB(&(userInput->glitch), optarg, 1, INT32_MAX, size_t))) {
                 glitch_offset_invalid_message(optarg); // Prints error messages
                 return EXIT_INVALID_PARAMETER;
             }
-            userInput->glitch = (size_t)glitchOff;
             break;
         }
 
@@ -282,22 +278,17 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
 
         case CONTRAST: { // If contrast flag set, verify the required argument
-            long contrast;
-            if ((contrast = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
-                    == -1) {
+            if (!(vlongB(&(userInput->contrast), optarg, 0, UINT8_MAX,
+                        uint8_t))) {
                 return EXIT_INVALID_PARAMETER;
             }
-            userInput->contrast = (uint8_t)contrast;
             break;
         }
 
         case DIM: { // If dim flag set, verify the required argument
-            long dim;
-            if ((dim = verify_long_arg_with_bounds(optarg, 0, UINT8_MAX))
-                    == -1) {
+            if (!(vlongB(&(userInput->dim), optarg, 0, UINT8_MAX, uint8_t))) {
                 return EXIT_INVALID_PARAMETER;
             }
-            userInput->dim = (uint8_t)dim;
             break;
         }
 
@@ -306,17 +297,8 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
 
         case ROTATE: {
-            char* endptr;
-            errno = 0;
-
-            // Convert optarg string to a long.
-            userInput->rotations = strtol(optarg, &endptr, base10);
-
-            if ((optarg == endptr) || (*endptr != eos)) {
-                return EXIT_INVALID_PARAMETER;
-            }
-
-            if (errno == ERANGE) {
+            if (!(vlongB(&(userInput->rotations), optarg, LONG_MIN, LONG_MAX,
+                        long))) {
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -327,15 +309,9 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
 
         case MELT: {
-            int val = atoi(optarg);
-            if (val) {
-                userInput->meltOffset = val;
-                userInput->melt = true;
-
-            } else {
+            if (!verify_melt(userInput, optarg)) {
                 return EXIT_INVALID_PARAMETER;
             }
-
             break;
         }
 
@@ -343,14 +319,13 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->scale = atof(optarg);
             break;
 
-        case BLUR:
-            int blur = atoi(optarg);
-            if (blur > 0) {
-                userInput->blur = (uint32_t)blur;
-                break;
-            } else {
+        case BLUR: {
+            if (!(vlongB(
+                        &(userInput->blur), optarg, 1, UINT32_MAX, uint32_t))) {
                 return EXIT_INVALID_PARAMETER;
             }
+            break;
+        }
 
             // If valid command supplied, or none supplied at all
         default:
@@ -360,6 +335,21 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
     // All options parses successfully
     return EXIT_SUCCESS;
+}
+
+bool verify_melt(UserInput* userInput, const char* arg)
+{
+    if (!(vlongB(&(userInput->meltOffset), arg, INT32_MIN, INT32_MAX,
+                int32_t))) {
+        return false;
+    }
+
+    // Could remove since this would have no effect if activated
+    if (userInput->meltOffset == 0) {
+        return false;
+    }
+
+    return true;
 }
 
 void glitch_offset_invalid_message(const char* arg)
@@ -556,7 +546,7 @@ Function handle_colour_filters(const uint8_t filters)
     return filterMap[index];
 }
 
-uint8_t handle_colour_filter_arg_parsing(const char* arg)
+int filtr_col_check(uint8_t* setting, const char* arg)
 {
     const char allowed[] = {'r', 'R', 'g', 'G', 'b', 'B', eos};
     uint8_t colourBitVect = 0;
@@ -569,7 +559,8 @@ uint8_t handle_colour_filter_arg_parsing(const char* arg)
             // Character did not match any valid char.
             if (allowed[j] == eos) {
                 fprintf(stderr, invalidFilterColourMessage, arg);
-                return 0;
+                *setting = 0;
+                return -1;
             }
 
             if ((char)(arg[i]) == allowed[j]) {
@@ -577,14 +568,15 @@ uint8_t handle_colour_filter_arg_parsing(const char* arg)
                 // Sets bit in bit vector to indicate presence of colour to
                 // filter. Both 'r' and 'R' are represented by the same bit,
                 // hence the division by two.
-                colourBitVect |= (uint8_t)(1 << (j / 2));
+                colourBitVect |= (uint8_t)(1 << (j / 2)); // FIX optimise
                 break;
             }
             j++;
         }
     }
 
-    return colourBitVect;
+    *setting = colourBitVect;
+    return EXIT_SUCCESS;
 }
 
 int handle_combine(const UserInput* userInput, BMP* bmpImage)

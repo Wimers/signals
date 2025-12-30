@@ -155,9 +155,10 @@ int handle_combine(const UserInput* userInput, BMP* bmpImage);
  */
 int check_valid_file_type(const char* const type, const char* filePath);
 
-uint8_t handle_colour_filter_arg_parsing(const char* arg);
+int filtr_col_check(uint8_t* setting, const char* arg);
 Function handle_colour_filters(const uint8_t filters);
 void handle_image_rotation(BMP* bmpImage, const long nRotations);
 int handle_merge(const UserInput* userInput, BMP* bmpImage);
+bool verify_melt(UserInput* userInput, const char* arg);
 
 #endif

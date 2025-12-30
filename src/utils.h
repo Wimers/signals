@@ -7,6 +7,16 @@
 constexpr char eos = '\0';
 constexpr int base10 = 10;
 
+#define vlongB(output, arg, min, max, type)                                    \
+    __extension__({                                                            \
+        long _temp;                                                            \
+        bool _success = vlongB_check(&(_temp), arg, min, max);                 \
+        if (_success) {                                                        \
+            *(type*)(output) = (type)_temp;                                    \
+        }                                                                      \
+        _success;                                                              \
+    })
+
 int is_str_in_const_str_array(const void* restrict arg,
         const char* const strArray[], const size_t nread);
 
@@ -76,7 +86,7 @@ int check_each_char_is_digit(const char* arg);
  */
 int check_long_within_bounds(const long num, const long min, const long max);
 
-/* verify_long_arg_with_bounds()
+/* vlongB_check()
  * ----------------------------
  * Checks whether an input string represents a base 10 number, within specified
  * upper and lower bounds.
@@ -89,7 +99,7 @@ int check_long_within_bounds(const long num, const long min, const long max);
  *
  * Errors: Returns -1.
  */
-long verify_long_arg_with_bounds(
-        const char* arg, const long min, const long max);
+bool vlongB_check(
+        long* output, const char* arg, const long min, const long max);
 
 #endif
