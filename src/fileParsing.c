@@ -640,11 +640,6 @@ int write_bmp_with_header_provided(
         return -1;
     }
 
-    FILE* message = fopen(messagePath, readMode);
-    if (check_file_opened(message, filename) == -1) {
-        return -1;
-    }
-
     // Write BmpHeader
     fwrite(&bmpHeader->id, sizeof(bmpHeader->id), 1, output);
     fwrite(&bmpHeader->bmpSize, sizeof(bmpHeader->bmpSize), 1, output);
@@ -665,16 +660,27 @@ int write_bmp_with_header_provided(
     fwrite(&info->coloursInPalette, sizeof(info->coloursInPalette), 1, output);
     fwrite(&info->importantColours, sizeof(info->importantColours), 1, output);
 
-    write_pixel_data(output, message, bmpHeader, info, image);
-
+    if (messagePath == NULL) {
+        write_pixel_data(output, bmpHeader, info, image);
+    } else {
+        if (write_pixel_data_secret(output, bmpHeader, info, image, messagePath)
+                == -1) {
+            safely_close_file(output);
+            return -1;
+        }
+    }
     safely_close_file(output);
-    safely_close_file(message);
     return EXIT_SUCCESS;
 }
 
-void write_pixel_data(FILE* output, FILE* message, BmpHeader* bmpHeader,
-        BmpInfoHeader* info, Image* image)
+[[nodiscard]] int write_pixel_data_secret(FILE* output, BmpHeader* bmpHeader,
+        BmpInfoHeader* info, Image* image, const char* messagePath)
 {
+    FILE* message = fopen(messagePath, readMode);
+    if (check_file_opened(message, messagePath) == -1) {
+        return -1;
+    }
+
     const long currentPosition = ftell(output);
     const size_t byteOffset
             = calc_row_byte_offset(info->bitsPerPixel, info->bitmapWidth);
@@ -687,23 +693,42 @@ void write_pixel_data(FILE* output, FILE* message, BmpHeader* bmpHeader,
 
     if (byteOffset) {
 
-        if (message == NULL) {
-            for (size_t row = 0; row < image->height; row++) {
-                fwrite(&((image->pixelData)[row * image->width]), writeSize, 1,
-                        output);
+        bool flag = false;
+        for (size_t row = 0; row < image->height; row++) {
+            fwrite(&((image->pixelData)[row * image->width]), writeSize, 1,
+                    output);
+            if (flag) {
                 write_padding_zeros(output, byteOffset);
+            } else {
+                flag = write_padding_message(output, message, byteOffset);
             }
-        } else {
-            bool flag = false;
-            for (size_t row = 0; row < image->height; row++) {
-                fwrite(&((image->pixelData)[row * image->width]), writeSize, 1,
-                        output);
-                if (flag) {
-                    write_padding_zeros(output, byteOffset);
-                } else {
-                    flag = write_padding_message(output, message, byteOffset);
-                }
-            }
+        }
+    } else {
+        fwrite(image->pixelData, writeSize, image->height, output);
+    }
+
+    safely_close_file(message);
+    return EXIT_SUCCESS;
+}
+
+void write_pixel_data(
+        FILE* output, BmpHeader* bmpHeader, BmpInfoHeader* info, Image* image)
+{
+    const long currentPosition = ftell(output);
+    const size_t byteOffset
+            = calc_row_byte_offset(info->bitsPerPixel, info->bitmapWidth);
+    const size_t writeSize = image->width * sizeof(Pixel);
+
+    if (!(currentPosition < 0) && (currentPosition < bmpHeader->offset)) {
+        size_t gapSize = (size_t)(bmpHeader->offset - currentPosition);
+        write_padding_zeros(output, gapSize);
+    }
+
+    if (byteOffset) {
+        for (size_t row = 0; row < image->height; row++) {
+            fwrite(&((image->pixelData)[row * image->width]), writeSize, 1,
+                    output);
+            write_padding_zeros(output, byteOffset);
         }
     } else {
         fwrite(image->pixelData, writeSize, image->height, output);

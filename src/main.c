@@ -262,6 +262,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
 
         case ENCODE:
+            userInput->encode = true;
             userInput->encodeFilePath = optarg;
             break;
 
@@ -504,11 +505,22 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->output) { // If output file mode enabled
-            if (write_bmp_with_header_provided(&bmpImage,
-                        userInput->outputFilePath, userInput->encodeFilePath)
-                    == -1) {
-                status = EXIT_OUTPUT_FILE_ERROR;
-                break;
+            if (userInput->encode) {
+                if (write_bmp_with_header_provided(&bmpImage,
+                            userInput->outputFilePath,
+                            userInput->encodeFilePath)
+                        == -1) {
+                    status = EXIT_OUTPUT_FILE_ERROR;
+                    break;
+                }
+            } else {
+
+                if (write_bmp_with_header_provided(
+                            &bmpImage, userInput->outputFilePath, NULL)
+                        == -1) {
+                    status = EXIT_OUTPUT_FILE_ERROR;
+                    break;
+                }
             }
         }
 

@@ -243,9 +243,10 @@ int header_safety_checks(BMP* bmpImage);
 int handle_bmp_loading(BMP* bmpImage);
 void check_image_resolution(BmpInfoHeader* info);
 void safely_close_file(FILE* file);
-void write_pixel_data(FILE* output, FILE* message, BmpHeader* bmpHeader,
-        BmpInfoHeader* info, Image* image);
+void write_pixel_data(
+        FILE* output, BmpHeader* bmpHeader, BmpInfoHeader* info, Image* image);
 [[nodiscard]] bool write_padding_message(FILE* dest, FILE* src, size_t gapSize);
 void write_padding_zeros(FILE* file, size_t gapSize);
-
+[[nodiscard]] int write_pixel_data_secret(FILE* output, BmpHeader* bmpHeader,
+        BmpInfoHeader* info, Image* image, const char* messagePath);
 #endif

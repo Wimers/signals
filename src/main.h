@@ -62,6 +62,7 @@ typedef struct {
     bool merge;
     char* mergeFilePath;
     uint32_t blur;
+    bool encode;
     char* encodeFilePath;
 } UserInput;
 
