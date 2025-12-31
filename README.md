@@ -41,7 +41,7 @@
 
 ## Heart
 ```console
-$ ./bmp -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightness-cut 245
+$ ./signals -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightness-cut 245
 ```
 
 <p align="center">
@@ -49,14 +49,28 @@ $ ./bmp -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightne
   <img src="images/modified/heart.bmp" width="49%"/> 
 </p>
 
+---
+
 ## Melt </3
 ```console
-$ ./bmp -i images/original/heartOriginal.bmp -o temp.bmp --reverse  --melt -1 --contrast 30
-$ ./bmp -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
+$ ./signals -i images/original/heartOriginal.bmp -o temp.bmp --reverse  --melt -1 --contrast 30
+$ ./signals -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
 ```
 
 <p align="center">
   <img src="images/modified/dbmelt.bmp" width="1000" height="400" />
+</p>
+
+---
+
+## InfraBW
+```console
+$ ./signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 15 --scale-strict 1.7
+```
+
+<p align="center">
+  <img src="images/original/birdsIndia.bmp" width="49%" />
+  <img src="images/modified/infrabirds.bmp" width="49%" />
 </p>
 
 ---
