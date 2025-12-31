@@ -19,8 +19,6 @@
 #define EXIT_INVALID_PARAMETER 90
 #define EXIT_SAME_FILE 91
 
-#define MIN_CMD_ARGS 2
-
 constexpr char glitchOffsetValMessage[]
         = "\nOffset must be a positive integer, within input image "
           "bounds.\n";
@@ -117,7 +115,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput);
  *
  * arg: Argument user supplied.
  */
-void glitch_offset_invalid_message(const char* arg);
+[[deprecated]] void glitch_offset_invalid_message(const char* arg);
 
 /* handle_commands()
  * -----------------
@@ -130,7 +128,7 @@ void glitch_offset_invalid_message(const char* arg);
  * Returns: EXIT_SUCCESS on successful handling of all commands, or returns a
  *          specific error code.
  */
-int handle_commands(UserInput* userInput);
+int handle_commands(UserInput* userInput, const int argc);
 
 /* handle_combine()
  * ----------------

@@ -43,6 +43,7 @@ constexpr char helpMessage[]
           "Intensity)\n"
           "  -v, --invert                - Invert image colours\n"
           "  -s, --swap                  - Swap Red and Blue color channels\n"
+          "\n"
           "Geometry & Orientation:\n"
           "  -r, --rotate <N>            - Rotate image 90° clockwise N "
           "times\n"
@@ -70,21 +71,23 @@ constexpr char helpMessage[]
           "allowed)\n"
           "  -E, --experimental          - Try out an experimental feature!\n";
 
-constexpr char fileTypeMessage[] = "Input file must be \"%s\"\n";
-constexpr char emptyArgsMessage[] = "Arguments must not be empty.\n";
-constexpr char noArgsProvidedMessage[] = "No arguments supplied.\n";
+constexpr char fileTypeMessage[] = "Input must be a \'%s\' file.\n";
+constexpr char emptyArgsMessage[] = "./signals: arguments must not be empty.\n";
+constexpr char noArgsProvidedMessage[] = "./signals: no arguments supplied.\n";
 constexpr char invalidCmdMessage[]
         = "./signals: \'%s\' is not a valid command.\n";
 constexpr char userHelpPrompt[] = "\nSee \'./signals --help\'.\n";
 constexpr char nonUniquePathsMessage[]
         = "Input and combine file paths must be unique!\n";
 constexpr char fileType[] = ".bmp";
+constexpr char invalidVal[] = "./signals: invalid value \'%s\'\n";
 
 // Error messages
-constexpr char unexpectedArgMessage[] = "Got \"%s\", expected \"%s\"\n";
-constexpr char gotStrMessage[] = "    Got \"%s\".\n";
+constexpr char unexpectedArgMessage[] = "Got \'%s\', expected \'%s\'\n";
+constexpr char gotStrMessage[] = "    Got \'%s\'.\n";
 constexpr char invalidFilterColourMessage[]
-        = "Filter colour/s invalid \"%s\", must be RGB characters.\n";
+        = "./signals: filter colour/s \'%s\' are invalid, must be RGB "
+          "characters.\n";
 
 // Assorted constant chars
 const char* const readMode = "rb";
@@ -181,7 +184,7 @@ int main(const int argc, char* argv[])
         exit(status);
     }
 
-    exit(handle_commands(&userInput));
+    exit(handle_commands(&userInput, argc));
 }
 
 int check_for_empty_args(const int argc, char** argv)
@@ -247,6 +250,8 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
         case FILTERS: {
             if (filtr_col_check(&(userInput->filters), optarg) == -1) {
+                fprintf(stderr, invalidFilterColourMessage, optarg);
+                printf("See \'./signals --help filters\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -264,10 +269,11 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->flip = true;
             break;
 
-        case BRIGHTNESS_CUT: { // If brightness cut flag used, verify the
-                               // required argument
+        case BRIGHTNESS_CUT: {
             if (!(vlongB(
                         &(userInput->cutoff), optarg, 0, UINT8_MAX, uint8_t))) {
+                fprintf(stderr, invalidVal, optarg);
+                printf("See \'./signals --help brightness-cut\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -290,7 +296,10 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
         case GLITCH: { // If glitch flag used, verify the glitch offset
             if (!(vlongB(&(userInput->glitch), optarg, 1, INT32_MAX, size_t))) {
-                glitch_offset_invalid_message(optarg); // Prints error messages
+                fprintf(stderr, invalidVal, optarg);
+                printf("See \'./signals --help glitch\'\n");
+                // glitch_offset_invalid_message(optarg); // Prints error
+                // messages
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -303,6 +312,8 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case CONTRAST: { // If contrast flag set, verify the required argument
             if (!(vlongB(&(userInput->contrast), optarg, 0, UINT8_MAX,
                         uint8_t))) {
+                fprintf(stderr, invalidVal, optarg);
+                printf("See \'./signals --help contrast\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -310,6 +321,8 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
         case DIM: { // If dim flag set, verify the required argument
             if (!(vlongB(&(userInput->dim), optarg, 0, UINT8_MAX, uint8_t))) {
+                fprintf(stderr, invalidVal, optarg);
+                printf("See \'./signals --help dim\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -322,6 +335,8 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case ROTATE: {
             if (!(vlongB(&(userInput->rotations), optarg, LONG_MIN, LONG_MAX,
                         long))) {
+                fprintf(stderr, invalidVal, optarg);
+                printf("See \'./signals --help rotate\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -333,6 +348,8 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
         case MELT: {
             if (!verify_melt(userInput, optarg)) {
+                fprintf(stderr, invalidVal, optarg);
+                printf("See \'./signals --help melt\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -350,6 +367,8 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case BLUR: {
             if (!(vlongB(
                         &(userInput->blur), optarg, 1, UINT32_MAX, uint32_t))) {
+                fprintf(stderr, invalidVal, optarg);
+                printf("See \'./signals --help blur\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -391,22 +410,25 @@ bool verify_melt(UserInput* userInput, const char* arg)
     return true;
 }
 
-void glitch_offset_invalid_message(const char* arg)
+[[deprecated]] void glitch_offset_invalid_message(const char* arg)
 {
     fputs(glitchUsageMessage, stderr);
     fputs(glitchOffsetValMessage, stderr);
     fprintf(stderr, gotStrMessage, arg);
 }
 
-int handle_commands(UserInput* userInput)
+int handle_commands(UserInput* userInput, const int argc)
 {
-    if (userInput->help) { // If help mode enabled
+    if (userInput->help && (argc == 2)) { // If help mode enabled
         fputs(usageMessage, stderr);
         fputs(helpMessage, stdout);
+        return EXIT_SUCCESS;
     }
 
     // An input file is required all non-help commands
     if (!(userInput->input)) {
+        fprintf(stderr, "./signals: no input file provided.\n");
+        printf(userHelpPrompt);
         return EXIT_MISSING_INPUT_FILE;
     }
 
@@ -624,7 +646,6 @@ int filtr_col_check(uint8_t* setting, const char* arg)
 
             // Character did not match any valid char.
             if (allowed[j] == eos) {
-                fprintf(stderr, invalidFilterColourMessage, arg);
                 *setting = 0;
                 return -1;
             }
