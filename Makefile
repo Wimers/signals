@@ -10,20 +10,29 @@ PFLAGS = -O3 -flto -funroll-loops
 DEBUG = -g -fsanitize=address -fsanitize=undefined
 
 .DEFAULT_GOAL := performance
-.PHONY: debug performance clean
+.PHONY: debug performance clean install uninstall
 
 all: signals
 
-debug:
-	$(MAKE) clean
-	$(MAKE) signals CFLAGS="$(CFLAGS) $(DEBUG)"
+debug: CFLAGS += $(DEBUG)
+debug: signals-debug
 
-performance:
-	$(MAKE) clean
-	$(MAKE) signals CFLAGS="$(CFLAGS) $(PFLAGS)"
+performance: CFLAGS += $(PFLAGS)
+performance: signals
+
+signals signals-debug: src/*.[ch]
+	$(CC) $(CFLAGS) $(WARNINGS) $^ -o $@
 
 clean:
-	rm -f signals *.o
+	rm -f signals signals-debug *.o
 
-signals: src/*.[ch]
-	$(CC) $(CFLAGS) $(WARNINGS) $^ -o $@
+PREFIX ?= /usr/local
+BINDIR = $(PREFIX)/bin
+
+install: signals
+	@echo "Installing to $(BINDIR)..."
+	install -d $(BINDIR)
+	install -m 755 signals $(BINDIR)/signals
+
+uninstall:
+	rm $(BINDIR)/signals
