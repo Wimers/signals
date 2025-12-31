@@ -12,18 +12,18 @@ DEBUG = -g -fsanitize=address -fsanitize=undefined
 .DEFAULT_GOAL := performance
 .PHONY: debug performance clean
 
-all: bmp
+all: signals
 
 debug:
 	$(MAKE) clean
-	$(MAKE) bmp CFLAGS="$(CFLAGS) $(DEBUG)"
+	$(MAKE) signals CFLAGS="$(CFLAGS) $(DEBUG)"
 
 performance:
 	$(MAKE) clean
-	$(MAKE) bmp CFLAGS="$(CFLAGS) $(PFLAGS)"
+	$(MAKE) signals CFLAGS="$(CFLAGS) $(PFLAGS)"
 
 clean:
-	rm -f bmp *.o
+	rm -f signals *.o
 
-bmp: src/*.[ch]
+signals: src/*.[ch]
 	$(CC) $(CFLAGS) $(WARNINGS) $^ -o $@
