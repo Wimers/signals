@@ -15,10 +15,10 @@
 #include <limits.h>
 
 // Program constant strings
-constexpr char usageMessage[] = "Usage: ./signals <option> [--input <file>] ...\n";
-constexpr char helpMessage[] // Need to update FIX
-        = "Usage: ./signals <option> [--input <file>] ...\n"
-          "\n"
+constexpr char usageMessage[]
+        = "Usage: ./signals <option> [--input <file>] ...\n";
+constexpr char helpMessage[]
+        = "\n"
           "Help:\n"
           "  -h, --help                  - Show this help message\n"
           "\n"
@@ -44,17 +44,18 @@ constexpr char helpMessage[] // Need to update FIX
           "  -v, --invert                - Invert image colours\n"
           "  -s, --swap                  - Swap Red and Blue color channels\n"
           "Geometry & Orientation:\n"
-          "  -r, --rotate <90s>          - Rotate image 90 degrees clockwise N "
-          "  -R, --reverse               - Reverse image horizontally\n"
-          "  -F, --flip                  - Flip image vertically\n"
+          "  -r, --rotate <N>            - Rotate image 90° clockwise N "
           "times\n"
+          "  -R, --reverse               - Reverse image horizontally\n"
+          "  -F, --flip                  - Flip image vertically times\n"
           "\n"
 
           "Brightness & Contrast:\n"
           "  -C, --contrast <val>        - Adjust contrast factor (0-255)\n"
           "  -b, --brightness-cut <val>  - Cuts pixel component if value "
           "exceeds cutoff (0-255)\n"
-          "  -D, --dim <val>             - Reduce brightness by value (0-255)\n"
+          "  -D, --dim <val>             - Reduce brightness by value "
+          "(0-255)\n"
           "  -T, --scale-strict <val>    - Scale colour intensity "
           "(multiplier)\n"
           "\n"
@@ -69,11 +70,12 @@ constexpr char helpMessage[] // Need to update FIX
           "allowed)\n"
           "  -E, --experimental          - Try out an experimental feature!\n";
 
-constexpr char fileTypeMessage[] = "Input file must be \".bmp\"\n";
+constexpr char fileTypeMessage[] = "Input file must be \"%s\"\n";
 constexpr char emptyArgsMessage[] = "Arguments must not be empty.\n";
-constexpr char noArgsProvidedMessage[] = "An argument must be supplied.\n";
-constexpr char userHelpPrompt[]
-        = "Enter: \"./signals --help\" for available commands\n";
+constexpr char noArgsProvidedMessage[] = "No arguments supplied.\n";
+constexpr char invalidCmdMessage[]
+        = "./signals: \'%s\' is not a valid command.\n";
+constexpr char userHelpPrompt[] = "\nSee \'./signals --help\'.\n";
 constexpr char nonUniquePathsMessage[]
         = "Input and combine file paths must be unique!\n";
 constexpr char fileType[] = ".bmp";
@@ -165,6 +167,7 @@ static struct option const longOptions[] = {
 int main(const int argc, char* argv[])
 {
     if (early_argument_checks(argc, argv) != EXIT_SUCCESS) {
+        fputs(userHelpPrompt, stdout);
         exit(EXIT_INVALID_ARG);
     }
 
@@ -185,8 +188,6 @@ int check_for_empty_args(const int argc, char** argv)
 {
     for (int i = 0; i < argc; i++) {
         if (argv[i][0] == eos) {
-            fputs(emptyArgsMessage, stderr);
-            fputs(usageMessage, stderr);
             return -1;
         }
     }
@@ -197,16 +198,15 @@ int check_for_empty_args(const int argc, char** argv)
 int early_argument_checks(const int argc, char** argv)
 {
     // Check if user did not supply any arguments
-    if (!(argc >= MIN_CMD_ARGS)) {
+    if (argc <= 1) {
 
         // Print error messages
         fputs(noArgsProvidedMessage, stderr);
-        fputs(usageMessage, stderr);
-        fputs(userHelpPrompt, stderr);
         return -1;
     }
 
     if (check_for_empty_args(argc, argv) == -1) {
+        fputs(emptyArgsMessage, stderr);
         return -1;
     }
 
@@ -361,8 +361,15 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
             // If valid command supplied, or none supplied at all
         default:
+            fputs(userHelpPrompt, stdout);
             return EXIT_NO_COMMAND;
         }
+    }
+
+    if (optind < argc) {
+        fprintf(stderr, invalidCmdMessage, argv[optind]);
+        fputs(userHelpPrompt, stdout);
+        return EXIT_INVALID_ARG;
     }
 
     // All options parses successfully
@@ -394,6 +401,7 @@ void glitch_offset_invalid_message(const char* arg)
 int handle_commands(UserInput* userInput)
 {
     if (userInput->help) { // If help mode enabled
+        fputs(usageMessage, stderr);
         fputs(helpMessage, stdout);
     }
 
@@ -721,7 +729,7 @@ int check_valid_file_type(const char* const type, const char* filePath)
     if (!ends_with(type, filePath)) {
 
         // Prints error message to stderr
-        fputs(fileTypeMessage, stderr);
+        fprintf(stderr, fileTypeMessage, type);
         fprintf(stderr, unexpectedArgMessage, filePath, type);
         return -1;
     }

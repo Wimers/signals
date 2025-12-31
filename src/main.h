@@ -21,8 +21,6 @@
 
 #define MIN_CMD_ARGS 2
 
-#define gotIntMessage "    Got \"%d\".\n"
-
 constexpr char glitchOffsetValMessage[]
         = "\nOffset must be a positive integer, within input image "
           "bounds.\n";
@@ -35,16 +33,16 @@ extern const char* const readMode;
 extern const char* const writeMode;
 
 typedef struct {
-    uint8_t input;
+    bool input;
     char* inputFilePath;
-    uint8_t output;
+    bool output;
     char* outputFilePath;
-    uint8_t help;
+    bool help;
     bool header;
     bool print;
     bool invert;
     uint8_t filters;
-    uint8_t grayscale;
+    bool grayscale;
     bool flip;
     uint8_t cutoff;
     bool combine;
@@ -53,7 +51,7 @@ typedef struct {
     uint8_t average;
     uint8_t contrast;
     uint8_t dim;
-    bool swap; // FIX
+    bool swap;
     long rotations;
     bool reverse;
     bool melt;
