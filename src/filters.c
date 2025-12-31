@@ -385,13 +385,29 @@ int cmp_pixels(const void* a, const void* b)
 void colour_scaler(
         Image* image, const double red, const double green, const double blue)
 {
-    FX_TEMPLATE(image, { // Swap red and blue values
+    FX_TEMPLATE(image, {
         pixel->blue = (uint8_t)(pixel->blue * blue);
         pixel->green = (uint8_t)(pixel->green * green);
         pixel->red = (uint8_t)(pixel->red * red);
     });
 }
 
+static inline uint8_t bound_double_to_u8(double val)
+{
+    return (uint8_t)((val >= UINT8_MAX) ? (UINT8_MAX) : (val));
+}
+
+void colour_scaler_strict(
+        Image* image, const double red, const double green, const double blue)
+{
+    FX_TEMPLATE(image, {
+        pixel->blue = bound_double_to_u8(pixel->blue * blue);
+        pixel->green = bound_double_to_u8(pixel->green * green);
+        pixel->red = bound_double_to_u8(pixel->red * red);
+    });
+}
+
+// This is slow as fuck
 Image* image_blur(Image* image, uint32_t radius)
 {
     size_t perimeter = (radius << 1) + 1;
@@ -444,4 +460,33 @@ Image* image_blur(Image* image, uint32_t radius)
     free(rowBuff);
 
     return new;
+}
+
+void edge_detection(Image* image, int threshold)
+{
+    for (size_t y = 0; y < image->height; y++) {
+        size_t rowOffset = y * image->width;
+        Pixel* rowPtr = get_pixel_fast(image, 0, rowOffset);
+
+        for (size_t x = 0; x < image->width - 1; x++) {
+
+            Pixel* cPixel = rowPtr + x;
+            Pixel* nPixel = rowPtr + x + 1;
+
+            int diffSum = 0;
+            diffSum += (int)(nPixel->blue - cPixel->blue);
+            diffSum += (int)(nPixel->green - cPixel->green);
+            diffSum += (int)(nPixel->red - cPixel->red);
+
+            if (diffSum > threshold) {
+                nPixel->blue = UINT8_MAX;
+                nPixel->green = 0;
+                nPixel->red = 0;
+            } else if (-diffSum > threshold) {
+                cPixel->blue = UINT8_MAX;
+                cPixel->green = 0;
+                cPixel->red = 0;
+            }
+        }
+    }
 }

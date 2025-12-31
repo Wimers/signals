@@ -59,11 +59,13 @@ typedef struct {
     bool melt;
     int32_t meltOffset;
     double scale;
+    double scaleStrict;
     bool merge;
     char* mergeFilePath;
     uint32_t blur;
     bool encode;
     char* encodeFilePath;
+    bool experimental;
 } UserInput;
 
 typedef void (*ColourFilter)(Image* image);

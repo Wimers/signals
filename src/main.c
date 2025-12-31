@@ -25,6 +25,10 @@ constexpr char helpMessage[] // Need to update FIX
           "File I/O Options:\n"
           "  -i, --input <file>          - Input BMP file to process\n"
           "  -o, --output <file>         - Output file path to write result\n"
+          "  -c, --combine <file>        - Overlay another BMP image onto "
+          "input\n"
+          "  -m, --merge <file>          - Average blend with another BMP "
+          "image\n"
           "  -d, --dump                  - Dump BMP header information to "
           "terminal\n"
           "  -p, --print                 - Render image to terminal (ANSI)\n"
@@ -32,37 +36,38 @@ constexpr char helpMessage[] // Need to update FIX
           "embeds into image\n"
           "\n"
           "Colours & Channels:\n"
+          "  -f, --filter <channels>     - Isolate specific channels (e.g. "
+          "'rb')\n"
           "  -g, --grayscale             - Convert image to grayscale (Luma)\n"
           "  -a, --average               - Convert to grayscale (Average "
           "Intensity)\n"
           "  -v, --invert                - Invert image colours\n"
-          "  -f, --filter <channels>     - Isolate specific channels (e.g. "
-          "'rb')\n"
           "  -s, --swap                  - Swap Red and Blue color channels\n"
-          "  -S, --scale <val>           - Scale color intensity (multiplier)\n"
-          "\n"
           "Geometry & Orientation:\n"
-          "  -r, --reverse               - Reverse image horizontally\n"
-          "  -u, --flip                  - Flip image vertically\n"
-          "  -w, --rotate <90s>          - Rotate image 90 degrees clockwise N "
+          "  -r, --rotate <90s>          - Rotate image 90 degrees clockwise N "
+          "  -R, --reverse               - Reverse image horizontally\n"
+          "  -F, --flip                  - Flip image vertically\n"
           "times\n"
           "\n"
+
           "Brightness & Contrast:\n"
+          "  -C, --contrast <val>        - Adjust contrast factor (0-255)\n"
           "  -b, --brightness-cut <val>  - Cuts pixel component if value "
           "exceeds cutoff (0-255)\n"
-          "  -m, --dim <val>             - Reduce brightness by value (0-255)\n"
-          "  -t, --contrast <val>        - Adjust contrast factor (0-255)\n"
+          "  -D, --dim <val>             - Reduce brightness by value (0-255)\n"
+          "  -T, --scale-strict <val>    - Scale colour intensity "
+          "(multiplier)\n"
           "\n"
+
           "Advanced Effects:\n"
-          "  -l, --glitch <offset>       - Apply horizontal glitch effect\n"
           "  -M, --melt <offset>         - Pixel sorting effect (negative to "
           "invert)\n"
-          "  -c, --combine <file>        - Overlay another BMP image onto "
-          "input\n"
-          "  -G, --merge <file>          - Average blend with another BMP "
-          "image\n"
+          "  -G, --glitch <offset>       - Apply horizontal glitch effect\n"
           "  -B, --blur <radius>         - Blurs the image using the set "
-          "radius\n";
+          "radius\n"
+          "  -S, --scale <val>           - Scale colour intensity (overflow "
+          "allowed)\n"
+          "  -E, --experimental          - Try out an experimental feature!\n";
 
 constexpr char fileTypeMessage[] = "Input file must be \".bmp\"\n";
 constexpr char emptyArgsMessage[] = "Arguments must not be empty.\n";
@@ -85,30 +90,48 @@ const char* const writeMode = "wb";
 
 typedef enum {
     INVALID = -1,
+
+    // Help:
     HELP = 'h',
-    DUMP_HEADER = 'd',
-    PRINT_IMAGE = 'p',
+
+    // I/O:
     INPUT_FILE = 'i',
     OUTPUT_FILE = 'o',
+    MERGE = 'm',
+    COMBINE = 'c',
+    DUMP_HEADER = 'd',
+    PRINT_IMAGE = 'p',
+    ENCODE = 'e',
+
+    // Colours & Channels:
     FILTERS = 'f',
     GRAY_SCALE = 'g',
-    INVERT = 'v',
-    FLIP = 'u',
-    BRIGHTNESS_CUT = 'b',
-    COMBINE = 'c',
-    GLITCH = 'l',
     AVE = 'a',
-    CONTRAST = 't',
-    DIM = 'm',
+    INVERT = 'v',
     SWAP = 's',
-    ROTATE = 'w',
-    REVERSE = 'r',
+
+    // Geometry & Orientation:
+    ROTATE = 'r',
+    REVERSE = 'R',
+    FLIP = 'F',
+
+    // Brightness & Contrast:
+    CONTRAST = 'C',
+    BRIGHTNESS_CUT = 'b',
+    DIM = 'D',
+    SCALE_STRICT = 'T',
+
+    // Advanced Effects:
     MELT = 'M',
+    GLITCH = 'G',
     SCALE = 'S',
-    MERGE = 'G',
     BLUR = 'B',
-    ENCODE = 'e',
+
+    EXPERIMENTAL = 'E',
 } Flag;
+
+constexpr char optstring[]
+        = "i:o:m:c:e:f:r:C:b:D:T:M:G:S:hdpgavsRFE"; // Defined program flags
 
 static struct option const longOptions[] = {
         {"input", required_argument, NULL, INPUT_FILE},
@@ -131,14 +154,13 @@ static struct option const longOptions[] = {
         {"reverse", no_argument, NULL, REVERSE},
         {"melt", required_argument, NULL, MELT},
         {"scale", required_argument, NULL, SCALE},
+        {"scale-strict", required_argument, NULL, SCALE_STRICT},
         {"merge", required_argument, NULL, MERGE},
         {"blur", required_argument, NULL, BLUR},
         {"encode", required_argument, NULL, ENCODE},
+        {"experimental", no_argument, NULL, EXPERIMENTAL},
         {NULL, 0, NULL, 0},
 };
-
-constexpr char optstring[]
-        = "i:o:b:l:t:m:c:w:S:rG:B:e:dphfavgusM:"; // Defined program flags
 
 int main(const int argc, char* argv[])
 {
@@ -320,6 +342,11 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->scale = atof(optarg);
             break;
 
+        case SCALE_STRICT: {
+            userInput->scaleStrict = atof(optarg);
+            break;
+        }
+
         case BLUR: {
             if (!(vlongB(
                         &(userInput->blur), optarg, 1, UINT32_MAX, uint32_t))) {
@@ -327,6 +354,10 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             }
             break;
         }
+
+        case EXPERIMENTAL:
+            userInput->experimental = true;
+            break;
 
             // If valid command supplied, or none supplied at all
         default:
@@ -399,6 +430,16 @@ int handle_commands(UserInput* userInput)
             break;
         }
 
+        if (userInput->experimental) {
+            edge_detection(bmpImage.image, 400);
+            Image* rotated = rotate_image_clockwise(bmpImage.image);
+            edge_detection(rotated, 400);
+            Image* unrotated = rotate_image_anticlockwise(rotated);
+            free_image(&rotated);
+            free_image(&(bmpImage.image));
+            bmpImage.image = unrotated;
+        }
+
         if (userInput->flip) { // If flip mode enabled
             if (flip_image(bmpImage.image) == -1) {
                 break;
@@ -418,6 +459,11 @@ int handle_commands(UserInput* userInput)
         if (userInput->scale) {
             colour_scaler(bmpImage.image, userInput->scale, userInput->scale,
                     userInput->scale);
+        }
+
+        if (userInput->scaleStrict) {
+            colour_scaler_strict(bmpImage.image, userInput->scaleStrict,
+                    userInput->scaleStrict, userInput->scaleStrict);
         }
 
         if (userInput->cutoff) {

@@ -69,6 +69,8 @@ $ ./bmp -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --
 | `-h` | `--help` | | Shows a helpful program usage message. |
 | `-i` | `--input` | `<file>` | Input BMP file path. |
 | `-o` | `--output` | `<file>` | Output file path. |
+| `-m` | `--merge` | `<file>` | Overlays a second image onto the input. |
+| `-c` | `--combine` | `<file>` | Averages the pixel data of two images together. |
 | `-d` | `--dump` | | Dumps the BMP header data to the terminal. |
 | `-p` | `--print` | | Renders the image to the terminal. |
 | `-e` | `--encode` | `<file>` | Embeds contents of a file into an image. |
@@ -76,27 +78,27 @@ $ ./bmp -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --
 ### **Filters**
 | Flag | Long Flag | Argument | Description |
 | :--- | :--- | :--- | :--- |
+| `-f` | `--filter` | `<channels>` | Isolate specific channels (e.g. 'rb') |
 | `-g` | `--grayscale` | | Converts to black & white (Luma). |
 | `-a` | `--average` | | Convert to grayscale (Average Intensity). |
-| `-s` | `--swap` | | Swaps the red and blue color channels. |
 | `-v` | `--invert` | | Inverts all colors (Negative effect). |
-| `-S` | `--scale` | `<val>` | Colour intensity multiplier |
-| `-t` | `--contrast` | `<val>` | Adjusts contrast intensity (0-255). |
-| `-m` | `--dim` | `<val>` | Reduce pixel intensity (0-255). |
+| `-s` | `--swap` | | Swaps the red and blue color channels. |
+| `-C` | `--contrast` | `<val>` | Adjusts contrast intensity (0-255). |
 | `-b` | `--brightness-cut` | `<val>` | Zeros pixel colour if value exceeds cutoff (0-255). |
-| `-B`,| `--blur` | `<radius>`| Blurs the image using the set radius. |
+| `-D` | `--dim` | `<val>` | Reduce pixel intensity (0-255). |
+| `-T` | `--scale-strict` | `<val>` | Colour intensity multiplier |
 
 ### **Effects**
 | Flag | Long Flag | Argument | Description |
 | :--- | :--- | :--- | :--- |
 | `-M` | `--melt` | `<offset>` | Pixel Sorting Effect (negative input to invert). |
-| `-l` | `--glitch` | `<offset>` | Apply horizontal shift effect to red and blue channels. |
-| `-G` | `--merge` | `<file>` | Overlays a second image onto the input. |
-| `-c` | `--combine` | `<file>` | Averages the pixel data of two images together. |
+| `-G` | `--glitch` | `<offset>` | Apply horizontal shift effect to red and blue channels. |
+| `-S` | `--scale` | `<val>` | Colour intensity multiplier (overflow allowed) |
+| `-B`,| `--blur` | `<radius>`| Blurs the image using the set radius. |
 
 ### **Geometry**
 | Flag | Long Flag | Argument | Description |
 | :--- | :--- | :--- | :--- |
-| `-u` | `--flip` | | Flips image vertically. |
-| `-r` | `--reverse` | | Reverse image horizontally. |
-| `-w` | `--rotate` | `<N>` | Rotates image 90° clockwise `N` times. |
+| `-r` | `--rotate` | `<N>` | Rotates image 90° clockwise `N` times. |
+| `-R` | `--reverse` | | Reverse image horizontally. |
+| `-F` | `--flip` | | Flips image vertically. |

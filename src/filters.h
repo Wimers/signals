@@ -206,5 +206,8 @@ void colour_scaler(
 [[nodiscard]] int merge_images(
         Image* restrict primary, const Image* restrict secondary);
 Image* image_blur(Image* image, uint32_t radius);
+void edge_detection(Image* image, int threshold);
+void colour_scaler_strict(
+        Image* image, const double red, const double green, const double blue);
 
 #endif
