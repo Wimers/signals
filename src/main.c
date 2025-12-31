@@ -15,9 +15,9 @@
 #include <limits.h>
 
 // Program constant strings
-constexpr char usageMessage[] = "Usage: ./bmp <option> [--input <file>] ...\n";
+constexpr char usageMessage[] = "Usage: ./signals <option> [--input <file>] ...\n";
 constexpr char helpMessage[] // Need to update FIX
-        = "Usage: ./bmp <option> [--input <file>] ...\n"
+        = "Usage: ./signals <option> [--input <file>] ...\n"
           "\n"
           "Help:\n"
           "  -h, --help                  - Show this help message\n"
@@ -73,7 +73,7 @@ constexpr char fileTypeMessage[] = "Input file must be \".bmp\"\n";
 constexpr char emptyArgsMessage[] = "Arguments must not be empty.\n";
 constexpr char noArgsProvidedMessage[] = "An argument must be supplied.\n";
 constexpr char userHelpPrompt[]
-        = "Enter: \"./bmp --help\" for available commands\n";
+        = "Enter: \"./signals --help\" for available commands\n";
 constexpr char nonUniquePathsMessage[]
         = "Input and combine file paths must be unique!\n";
 constexpr char fileType[] = ".bmp";
