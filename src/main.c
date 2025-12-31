@@ -131,7 +131,7 @@ typedef enum {
 } Flag;
 
 constexpr char optstring[]
-        = "i:o:m:c:e:f:r:C:b:D:T:M:G:S:hdpgavsRFE"; // Defined program flags
+        = "i:o:m:c:e:f:r:C:b:D:T:M:G:S:B:hdpgavsRFE"; // Defined program flags
 
 static struct option const longOptions[] = {
         {"input", required_argument, NULL, INPUT_FILE},
