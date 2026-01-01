@@ -14,11 +14,12 @@
 
 ---
 
-# Overview
+## Overview
 
 **Signals** is a BMP image processor built with zero dependencies for Linux/Unix systems and features a range of image editing tools, custom filters/effects, ANSI terminal rendering, and image exporting.
 
-## Key Features
+### Key Features
+
 - **Effects:** Channel isolation, colour scaling, contrast, inversion, and more!
 - **Transformations:** Image rotation, reversing, and flipping.
 - **Steganography**: Encode secret messages for later decoding.
@@ -26,7 +27,7 @@
 
 > Currently only supports 24-bit Windows BMP's.
 
-## Visual Tuning Tips
+### Visual Tuning Tips
 
 - **Terminal Rendering**:
   - For the best viewing experience, zoom out in your terminal.
@@ -37,9 +38,9 @@
 
 ---
 
-# Examples
+## Examples
 
-## Heart
+### Heart
 ```console
 $ ./signals -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightness-cut 245
 ```
@@ -51,7 +52,7 @@ $ ./signals -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brig
 
 ---
 
-## Melt </3
+### Melt </3
 ```console
 $ ./signals -i images/original/heartOriginal.bmp -o temp.bmp --reverse  --melt -1 --contrast 30
 $ ./signals -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
@@ -63,7 +64,7 @@ $ ./signals -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  
 
 ---
 
-## InfraBW
+### InfraBW
 ```console
 $ ./signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 15 --scale-strict 1.7
 ```
@@ -75,12 +76,11 @@ $ ./signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 
 
 ---
 
-# Usage
+## Usage
 
 ### **I/O**
 | Flag | Long Flag | Argument | Description |
 | :--- | :--- | :--- | :--- |
-| `-h` | `--help` | | Shows a helpful program usage message. |
 | `-i` | `--input` | `<file>` | Input BMP file path. |
 | `-o` | `--output` | `<file>` | Output file path. |
 | `-m` | `--merge` | `<file>` | Averages the pixel data of the two images together. |

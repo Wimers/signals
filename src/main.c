@@ -70,7 +70,8 @@ constexpr char helpMessage[]
           "  -S, --scale <val>           - Scale colour intensity (overflow "
           "allowed)\n"
           "  -E, --experimental          - Try out an experimental feature!\n"
-          "\n";
+          "\n"
+          "See \'signals help <command>\' to read about a specific command.\n";
 
 constexpr char fileTypeMessage[] = "Input must be a \'%s\' file.\n";
 constexpr char invalidCmdMessage[]
