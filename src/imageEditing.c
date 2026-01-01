@@ -4,7 +4,7 @@
 #include "filters.h"
 #include "imageEditing.h"
 
-[[nodiscard]] int flip_image(Image* image)
+int flip_image(Image* image)
 {
     if (image == NULL) {
         return -1;
@@ -58,46 +58,46 @@ void reverse_image(Image* image)
     }
 }
 
-static inline Image* rotation_helper(const Image* restrict image)
+Image* transpose_image(const Image* restrict image)
 {
-    Image* rotated = create_image((int32_t)(image->height),
+    Image* transpose = create_image((int32_t)(image->height),
             (int32_t)(image->width)); // FIX type casts
 
-    if (rotated != NULL) {
+    if (transpose != NULL) {
 
         FX_TEMPLATE(image, {
-            size_t innerRowOffset = rotated->width * x;
-            (rotated->pixelData)[innerRowOffset + y] = *pixel;
+            size_t innerRowOffset = transpose->width * x;
+            (transpose->pixelData)[innerRowOffset + y] = *pixel;
         });
     }
 
-    return rotated;
+    return transpose;
 }
 
 Image* rotate_image_clockwise(const Image* restrict image)
 {
-    Image* rotated = rotation_helper(image);
+    Image* output = transpose_image(image);
 
-    if (rotated == NULL) {
+    if (output == NULL) {
         return NULL;
     }
 
-    if (flip_image(rotated) == -1) {
-        free_image(&rotated);
+    if (flip_image(output) == -1) {
+        free_image(&output);
         return NULL;
     }
 
-    return rotated;
+    return output;
 }
 
 Image* rotate_image_anticlockwise(const Image* restrict image)
 {
-    Image* rotated = rotation_helper(image);
+    Image* output = transpose_image(image);
 
-    if (rotated == NULL) {
+    if (output == NULL) {
         return NULL;
     }
 
-    reverse_image(rotated);
-    return rotated;
+    reverse_image(output);
+    return output;
 }

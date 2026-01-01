@@ -46,6 +46,7 @@ constexpr char helpMessage[]
           "Geometry & Orientation:\n"
           "  -r, --rotate <N>            - Rotate image 90° clockwise N "
           "times\n"
+          "  -t, --transpose             - Transposes the image\n"
           "  -R, --reverse               - Reverse image horizontally\n"
           "  -F, --flip                  - Flip image vertically times\n"
           "\n"
@@ -112,6 +113,7 @@ typedef enum {
 
     // Geometry & Orientation:
     ROTATE = 'r',
+    TRANSPOSE = 't',
     REVERSE = 'R',
     FLIP = 'F',
 
@@ -131,7 +133,7 @@ typedef enum {
 } Flag;
 
 constexpr char optstring[]
-        = "i:o:m:c:e:f:r:C:b:D:T:M:G:S:B:dpgavsRFE"; // Defined program flags
+        = "i:o:m:c:e:f:r:C:b:D:T:M:G:S:B:dpgavstRFE"; // Defined program flags
 
 static struct option const longOptions[] = {
         {"input", required_argument, NULL, INPUT},
@@ -150,6 +152,7 @@ static struct option const longOptions[] = {
         {"dim", required_argument, NULL, DIM},
         {"swap", no_argument, NULL, SWAP},
         {"rotate", required_argument, NULL, ROTATE},
+        {"transpose", no_argument, NULL, TRANSPOSE},
         {"reverse", no_argument, NULL, REVERSE},
         {"melt", required_argument, NULL, MELT},
         {"scale", required_argument, NULL, SCALE},
@@ -425,6 +428,12 @@ int command_list(const char* command)
                 "signals -i in.bmp -o rotated.bmp --rotate 1");
         break;
 
+    case TRANSPOSE:
+        print_cmd_help("transpose", cmd, "Transposes the input image.",
+                "-i <file> --transpose",
+                "signals -i in.bmp -o out.bmp --transpose");
+        break;
+
     case REVERSE:
         print_cmd_help("reverse", cmd, "Mirrors the image horizontally.",
                 "-i <file> --reverse",
@@ -498,6 +507,10 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
 
         case FLIP:
             userInput->flip = true;
+            break;
+
+        case TRANSPOSE:
+            userInput->transpose = true;
             break;
 
         case BRIGHTNESS_CUT: {
@@ -699,6 +712,17 @@ int handle_commands(UserInput* userInput)
             if (flip_image(bmpImage.image) == -1) {
                 break;
             }
+        }
+
+        if (userInput->transpose) {
+            Image* transpose = transpose_image(bmpImage.image);
+            free_image(&(bmpImage.image));
+            bmpImage.image = transpose;
+
+            // Update image dimensions
+            const int32_t temp = bmpImage.infoHeader.bitmapWidth;
+            bmpImage.infoHeader.bitmapWidth = bmpImage.infoHeader.bitmapHeight;
+            bmpImage.infoHeader.bitmapHeight = temp;
         }
 
         if (userInput->filters) {

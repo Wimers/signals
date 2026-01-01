@@ -64,6 +64,7 @@ typedef struct {
     bool encode;
     char* encodeFilePath;
     bool experimental;
+    bool transpose;
 } UserInput;
 
 typedef void (*ColourFilter)(Image* image);

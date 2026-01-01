@@ -114,6 +114,7 @@ $ ./signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 
 | Flag | Long Flag | Argument | Description |
 | :--- | :--- | :--- | :--- |
 | `-r` | `--rotate` | `<N>` | Rotates image 90° clockwise `N` times. |
+| `-t` | `--transpose` | | Tranposes the image. |
 | `-R` | `--reverse` | | Reverse image horizontally. |
 | `-F` | `--flip` | | Flips image vertically. |
 
