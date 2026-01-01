@@ -41,8 +41,8 @@
 ## Examples
 
 ### Heart
-```console
-$ ./signals -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightness-cut 245
+```bash
+$ signals -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightness-cut 245
 ```
 
 <p align="center">
@@ -53,9 +53,9 @@ $ ./signals -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brig
 ---
 
 ### Melt </3
-```console
-$ ./signals -i images/original/heartOriginal.bmp -o temp.bmp --reverse  --melt -1 --contrast 30
-$ ./signals -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
+```bash
+$ signals -i images/original/heartOriginal.bmp -o temp.bmp --reverse  --melt -1 --contrast 30
+$ signals -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
 ```
 
 <p align="center">
@@ -65,8 +65,8 @@ $ ./signals -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  
 ---
 
 ### InfraBW
-```console
-$ ./signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 15 --scale-strict 1.7
+```bash
+$ signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 15 --scale-strict 1.7
 ```
 
 <p align="center">
@@ -77,6 +77,17 @@ $ ./signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 
 ---
 
 ## Usage
+
+To view a list of all available program commands and flags, see:
+```bash
+$ signals help
+```
+
+Similarly, usage for individual commands may also be viewed by specifying the command:
+```bash
+$ signals help [command]
+```
+> Note: Aside from the help command, all operations require an input file to be specified via `-i` or `--input`.
 
 ### **I/O**
 | Flag | Long Flag | Argument | Description |
