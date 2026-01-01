@@ -83,8 +83,8 @@ $ ./signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 
 | `-h` | `--help` | | Shows a helpful program usage message. |
 | `-i` | `--input` | `<file>` | Input BMP file path. |
 | `-o` | `--output` | `<file>` | Output file path. |
-| `-m` | `--merge` | `<file>` | Overlays a second image onto the input. |
-| `-c` | `--combine` | `<file>` | Averages the pixel data of two images together. |
+| `-m` | `--merge` | `<file>` | Averages the pixel data of the two images together. |
+| `-c` | `--combine` | `<file>` | Overlays a second image onto the input. |
 | `-d` | `--dump` | | Dumps the BMP header data to the terminal. |
 | `-p` | `--print` | | Renders the image to the terminal. |
 | `-e` | `--encode` | `<file>` | Embeds contents of a file into an image. |
@@ -92,22 +92,22 @@ $ ./signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 
 ### **Filters**
 | Flag | Long Flag | Argument | Description |
 | :--- | :--- | :--- | :--- |
-| `-f` | `--filter` | `<channels>` | Isolate specific channels (e.g. 'rb') |
+| `-f` | `--filter` | `<channels>` | Isolate specific channels (e.g. 'RB') |
 | `-g` | `--grayscale` | | Converts to black & white (Luma). |
 | `-a` | `--average` | | Convert to grayscale (Average Intensity). |
-| `-v` | `--invert` | | Inverts all colors (Negative effect). |
-| `-s` | `--swap` | | Swaps the red and blue color channels. |
-| `-C` | `--contrast` | `<val>` | Adjusts contrast intensity (0-255). |
-| `-b` | `--brightness-cut` | `<val>` | Zeros pixel colour if value exceeds cutoff (0-255). |
-| `-D` | `--dim` | `<val>` | Reduce pixel intensity (0-255). |
-| `-T` | `--scale-strict` | `<val>` | Colour intensity multiplier |
+| `-v` | `--invert` | | Inverts all colours (Negative effect). |
+| `-s` | `--swap` | | Swaps the red and blue colour channels. |
+| `-C` | `--contrast` | `<0-255>` | Adjusts contrast intensity. |
+| `-b` | `--brightness-cut` | `<0-255>` | Zeros pixel colour if value exceeds cutoff. |
+| `-D` | `--dim` | `<0-255>` | Reduce pixel intensity. |
+| `-T` | `--scale-strict` | `<float>` | Colour intensity multiplier |
 
 ### **Effects**
 | Flag | Long Flag | Argument | Description |
 | :--- | :--- | :--- | :--- |
 | `-M` | `--melt` | `<offset>` | Pixel Sorting Effect (negative input to invert). |
 | `-G` | `--glitch` | `<offset>` | Apply horizontal shift effect to red and blue channels. |
-| `-S` | `--scale` | `<val>` | Colour intensity multiplier (overflow allowed) |
+| `-S` | `--scale` | `<float>` | Colour intensity multiplier (overflow allowed) |
 | `-B`,| `--blur` | `<radius>`| Blurs the image using the set radius. |
 
 ### **Geometry**
