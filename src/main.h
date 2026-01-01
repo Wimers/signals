@@ -8,8 +8,10 @@
 #include <getopt.h>
 
 // Exit codes
-#define EXIT_OK 0
-#define EXIT_EMPTY_ARG 19
+#define EXIT_NO_ARGUMENTS 1
+#define EXIT_EMPTY_ARG 2
+#define EXIT_NON_EXISTENT_COMMAND 3
+#define EXIT_TOO_MANY_ARGS 4
 #define EXIT_INVALID_ARG 20
 #define EXIT_FILE_CANNOT_BE_READ 9
 #define EXIT_OUTPUT_FILE_ERROR 11
@@ -77,19 +79,7 @@ typedef void (*Function)(void);
  *
  * Returns: EXIT_SUCCESS if no empty args found, -1 otherwise.
  */
-int check_for_empty_args(const int argc, char** argv);
-
-/* early_argument_checks()
- * -----------------------
- * Checks list of command line arguments contains at least 2 arguments,
- * and none are empty strings.
- *
- * argc: Number of command line arguments.
- * argv: Array of of command line argument strings.
- *
- * Returns: EXIT_SUCCESS if checks pass, -1 otherwise.
- */
-int early_argument_checks(const int argc, char** argv);
+bool any_empty_args(const int argc, char** argv);
 
 /* parse_user_commands()
  * ---------------------
@@ -128,7 +118,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput);
  * Returns: EXIT_SUCCESS on successful handling of all commands, or returns a
  *          specific error code.
  */
-int handle_commands(UserInput* userInput, const int argc);
+int handle_commands(UserInput* userInput);
 
 /* handle_combine()
  * ----------------
@@ -159,5 +149,7 @@ Function handle_colour_filters(const uint8_t filters);
 void handle_image_rotation(BMP* bmpImage, const long nRotations);
 int handle_merge(const UserInput* userInput, BMP* bmpImage);
 bool verify_melt(UserInput* userInput, const char* arg);
+int command_list(const char* command);
+void help_message(void);
 
 #endif

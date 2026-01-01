@@ -15,12 +15,11 @@
 #include <limits.h>
 
 // Program constant strings
-constexpr char usageMessage[]
-        = "Usage: ./signals <option> [--input <file>] ...\n";
 constexpr char helpMessage[]
-        = "\n"
+        = "Usage: signals <option> [--input <file>] ...\n"
+          "\n"
           "Help:\n"
-          "  -h, --help                  - Show this help message\n"
+          "  \'signals help\'              - Show this help message\n"
           "\n"
           "File I/O Options:\n"
           "  -i, --input <file>          - Input BMP file to process\n"
@@ -69,24 +68,23 @@ constexpr char helpMessage[]
           "radius\n"
           "  -S, --scale <val>           - Scale colour intensity (overflow "
           "allowed)\n"
-          "  -E, --experimental          - Try out an experimental feature!\n";
+          "  -E, --experimental          - Try out an experimental feature!\n"
+          "\n";
 
 constexpr char fileTypeMessage[] = "Input must be a \'%s\' file.\n";
-constexpr char emptyArgsMessage[] = "./signals: arguments must not be empty.\n";
-constexpr char noArgsProvidedMessage[] = "./signals: no arguments supplied.\n";
 constexpr char invalidCmdMessage[]
-        = "./signals: \'%s\' is not a valid command.\n";
-constexpr char userHelpPrompt[] = "\nSee \'./signals --help\'.\n";
+        = "signals: \'%s\' is not a valid command. See \'signals help\'\n";
+constexpr char userHelpPrompt[] = "See \'signals help\'.\n";
 constexpr char nonUniquePathsMessage[]
-        = "Input and combine file paths must be unique!\n";
+        = "signals: input and combine file paths must be unique!\n";
 constexpr char fileType[] = ".bmp";
-constexpr char invalidVal[] = "./signals: invalid value \'%s\'\n";
+constexpr char invalidVal[] = "signals: invalid value \'%s\'\n";
 
 // Error messages
 constexpr char unexpectedArgMessage[] = "Got \'%s\', expected \'%s\'\n";
 constexpr char gotStrMessage[] = "    Got \'%s\'.\n";
 constexpr char invalidFilterColourMessage[]
-        = "./signals: filter colour/s \'%s\' are invalid, must be RGB "
+        = "signals: filter colour/s \'%s\' are invalid, must be RGB "
           "characters.\n";
 
 // Assorted constant chars
@@ -96,22 +94,19 @@ const char* const writeMode = "wb";
 typedef enum {
     INVALID = -1,
 
-    // Help:
-    HELP = 'h',
-
     // I/O:
-    INPUT_FILE = 'i',
-    OUTPUT_FILE = 'o',
+    INPUT = 'i',
+    OUTPUT = 'o',
     MERGE = 'm',
     COMBINE = 'c',
-    DUMP_HEADER = 'd',
-    PRINT_IMAGE = 'p',
+    DUMP = 'd',
+    PRINT = 'p',
     ENCODE = 'e',
 
     // Colours & Channels:
     FILTERS = 'f',
-    GRAY_SCALE = 'g',
-    AVE = 'a',
+    GRAYSCALE = 'g',
+    AVERAGE = 'a',
     INVERT = 'v',
     SWAP = 's',
 
@@ -136,22 +131,21 @@ typedef enum {
 } Flag;
 
 constexpr char optstring[]
-        = "i:o:m:c:e:f:r:C:b:D:T:M:G:S:B:hdpgavsRFE"; // Defined program flags
+        = "i:o:m:c:e:f:r:C:b:D:T:M:G:S:B:dpgavsRFE"; // Defined program flags
 
 static struct option const longOptions[] = {
-        {"input", required_argument, NULL, INPUT_FILE},
-        {"output", required_argument, NULL, OUTPUT_FILE},
-        {"dump", no_argument, NULL, DUMP_HEADER},
-        {"print", no_argument, NULL, PRINT_IMAGE},
-        {"help", no_argument, NULL, HELP},
+        {"input", required_argument, NULL, INPUT},
+        {"output", required_argument, NULL, OUTPUT},
+        {"dump", no_argument, NULL, DUMP},
+        {"print", no_argument, NULL, PRINT},
         {"filter", required_argument, NULL, FILTERS},
-        {"grayscale", no_argument, NULL, GRAY_SCALE},
+        {"grayscale", no_argument, NULL, GRAYSCALE},
         {"invert", no_argument, NULL, INVERT},
         {"flip", no_argument, NULL, FLIP},
         {"brightness-cut", required_argument, NULL, BRIGHTNESS_CUT},
         {"combine", required_argument, NULL, COMBINE},
         {"glitch", required_argument, NULL, GLITCH},
-        {"average", no_argument, NULL, AVE},
+        {"average", no_argument, NULL, AVERAGE},
         {"contrast", required_argument, NULL, CONTRAST},
         {"dim", required_argument, NULL, DIM},
         {"swap", no_argument, NULL, SWAP},
@@ -169,14 +163,38 @@ static struct option const longOptions[] = {
 
 int main(const int argc, char* argv[])
 {
-    if (early_argument_checks(argc, argv) != EXIT_SUCCESS) {
-        fputs(userHelpPrompt, stdout);
-        exit(EXIT_INVALID_ARG);
+    // Check if user did not supply any arguments
+    if (argc <= 1) {
+        help_message();
+        exit(EXIT_NO_ARGUMENTS);
+    }
+
+    if (any_empty_args(argc, argv)) {
+        help_message();
+        exit(EXIT_EMPTY_ARG);
     }
 
     // Initialise
     UserInput userInput;
     (void)memset(&userInput, 0, sizeof(userInput));
+
+    if (!(strcmp(argv[1], "help"))) {
+        if (argc == 2) {
+            help_message();
+
+        } else if (argc == 3) { // Print output for branch
+                                // handled by command_list
+            char* cmd = argv[2];
+            if (command_list(cmd) == -1) {
+                exit(EXIT_NON_EXISTENT_COMMAND);
+            }
+        } else {
+            help_message();
+            exit(EXIT_TOO_MANY_ARGS);
+        }
+
+        return EXIT_SUCCESS;
+    }
 
     int status;
     if ((status = parse_user_commands(argc, argv, &userInput))
@@ -184,36 +202,253 @@ int main(const int argc, char* argv[])
         exit(status);
     }
 
-    exit(handle_commands(&userInput, argc));
+    exit(handle_commands(&userInput));
 }
 
-int check_for_empty_args(const int argc, char** argv)
+void help_message(void)
+{
+    fputs(helpMessage, stdout);
+}
+
+bool any_empty_args(const int argc, char** argv)
 {
     for (int i = 0; i < argc; i++) {
-        if (argv[i][0] == eos) {
-            return -1;
+        if (argv[i][0] == '\0') {
+            return true;
         }
     }
 
-    return EXIT_SUCCESS;
+    return false;
 }
 
-int early_argument_checks(const int argc, char** argv)
+// Helper function to format the output consistently
+void print_cmd_help(const char* name, const char shortOpt, const char* desc,
+        const char* usage, const char* examples)
 {
-    // Check if user did not supply any arguments
-    if (argc <= 1) {
+    fprintf(stdout,
+            "\n"
+            "NAME\n"
+            "\t-%c, --%s\n\n"
 
-        // Print error messages
-        fputs(noArgsProvidedMessage, stderr);
-        return -1;
+            "USAGE\n"
+            "\t%s\n\n"
+
+            "DESCRIPTION\n"
+            "\t%s\n\n"
+
+            "EXAMPLES\n"
+            "\t%s\n\n",
+            shortOpt, name, usage, desc, examples);
+}
+
+int command_list(const char* command)
+{
+    int i = 0;
+    int status = INVALID;
+
+    while (1) {
+        const char* setting = (longOptions[i]).name;
+
+        if (setting == NULL) { // command is not registered
+            goto invalid;
+        }
+
+        if (!(strcmp(setting, command))) {
+            status = (longOptions[i]).val;
+            break;
+        }
+
+        i++;
     }
 
-    if (check_for_empty_args(argc, argv) == -1) {
-        fputs(emptyArgsMessage, stderr);
-        return -1;
+    const char cmd = (char)status;
+
+    switch (cmd) {
+    case INPUT:
+        print_cmd_help("input", cmd,
+                "Specifies the source BMP image file to be "
+                "processed.\n\tFilename "
+                "must end in \'.bmp\'.",
+                "--input <file>", "signals -i images/beach.bmp");
+        break;
+
+    case OUTPUT:
+        print_cmd_help("output", cmd,
+                "Specifies the destination path where the processed BMP will "
+                "be saved.",
+                "-i <file> --output <file>", "signals -i in.bmp -o out.bmp");
+        break;
+
+    case MERGE:
+        print_cmd_help("merge", cmd,
+                "Overlays the specified file onto the input file.\n\tInput "
+                "and merge paths must be unique.",
+                "-i <file> --merge <file>",
+                "signals -i face1.bmp -m face2.bmp -o morph.bmp");
+        break;
+
+    case COMBINE:
+        print_cmd_help("combine", cmd,
+                "Averages the pixel values of the input file and the combine "
+                "file (50/50 blend).\n\tInput and combine paths must be "
+                "unique.",
+                "-i <file> --combine <file>",
+                "signals -i back.bmp -c front.bmp -o combined.bmp");
+        break;
+
+    case DUMP:
+        print_cmd_help("dump", cmd,
+                "Reads the input BMP file and prints the header "
+                "metadata to the terminal.",
+                "-i <file> --dump", "signals -i image.bmp --dump");
+        break;
+
+    case PRINT:
+        print_cmd_help("print", cmd,
+                "Renders the image (in colour) directly to the "
+                "terminal.\n\n\tFor the best viewing experience, zoom out in "
+                "your terminal.\n\tUseful for checking parameters without "
+                "saving to disk.",
+                "-i <file> --print", "signals -i icon.bmp -p");
+        break;
+
+    case ENCODE:
+        print_cmd_help("encode", cmd,
+                "Reads an input file and hides the contents within the output "
+                "image.",
+                "-i <file> --encode <secrets>",
+                "signals -i cover.bmp --encode secret.txt -o cover.bmp");
+        break;
+
+    case FILTERS:
+        print_cmd_help("filter", cmd,
+                "Isolates specific colour channels. Use 'R', 'G', or 'B' in "
+                "any combination.\n\tThe channels specified will be removed "
+                "from the output image.",
+                "-i <file> --filter <channels>",
+                "signals -i in.bmp -o out.bmp --filter rb");
+        break;
+
+    case GRAYSCALE:
+        print_cmd_help("grayscale", cmd,
+                "Converts the image to grayscale using the Luma RGB "
+                "coefficients.\n\tR *= 0.299, G *= 0.587, B *= 0.114.",
+                "-i <file> --grayscale",
+                "signals -i in.bmp -o bw.bmp --grayscale");
+        break;
+
+    case AVERAGE:
+        print_cmd_help("average", cmd,
+                "Converts the image to grayscale using a simple average"
+                " \'(R + G + B) / 3\'.",
+                "-i <file> --average",
+                "signals -i in.bmp -o avg.bmp --average");
+        break;
+
+    case INVERT:
+        print_cmd_help("invert", cmd,
+                "Inverts the colours of the image (creates a negative).",
+                "-i <file> --invert", "signals -i wb.bmp -o bw.bmp --invert");
+        break;
+
+    case SWAP:
+        print_cmd_help("swap", cmd, "Swaps the Red and Blue colour channels.",
+                "-i <file> --swap", "signals -i in.bmp -o swapped.bmp --swap");
+        break;
+
+    case CONTRAST:
+        print_cmd_help("contrast", cmd, "Increase the contrast of an image.",
+                "-i <file> --contrast <0-255>",
+                "signals -i in.bmp -o out.bmp --contrast 150");
+        break;
+
+    case BRIGHTNESS_CUT:
+        print_cmd_help("brightness-cut", cmd,
+                "Sets a pixel channel to 0 if it exceeds the cutoff value.",
+                "-i <file> --brightness-cut <0-255>",
+                "signals -i in.bmp -o cut.bmp --brightness-cut 200");
+        break;
+
+    case DIM:
+        print_cmd_help("dim", cmd,
+                "Reduces the brightness of the image by a constant.",
+                "-i <file> --dim <0-255>",
+                "signals -i in.bmp -o dimmed.bmp --dim 50");
+        break;
+
+    case SCALE_STRICT:
+        print_cmd_help("scale-strict", cmd,
+                "Multiplies colour intensity by a constant "
+                "factor.\n\tIntensity is clamped above by UINT8_MAX.",
+                "-i <file> --scale-strict <float>",
+                "signals -i in.bmp -o strict.bmp --scale-strict 0.5");
+        break;
+
+    case MELT:
+        print_cmd_help("melt", cmd,
+                "Applies a pixel sorting 'melt' effect.\n\tUse negative values "
+                "to melt upwards.",
+                "-i <file> --melt <offset>",
+                "signals -i in.bmp -o melted.bmp --melt 50");
+        break;
+
+    case GLITCH:
+        print_cmd_help("glitch", cmd,
+                "Applies a horizontal shift effect to red/blue channels based "
+                "on the offset provided.\n\tThe offset must be a positive "
+                "integer, and also within the horizontal dimensions of the "
+                "input image.",
+                "-i <file> --glitch <offset>",
+                "signals -i in.bmp -o glitch.bmp --glitch 20");
+        break;
+
+    case SCALE:
+        print_cmd_help("scale", cmd,
+                "Scales colour intensity, allowing 8-bit integer overflow for "
+                "some very interesting effets :)",
+                "-i <file> --scale <float>",
+                "signals -i in.bmp -o trippy.bmp --scale 2.5");
+        break;
+
+    case BLUR:
+        print_cmd_help("blur", cmd,
+                "Applies a box blur to the image using the specified radius.",
+                "-i <file> --blur <radius>",
+                "signals -i in.bmp -o blurred.bmp --blur 5");
+        break;
+
+    case ROTATE:
+        print_cmd_help("rotate", cmd,
+                "Rotates the image 90° clockwise N times.\n\tNegative "
+                "numbers rotate anti-clockwise.",
+                "-i <file> --rotate <N>",
+                "signals -i in.bmp -o rotated.bmp --rotate 1");
+        break;
+
+    case REVERSE:
+        print_cmd_help("reverse", cmd, "Mirrors the image horizontally.",
+                "-i <file> --reverse",
+                "signals -i in.bmp -o mirror.bmp --reverse");
+        break;
+
+    case FLIP:
+        print_cmd_help("flip", cmd, "Flips the image vertically.",
+                "-i <file> --flip", "signals -i in.bmp -o flipped.bmp --flip");
+        break;
+
+    case EXPERIMENTAL:
+        print_cmd_help("experimental", cmd,
+                "Runs a specific experimental chain of effects.",
+                "-i <file> --experimental",
+                "signals -i in.bmp -o exp.bmp --experimental");
+        break;
+
+    default:
+    invalid:
+        fprintf(stderr, invalidCmdMessage, command);
+        return INVALID;
     }
 
-    // Checks passed
     return EXIT_SUCCESS;
 }
 
@@ -226,24 +461,20 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             != -1) {
         switch (opt) {
 
-        case HELP:
-            userInput->help = true;
-            break;
-
-        case DUMP_HEADER:
+        case DUMP:
             userInput->header = true;
             break;
 
-        case PRINT_IMAGE:
+        case PRINT:
             userInput->print = true;
             break;
 
-        case INPUT_FILE:
+        case INPUT:
             userInput->input = true;
             userInput->inputFilePath = optarg;
             break;
 
-        case OUTPUT_FILE:
+        case OUTPUT:
             userInput->output = true;
             userInput->outputFilePath = optarg;
             break;
@@ -251,13 +482,13 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case FILTERS: {
             if (filtr_col_check(&(userInput->filters), optarg) == -1) {
                 fprintf(stderr, invalidFilterColourMessage, optarg);
-                printf("See \'./signals --help filters\'\n");
+                printf("See \'signals help filters\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
         }
 
-        case GRAY_SCALE:
+        case GRAYSCALE:
             userInput->grayscale = true;
             break;
 
@@ -273,7 +504,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             if (!(vlongB(
                         &(userInput->cutoff), optarg, 0, UINT8_MAX, uint8_t))) {
                 fprintf(stderr, invalidVal, optarg);
-                printf("See \'./signals --help brightness-cut\'\n");
+                printf("See \'signals help brightness-cut\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -297,7 +528,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case GLITCH: { // If glitch flag used, verify the glitch offset
             if (!(vlongB(&(userInput->glitch), optarg, 1, INT32_MAX, size_t))) {
                 fprintf(stderr, invalidVal, optarg);
-                printf("See \'./signals --help glitch\'\n");
+                printf("See \'signals help glitch\'\n");
                 // glitch_offset_invalid_message(optarg); // Prints error
                 // messages
                 return EXIT_INVALID_PARAMETER;
@@ -305,7 +536,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
         }
 
-        case AVE:
+        case AVERAGE:
             userInput->average = true;
             break;
 
@@ -313,7 +544,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             if (!(vlongB(&(userInput->contrast), optarg, 0, UINT8_MAX,
                         uint8_t))) {
                 fprintf(stderr, invalidVal, optarg);
-                printf("See \'./signals --help contrast\'\n");
+                printf("See \'signals help contrast\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -322,7 +553,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case DIM: { // If dim flag set, verify the required argument
             if (!(vlongB(&(userInput->dim), optarg, 0, UINT8_MAX, uint8_t))) {
                 fprintf(stderr, invalidVal, optarg);
-                printf("See \'./signals --help dim\'\n");
+                printf("See \'signals help dim\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -336,7 +567,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             if (!(vlongB(&(userInput->rotations), optarg, LONG_MIN, LONG_MAX,
                         long))) {
                 fprintf(stderr, invalidVal, optarg);
-                printf("See \'./signals --help rotate\'\n");
+                printf("See \'signals help rotate\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -349,7 +580,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case MELT: {
             if (!verify_melt(userInput, optarg)) {
                 fprintf(stderr, invalidVal, optarg);
-                printf("See \'./signals --help melt\'\n");
+                printf("See \'signals help melt\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -368,7 +599,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             if (!(vlongB(
                         &(userInput->blur), optarg, 1, UINT32_MAX, uint32_t))) {
                 fprintf(stderr, invalidVal, optarg);
-                printf("See \'./signals --help blur\'\n");
+                printf("See \'signals help blur\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -378,17 +609,16 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             userInput->experimental = true;
             break;
 
-            // If valid command supplied, or none supplied at all
+        // If valid command supplied, or none supplied at all
         default:
             fputs(userHelpPrompt, stdout);
-            return EXIT_NO_COMMAND;
+            return EXIT_NON_EXISTENT_COMMAND;
         }
     }
 
     if (optind < argc) {
         fprintf(stderr, invalidCmdMessage, argv[optind]);
-        fputs(userHelpPrompt, stdout);
-        return EXIT_INVALID_ARG;
+        return EXIT_TOO_MANY_ARGS;
     }
 
     // All options parses successfully
@@ -417,17 +647,12 @@ bool verify_melt(UserInput* userInput, const char* arg)
     fprintf(stderr, gotStrMessage, arg);
 }
 
-int handle_commands(UserInput* userInput, const int argc)
+int handle_commands(UserInput* userInput)
 {
-    if (userInput->help && (argc == 2)) { // If help mode enabled
-        fputs(usageMessage, stderr);
-        fputs(helpMessage, stdout);
-        return EXIT_SUCCESS;
-    }
 
     // An input file is required all non-help commands
     if (!(userInput->input)) {
-        fprintf(stderr, "./signals: no input file provided.\n");
+        fprintf(stderr, "signals: no input file provided. ");
         printf(userHelpPrompt);
         return EXIT_MISSING_INPUT_FILE;
     }
