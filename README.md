@@ -137,3 +137,5 @@ $ cd signals
 $ sudo make install
 $ cd .. && rm -rf signals  # (optional cleanup after install)
 ```
+
+> If you intend to modify source code, consider using a symbolic link via `sudo make link`.
