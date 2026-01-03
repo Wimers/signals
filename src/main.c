@@ -492,7 +492,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         case FILTERS: {
             if (filtr_col_check(&(userInput->filters), optarg) == -1) {
                 fprintf(stderr, invalidFilterColourMessage, optarg);
-                printf("See \'signals help filters\'\n");
+                printf("See \'signals help filter\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -884,31 +884,33 @@ Function handle_colour_filters(const uint8_t filters)
     return filterMap[index];
 }
 
-int filtr_col_check(uint8_t* setting, const char* arg)
+[[nodiscard]] int filtr_col_check(uint8_t* setting, const char* arg)
 {
-    const char allowed[] = {'r', 'R', 'g', 'G', 'b', 'B', eos};
     uint8_t colourBitVect = 0;
 
-    for (size_t i = 0; i < strlen(arg); i++) {
+    for (const char* s = arg; *s != '\0'; s++) {
 
-        size_t j = 0;
-        while (1) {
+        // Sets bit in bit vector to indicate presence of colour to
+        // filter. Both 'r' and 'R' are represented by the same bit.
+        switch (*s) {
+        case 'r':
+        case 'R':
+            colourBitVect |= 1; // Bit 0
+            break;
 
-            // Character did not match any valid char.
-            if (allowed[j] == eos) {
-                *setting = 0;
-                return -1;
-            }
+        case 'g':
+        case 'G':
+            colourBitVect |= 2; // Bit 1
+            break;
 
-            if ((char)(arg[i]) == allowed[j]) {
+        case 'b':
+        case 'B':
+            colourBitVect |= 4; // Bit 2
+            break;
 
-                // Sets bit in bit vector to indicate presence of colour to
-                // filter. Both 'r' and 'R' are represented by the same bit,
-                // hence the division by two.
-                colourBitVect |= (uint8_t)(1 << (j / 2)); // FIX optimise
-                break;
-            }
-            j++;
+        default:
+            *setting = 0;
+            return -1;
         }
     }
 
