@@ -572,8 +572,9 @@ Image* create_image(const int32_t width, const int32_t height)
         return NULL;
     }
 
-    img->width = (width < 0) ? (size_t)(-width) : (size_t)(width);
-    img->height = (height < 0) ? (size_t)(-height) : (size_t)(height);
+    // FIX issue with INT32_MIN
+    img->width = (size_t)abs(width);
+    img->height = (size_t)abs(height);
 
     // Allocate memory for all pixel data
     img->pixelData = malloc(img->height * img->width * sizeof(Pixel));
