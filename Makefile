@@ -10,7 +10,7 @@ PFLAGS = -O3 -flto -funroll-loops
 DEBUG = -g -fsanitize=address -fsanitize=undefined
 
 .DEFAULT_GOAL := performance
-.PHONY: debug performance clean install uninstall
+.PHONY: debug performance clean install uninstall link
 
 all: signals
 
@@ -36,3 +36,7 @@ install: signals
 
 uninstall:
 	rm $(BINDIR)/signals
+
+link: signals
+	@echo "Linking $(CURDIR)/signals to $(BINDIR)/signals..."
+	ln -sf $(CURDIR)/signals $(BINDIR)/signals
