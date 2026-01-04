@@ -60,7 +60,7 @@ typedef struct {
     double scaleStrict;
     bool merge;
     char* mergeFilePath;
-    uint32_t blur;
+    size_t blur;
     bool encode;
     char* encodeFilePath;
     bool experimental;

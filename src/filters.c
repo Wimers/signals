@@ -408,7 +408,7 @@ void colour_scaler_strict(
 }
 
 // This is slow as fuck
-Image* image_blur(Image* image, uint32_t radius)
+[[deprecated]] Image* image_blur(Image* image, uint32_t radius)
 {
     size_t perimeter = (radius << 1) + 1;
     size_t volume = perimeter * perimeter;
@@ -459,6 +459,121 @@ Image* image_blur(Image* image, uint32_t radius)
     free(buffer);
     free(rowBuff);
 
+    return new;
+}
+
+static inline void populate_row_pointer(
+        size_t* lookup, size_t width, size_t start, size_t perimeter)
+{
+    for (size_t y = 0; y < perimeter; y++) {
+        lookup[y] = width * (start++);
+    }
+}
+
+static inline void blurred_pixel_row(Image* image, const Pixel* buffer,
+        const size_t rNumber, const size_t radius, const size_t perimeter)
+{
+    const size_t rOffset = rNumber * image->width;
+    size_t blueSum = 0;
+    size_t greenSum = 0;
+    size_t redSum = 0;
+
+    // Initial average generation (equivilent to -1 index)
+    for (size_t i = 0; i < radius; i++) {
+        blueSum += (size_t)((buffer[i]).blue);
+        greenSum += (size_t)((buffer[i]).green);
+        redSum += (size_t)((buffer[i]).red);
+    }
+
+    for (size_t x = 0; x < image->width; x++) {
+        Pixel* p = get_pixel_fast(image, x, rOffset);
+
+        if (x <= radius) { // Just adding
+            Pixel last = buffer[x + radius];
+            blueSum += (size_t)(last.blue);
+            greenSum += (size_t)(last.green);
+            redSum += (size_t)(last.red);
+
+            const size_t nmemb = x + 1 + radius;
+            p->blue = (uint8_t)(blueSum / nmemb);
+            p->green = (uint8_t)(greenSum / nmemb);
+            p->red = (uint8_t)(redSum / nmemb);
+
+        } else if (x + radius + 1 > image->width) { // Just subtracting
+            Pixel first = buffer[x - radius - 1];
+            blueSum -= (size_t)(first.blue);
+            greenSum -= (size_t)(first.green);
+            redSum -= (size_t)(first.red);
+
+            const size_t nmemb = image->width - x + radius;
+            p->blue = (uint8_t)(blueSum / nmemb);
+            p->green = (uint8_t)(greenSum / nmemb);
+            p->red = (uint8_t)(redSum / nmemb);
+
+        } else { // Adding and subtracting
+            Pixel first = buffer[x - radius - 1];
+            Pixel last = buffer[x + radius];
+
+            blueSum += (size_t)(last.blue) - (size_t)(first.blue);
+            greenSum += (size_t)(last.green) - (size_t)(first.green);
+            redSum += (size_t)(last.red) - (size_t)(first.red);
+
+            p->blue = (uint8_t)(blueSum / perimeter);
+            p->green = (uint8_t)(greenSum / perimeter);
+            p->red = (uint8_t)(redSum / perimeter);
+        }
+    }
+}
+
+Image* faster_image_blur(const Image* restrict image, const size_t radius)
+{
+    Image* new = create_image((int32_t)image->width, (int32_t)image->height);
+    size_t perimeter = (radius << 1) + 1;
+
+    Pixel* buffer = malloc(sizeof(Pixel) * image->width);
+
+    if (buffer == NULL) {
+        free_image(&new);
+        return NULL;
+    }
+
+    size_t* lookup = malloc(perimeter * sizeof(size_t));
+    if (lookup == NULL) {
+        free_image(&new);
+        free(buffer);
+        return NULL;
+    }
+
+    for (size_t row = radius; row < image->height - radius; row++) {
+        populate_row_pointer(lookup, image->width, row - radius, perimeter);
+
+        for (size_t x = 0; x < image->width; x++) {
+
+            size_t bAve = 0;
+            size_t gAve = 0;
+            size_t rAve = 0;
+
+            for (size_t y = 0; y < perimeter; y++) {
+                Pixel* pix = get_pixel_fast(image, x, lookup[y]);
+                bAve += (size_t)(pix->blue);
+                gAve += (size_t)(pix->green);
+                rAve += (size_t)(pix->red);
+            }
+
+            Pixel average = {
+                    .blue = (uint8_t)(bAve / perimeter),
+                    .green = (uint8_t)(gAve / perimeter),
+                    .red = (uint8_t)(rAve / perimeter),
+            };
+
+            buffer[x] = average;
+        }
+
+        blurred_pixel_row(new, buffer, row, radius, perimeter);
+    }
+
+    free(buffer);
+    free(lookup);
     return new;
 }
 

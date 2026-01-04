@@ -610,8 +610,7 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         }
 
         case BLUR: {
-            if (!(vlongB(
-                        &(userInput->blur), optarg, 1, UINT32_MAX, uint32_t))) {
+            if (!(vlongB(&(userInput->blur), optarg, 1, INT32_MAX, size_t))) {
                 fprintf(stderr, invalidVal, optarg);
                 printf("See \'signals help blur\'\n");
                 return EXIT_INVALID_PARAMETER;
@@ -771,8 +770,11 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->blur) {
-            // FIX add error
-            Image* blurred = image_blur(bmpImage.image, userInput->blur);
+            Image* blurred = faster_image_blur(bmpImage.image, userInput->blur);
+            if (blurred == NULL) {
+                fprintf(stderr, "Blurring failed\n");
+                break;
+            }
             free_image(&(bmpImage.image));
             bmpImage.image = blurred;
         }
@@ -784,7 +786,7 @@ int handle_commands(UserInput* userInput)
 
         if (userInput->melt) {
             if (melt(&bmpImage, userInput->meltOffset) == -1) {
-                puts("Melt failed"); // FIX
+                fprintf(stderr, "Melt failed\n"); // FIX
                 break;
             }
         }
@@ -815,6 +817,7 @@ int handle_commands(UserInput* userInput)
         if (userInput->rotations) {
             handle_image_rotation(&bmpImage, userInput->rotations);
             if (bmpImage.image == NULL) {
+                fprintf(stderr, "Rotation failed\n");
                 break; // FIX add specific error code
             }
 
