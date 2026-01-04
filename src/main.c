@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -254,7 +255,8 @@ int command_list(const char* command)
         const char* setting = (longOptions[i]).name;
 
         if (setting == NULL) { // command is not registered
-            goto invalid;
+            fprintf(stderr, invalidCmdMessage, command);
+            return INVALID;
         }
 
         if (!(strcmp(setting, command))) {
@@ -454,9 +456,7 @@ int command_list(const char* command)
         break;
 
     default:
-    invalid:
-        fprintf(stderr, invalidCmdMessage, command);
-        return INVALID;
+        unreachable();
     }
 
     return EXIT_SUCCESS;
@@ -1041,7 +1041,7 @@ void handle_image_rotation(BMP* bmpImage, const long nRotations)
         break;
 
     default:
-        break;
+        unreachable();
     }
 
     // Free memory in cases where new image is created
