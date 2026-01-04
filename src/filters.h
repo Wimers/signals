@@ -205,9 +205,11 @@ void colour_scaler(
 
 [[nodiscard]] int merge_images(
         Image* restrict primary, const Image* restrict secondary);
-[[deprecated]] Image* image_blur(Image* image, uint32_t radius);
 void edge_detection(Image* image, int threshold);
 void colour_scaler_strict(
         Image* image, const double red, const double green, const double blue);
-Image* faster_image_blur(const Image* restrict image, const size_t radius);
+[[deprecated]] Image* faster_image_blur(
+        const Image* restrict image, const size_t radius);
+Image* even_faster_image_blur(const Image* restrict image, const size_t radius);
+
 #endif

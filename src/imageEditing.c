@@ -19,6 +19,7 @@ int flip_image(Image* image)
     }
 
     const size_t last = image->height >> 1;
+
     for (size_t y = 0; y < last; y++) {
 
         // Calculate offsets for starting index of current top/bottom rows
@@ -33,6 +34,7 @@ int flip_image(Image* image)
         memcpy(topRow, bottomRow, rowSize);
         memcpy(bottomRow, rowBuffer, rowSize);
     }
+
     free(rowBuffer);
     return EXIT_SUCCESS;
 }

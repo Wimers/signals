@@ -407,61 +407,6 @@ void colour_scaler_strict(
     });
 }
 
-// This is slow as fuck
-[[deprecated]] Image* image_blur(Image* image, uint32_t radius)
-{
-    size_t perimeter = (radius << 1) + 1;
-    size_t volume = perimeter * perimeter;
-
-    Pixel** buffer = malloc(volume * sizeof(Pixel*));
-    size_t* rowBuff = malloc(perimeter * sizeof(size_t));
-
-    Image* new = create_image((int32_t)image->width, (int32_t)image->height);
-
-    for (size_t y = radius; y < image->height - radius; y++) {
-        size_t ggVal = y - radius;
-
-        for (size_t j = 0; j < perimeter; j++) {
-            rowBuff[j] = image->width * (ggVal + j);
-        }
-
-        for (size_t x = radius; x < image->width - radius; x++) {
-            const size_t val = x - radius;
-
-            for (size_t w = 0; w < perimeter; w++) {
-
-                for (size_t z = 0; z < perimeter; z++) {
-                    const size_t newVal = val + z;
-
-                    buffer[perimeter * w + z]
-                            = get_pixel_fast(image, newVal, rowBuff[w]);
-                }
-            }
-
-            size_t bSum = 0;
-            size_t gSum = 0;
-            size_t rSum = 0;
-
-            for (size_t i = 0; i < volume; i++) {
-                bSum += (buffer[i])->blue;
-                gSum += (buffer[i])->green;
-                rSum += (buffer[i])->red;
-            }
-
-            Pixel* pPixel = get_pixel(new, x, y);
-            pPixel->blue = (uint8_t)(bSum / volume);
-            pPixel->green = (uint8_t)(gSum / volume);
-            pPixel->red = (uint8_t)(rSum / volume);
-        }
-    }
-
-    // Free temporary resources
-    free(buffer);
-    free(rowBuff);
-
-    return new;
-}
-
 static inline void populate_row_pointer(
         size_t* lookup, size_t width, size_t start, size_t perimeter)
 {
@@ -525,7 +470,9 @@ static inline void blurred_pixel_row(Image* image, const Pixel* buffer,
     }
 }
 
-Image* faster_image_blur(const Image* restrict image, const size_t radius)
+// O(R)
+[[deprecated]] Image* faster_image_blur(
+        const Image* restrict image, const size_t radius)
 {
     Image* new = create_image((int32_t)image->width, (int32_t)image->height);
     size_t perimeter = (radius << 1) + 1;
@@ -575,6 +522,54 @@ Image* faster_image_blur(const Image* restrict image, const size_t radius)
     free(buffer);
     free(lookup);
     return new;
+}
+
+// O(1)
+Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
+{
+    Image* t1 = create_image((int32_t)image->width, (int32_t)image->height);
+    if (t1 == NULL) {
+        return NULL;
+    }
+
+    const size_t nPixelsMax
+            = (image->width > image->height) ? (image->width) : (image->height);
+
+    Pixel* buffer = malloc(nPixelsMax * sizeof(Pixel));
+    if (buffer == NULL) {
+        free_image(&t1);
+        return NULL;
+    }
+
+    const size_t perimeter = (radius << 1) + 1;
+    const size_t rSizeT1 = image->width * sizeof(Pixel);
+
+    for (size_t y = 0; y < image->height; y++) {
+        Pixel* p = get_pixel_fast(image, 0, y * image->width);
+        memcpy(buffer, p, rSizeT1);
+        blurred_pixel_row(t1, buffer, y, radius, perimeter);
+    }
+
+    Image* t2 = transpose_image(t1);
+    free_image(&t1);
+
+    if (t2 == NULL) {
+        free(buffer);
+        return NULL;
+    }
+
+    const size_t rSizeT2 = t2->width * sizeof(Pixel);
+
+    for (size_t y = 0; y < t2->height; y++) {
+        Pixel* p = get_pixel_fast(t2, 0, y * t2->width);
+        memcpy(buffer, p, rSizeT2);
+        blurred_pixel_row(t2, buffer, y, radius, perimeter);
+    }
+
+    Image* final = transpose_image(t2);
+    free(buffer);
+    free_image(&t2);
+    return final;
 }
 
 void edge_detection(Image* image, int threshold)

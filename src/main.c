@@ -770,7 +770,8 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->blur) {
-            Image* blurred = faster_image_blur(bmpImage.image, userInput->blur);
+            Image* blurred
+                    = even_faster_image_blur(bmpImage.image, userInput->blur);
             if (blurred == NULL) {
                 fprintf(stderr, "Blurring failed\n");
                 break;
