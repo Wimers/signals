@@ -211,14 +211,17 @@ int combine_images(Image* restrict primary, const Image* restrict secondary)
 
     // For each row
     for (size_t y = 0; y < height; y++) {
-        size_t rowOffset = y * width;
+        const size_t rowOffset = y * width;
+
+        Pixel* pRowPtr = get_pixel_fast(primary, 0, rowOffset);
+        Pixel* sRowPtr = get_pixel_fast(secondary, 0, rowOffset);
 
         // For each pixel in row
-        for (size_t x = 0; x < width; x++) {
-
+        _Pragma("omp simd") for (size_t x = 0; x < width; x++)
+        {
             // For reduced cpu cycles
-            Pixel* pPixel = get_pixel_fast(primary, x, rowOffset);
-            Pixel* sPixel = get_pixel_fast(secondary, x, rowOffset);
+            Pixel* pPixel = pRowPtr + x;
+            Pixel* sPixel = sRowPtr + x;
 
             // Average the each colour value from each image and update
             // value in primary image.
@@ -248,14 +251,18 @@ int merge_images(Image* restrict primary, const Image* restrict secondary)
 
     // For each row
     for (size_t y = 0; y < height; y++) {
-        size_t rowOffset = y * primary->width;
+        const size_t rowOffset = y * width;
+
+        Pixel* pRowPtr = get_pixel_fast(primary, 0, rowOffset);
+        Pixel* sRowPtr = get_pixel_fast(secondary, 0, rowOffset);
 
         // For each pixel in row
-        for (size_t x = 0; x < width; x++) {
+        _Pragma("omp simd") for (size_t x = 0; x < width; x++)
+        {
 
             // For reduced cpu cycles
-            Pixel* pPixel = get_pixel_fast(primary, x, rowOffset);
-            Pixel* sPixel = get_pixel_fast(secondary, x, rowOffset);
+            Pixel* pPixel = pRowPtr + x;
+            Pixel* sPixel = sRowPtr + x;
 
             // Average the each colour value from each image and update
             // value in primary image.
