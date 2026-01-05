@@ -8,8 +8,6 @@
 #include <string.h>
 
 // Error messages
-constexpr char invalidColourPlanesMessage[]
-        = "The number of colour planes must be 1, got \"%u\".\n";
 constexpr char fileOpeningErrorMessage[]
         = "Error opening file \"%s\" for reading.\n";
 constexpr char errorReadingPixelsMessage[]
@@ -26,10 +24,6 @@ constexpr char invalidCompressionMessage[]
           "(inclusive).\n";
 constexpr char unsupportedCompressionMessage[]
         = "Compression method not supported (code: \"%u\").\n";
-constexpr char invalidBmpTypeMessage[]
-        = "Invalid compression method \"%.2s\".\n";
-constexpr char unsupportedBmpTypeMessage[]
-        = "Unsupported BMP format \"%.2s\".\n";
 constexpr char fileSizeCompareMessage[]
         = "File contains \"%ld\" bytes: metadata asserts \"%u\" "
           "bytes.\n";
@@ -76,9 +70,9 @@ void initialise_bmp(BMP* bmpImage)
     BmpInfoHeader infoHeader;
 
     // Initialise memory to zero's
-    memset(bmpImage, 0, sizeof(*bmpImage));
-    memset(&header, 0, sizeof(header));
-    memset(&infoHeader, 0, sizeof(infoHeader));
+    (void)memset(bmpImage, 0, sizeof(*bmpImage));
+    (void)memset(&header, 0, sizeof(header));
+    (void)memset(&infoHeader, 0, sizeof(infoHeader));
 
     // Assign to the bmpImage
     bmpImage->bmpHeader = header;
@@ -121,11 +115,11 @@ void initialise_bmp(BMP* bmpImage)
 [[nodiscard]] int read_headers(BMP* bmpImage)
 {
     if (parse_bmp_header(bmpImage) == -1) {
-        return -1;
+        return -1; // FIX add specific code
     }
 
     if (parse_bmp_info_header(bmpImage) == -1) {
-        return -1;
+        return -1; // FIX add specific code
     }
 
     return EXIT_SUCCESS;
@@ -208,9 +202,9 @@ void initialise_bmp(BMP* bmpImage)
     return EXIT_SUCCESS;
 }
 
-[[nodiscard]] int confirm_choice(void)
+[[nodiscard]] int confirm_choice(const char* const message)
 {
-    printf("Continue anyway? [Y/n]\n");
+    printf("%s [Y/n]\n", message);
     printf(">> ");
     char c;
 
@@ -228,21 +222,30 @@ void initialise_bmp(BMP* bmpImage)
     return EXIT_SUCCESS;
 }
 
+static inline void u16_to_str_LE(const uint16_t val, char (*str)[3])
+{
+    (*str)[0] = (char)(0x00FF & val);
+    (*str)[1] = (char)(0x00FF & (val >> 8));
+    (*str)[2] = '\0';
+}
+
 [[nodiscard]] int header_safety_checks(BMP* bmpImage)
 {
     const BmpHeader* bmpHeader = &(bmpImage->bmpHeader);
     const BmpInfoHeader* info = &(bmpImage->infoHeader);
 
-    if (is_str_in_const_str_array(
-                (char*)&(bmpHeader->id), bmpIdentifier, sizeof(bmpHeader->id))
+    char id[3];
+    u16_to_str_LE(bmpHeader->id, &id);
+
+    if (is_str_in_const_str_array(id, bmpIdentifier, sizeof(bmpHeader->id))
             == -1) {
-        fprintf(stderr, invalidBmpTypeMessage, (char*)&(bmpHeader->id));
+        fprintf(stderr, "Invalid BMP format \'%s\'.\n", id);
         return -1;
     }
 
     // Check if ID corresponds to an unsupported BMP version
     if (memcmp(&(bmpHeader->id), windowsBmpID, sizeof(bmpHeader->id))) {
-        fprintf(stderr, unsupportedBmpTypeMessage, (char*)&(bmpHeader->id));
+        fprintf(stderr, "Unsupported BMP format \'%s\'.\n", id);
         return -1;
     }
 
@@ -259,7 +262,8 @@ void initialise_bmp(BMP* bmpImage)
     }
 
     if (info->colourPlanes != 1) { // Must be one
-        fprintf(stderr, invalidColourPlanesMessage, info->colourPlanes);
+        fprintf(stderr, "The number of colour planes must be 1, got \'%u\'.\n",
+                info->colourPlanes);
         return -1;
     }
 
@@ -293,7 +297,7 @@ void initialise_bmp(BMP* bmpImage)
         }
 
         fprintf(stderr, fileCorruptionMessage, -diff);
-        if (confirm_choice() == -1) {
+        if (confirm_choice("Continue Anyway?") == -1) {
             return -1;
         }
     }
@@ -311,6 +315,7 @@ void initialise_bmp(BMP* bmpImage)
         return -1;
     }
 
+    // Cast to size_t safe give earlier check to see if < 0
     if ((offset + minRequiredBytes > (size_t)eofPos)
             || (offset < (BMP_HEADER_SIZE + DIB_HEADER_SIZE))) {
         fprintf(stderr, pixelOffsetInvalidMessage, offset);
@@ -348,8 +353,9 @@ void print_bmp_header(const BmpHeader* bmp)
     fprintf(stdout, sssFormat, "BMP Header", "Data", "Hex");
     fputs(lineSeparator, stdout);
 
-    // Output capped at two chars to prevent buffer overflow
-    fprintf(stdout, ssdFormat, "ID", (char*)&(bmp->id), bmp->id);
+    char id[3];
+    u16_to_str_LE(bmp->id, &id);
+    fprintf(stdout, ssdFormat, "ID", id, bmp->id);
 
     fprintf(stdout, suXFormat, "Size", bmp->bmpSize, bmp->bmpSize);
     fprintf(stdout, suXFormat, "Offset", bmp->offset, bmp->offset);
@@ -376,6 +382,7 @@ void print_bmp_info_header(const BmpInfoHeader* bmp)
             bmp->coloursInPalette);
     printf(suXFormat, "Important Colours", bmp->importantColours,
             bmp->importantColours);
+    fputs(lineSeparator, stdout);
 }
 
 int globalDecode = 0;
@@ -406,8 +413,8 @@ int globalDecode = 0;
                 fprintf(stderr,
                         "Non zero padding detected, file may be corrupted, or "
                         "contain hidden data.\n");
-                fprintf(stderr, "Would you like to view the data as text?\n");
-                if (confirm_choice() == -1) {
+                if (confirm_choice("Would you like to view the data as text?")
+                        == -1) {
                     globalDecode = -1;
 
                     fprintf(stderr, "Ignoring padding...\n");

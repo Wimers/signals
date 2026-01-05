@@ -16,7 +16,7 @@
 #define suXFormat "%-25s %-15u %X\n"
 #define sdXFormat "%-25s %-15d %X\n"
 #define sssFormat "%-25s %-15s %s\n"
-#define ssdFormat "%-25s %-15.2s %d\n"
+#define ssdFormat "%-25s %-15s %d\n"
 #define sudFormat "%-25s %-15u %d\n"
 
 #define READ_HEADER_SAFE(dest, size, file, parameterName)                      \
