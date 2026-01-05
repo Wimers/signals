@@ -636,6 +636,35 @@ void write_padding_zeros(FILE* file, size_t gapSize)
     }
 }
 
+static inline void update_bmp_size(
+        BmpHeader* bmpHeader, const BmpInfoHeader* info)
+{
+    // Safe cast as byteOffset is [0, 3].
+    const uint32_t byteOffset = (uint32_t)(calc_row_byte_offset(
+            info->bitsPerPixel, info->bitmapWidth));
+
+    const uint32_t pixelDataSize = (uint32_t)info->bitmapHeight
+            * (byteOffset
+                    + ((uint32_t)info->bitmapWidth
+                            * (uint32_t)(info->bitsPerPixel >> 3)));
+
+    bmpHeader->bmpSize = bmpHeader->offset + pixelDataSize;
+}
+
+static inline void update_image_size_tag(BmpInfoHeader* info)
+{
+    // Safe cast as byteOffset is [0, 3].
+    const uint32_t byteOffset = (uint32_t)(calc_row_byte_offset(
+            info->bitsPerPixel, info->bitmapWidth));
+
+    const uint32_t pixelDataSize = (uint32_t)info->bitmapHeight
+            * (byteOffset
+                    + ((uint32_t)info->bitmapWidth
+                            * (uint32_t)(info->bitsPerPixel >> 3)));
+
+    info->imageSize = pixelDataSize;
+}
+
 int write_bmp_with_header_provided(
         BMP* bmpImage, const char* filename, const char* messagePath)
 {
@@ -647,6 +676,9 @@ int write_bmp_with_header_provided(
     if (check_file_opened(output, filename) == -1) {
         return -1;
     }
+
+    update_bmp_size(bmpHeader, info);
+    update_image_size_tag(info);
 
     // Write BmpHeader
     fwrite(&bmpHeader->id, sizeof(bmpHeader->id), 1, output);
