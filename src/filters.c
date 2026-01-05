@@ -505,6 +505,17 @@ void colour_scaler(
     });
 }
 
+/* blurred_pixel_row()
+ * -------------------
+ * Applies a horizontal box blur to a single row of an image using a sliding
+ * window.
+ *
+ * image: Destination image to store the blurred row.
+ * buffer: Source array containing the original pixel row data.
+ * rNumber: The vertical index of the row being processed.
+ * radius: The radius of the blur.
+ * perimeter: The total width of the blur effect (radius * 2 + 1).
+ */
 static inline void blurred_pixel_row(Image* image, const Pixel* buffer,
         const size_t rNumber, const size_t radius, const size_t perimeter)
 {
@@ -608,14 +619,6 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
     return final;
 }
 
-static inline void populate_row_pointer(size_t* lookup, const size_t width,
-        size_t start, const size_t perimeter)
-{
-    for (size_t y = 0; y < perimeter; y++) {
-        lookup[y] = width * (start++);
-    }
-}
-
 // O(R)
 [[deprecated]] Image* faster_image_blur(
         const Image* restrict image, const size_t radius)
@@ -638,7 +641,12 @@ static inline void populate_row_pointer(size_t* lookup, const size_t width,
     }
 
     for (size_t row = radius; row < image->height - radius; row++) {
-        populate_row_pointer(lookup, image->width, row - radius, perimeter);
+
+        // Populate row pointer
+        size_t start = row - radius;
+        for (size_t i = 0; i < perimeter; i++) {
+            lookup[i] = image->width * (start++);
+        }
 
         for (size_t x = 0; x < image->width; x++) {
 
