@@ -95,3 +95,64 @@ bool vlongB_check(long* output, const char* arg, const long min, const long max)
     *output = val;
     return true;
 }
+
+int* separate_to_int_array(const char* str, const char delim, const size_t exp)
+{
+    if ((delim == '-') || (delim == '+')) {
+        return NULL;
+    }
+
+    if ((str == NULL) || (exp == 0)) {
+        return NULL;
+    }
+
+    if (str[0] == delim) {
+        return NULL;
+    }
+
+    size_t len = strlen(str);
+    if (len < 1) {
+        return NULL;
+    }
+
+    int* values = calloc(exp, sizeof(int));
+    if (values == NULL) {
+        return NULL;
+    }
+
+    const char* cur = str;
+    size_t vCount = 0;
+    size_t i = 0;
+
+    while (str[i] != '\0') {
+        if (str[i] == delim) {
+            if (vCount >= exp) {
+                free(values);
+                return NULL;
+            }
+
+            values[vCount] = atoi(cur);
+            vCount++;
+
+            cur = &(str[i + 1]);
+        }
+        i++;
+    }
+
+    if (*cur != '\0') {
+        if (vCount >= exp) {
+            free(values);
+            return NULL;
+        }
+
+        values[vCount] = atoi(cur);
+        vCount++;
+    }
+
+    if (vCount != exp) {
+        free(values);
+        return NULL;
+    }
+
+    return values;
+}
