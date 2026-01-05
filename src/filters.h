@@ -258,9 +258,9 @@ void colour_scaler(
  * image, blurs the new rows (original columns), and transposes back.
  *
  * Algorithm complexity is O(1) (relative to radius). This blurring algorithm is
- * better suited for blurring with a large radi, as the overhead from
+ * better suited for blurring with a large radii, as the overhead from
  * transposing the image twice is significant and counter-productive for small
- * radi.
+ * radii.
  *
  * image: Pointer to struct containing the pixel data.
  * radius: The radius of the blur.
