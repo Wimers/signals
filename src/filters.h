@@ -4,19 +4,6 @@
 #include "fileParsing.h"
 #include <stdint.h>
 
-// Constants to best map RGB values to grayscale
-// Each multiplied by 1024 to avoid floats
-constexpr int rMapGS = 306; // 0.299
-constexpr int gMapGS = 601; // 0.587
-constexpr int bMapGS = 117; // 0.114
-
-// Used to optimise division by 3 (for positive integers less than 765)
-constexpr int div3Const = 683;
-constexpr int div3Shift = 11;
-
-// Used for division by 1024 (more efficient than dividing by 1000)
-constexpr int pixScaleMultGS = 10;
-
 #define FX_TEMPLATE(image, function)                                           \
     for (size_t y = 0; y < image->height; y++) {                               \
         size_t rowOffset = y * image->width;                                   \
@@ -28,21 +15,6 @@ constexpr int pixScaleMultGS = 10;
             function;                                                          \
         }                                                                      \
     }
-
-static inline uint8_t calc_pixel_average(Pixel* pixel)
-{
-    return (uint8_t)(((pixel->red + pixel->green + pixel->blue) * div3Const)
-            >> div3Shift);
-}
-
-static inline uint8_t calc_pixel_grayscale(Pixel* pixel)
-{
-    // Calculate gray scaled value
-    const uint32_t temp = (uint32_t)(rMapGS * pixel->red + gMapGS * pixel->green
-            + bMapGS * pixel->blue);
-
-    return (uint8_t)(temp >> pixScaleMultGS);
-}
 
 /* invert_colours()
  * ----------------

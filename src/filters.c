@@ -10,18 +10,92 @@ constexpr char fileDimensionMismatchMessage[]
         = "File dimension mismatch: \"%zux%zu\" is not \"%zux%zu\"\n";
 constexpr char imageBoundsMessage[] = "Image bounds (%zux%zu)\n";
 
+// Constants to best map RGB values to grayscale
+// Each multiplied by 1024 to avoid floats
+constexpr int rMapGS = 306; // 0.299
+constexpr int gMapGS = 601; // 0.587
+constexpr int bMapGS = 117; // 0.114
+
+// Used to optimise division by 3 (for positive integers less than 765)
+constexpr int div3Const = 683;
+constexpr int div3Shift = 11;
+
+// Used for division by 1024 (more efficient than dividing by 1000)
+constexpr int pixScaleMultGS = 10;
+
+/* calc_pixel_average()
+ * --------------------
+ * Calculate the average intensity of an input Pixels colour channels.
+ *
+ * pixel: input Pixel.
+ *
+ * Returns: The average intensity.
+ */
+static inline uint8_t calc_pixel_average(Pixel* pixel)
+{
+    return (uint8_t)(((pixel->red + pixel->green + pixel->blue) * div3Const)
+            >> div3Shift);
+}
+
+/* calc_pixel_grayscale()
+ * ----------------------
+ * Uses the Luma RGB intensity coefficients to calculate the intensity value
+ * required to make the Pixel appear grayscaled.
+ *
+ * pixel: input Pixel.
+ *
+ * Returns: The grayscale value.
+ */
+static inline uint8_t calc_pixel_grayscale(Pixel* pixel)
+{
+    // Calculate gray scaled value
+    const uint32_t temp = (uint32_t)(rMapGS * pixel->red + gMapGS * pixel->green
+            + bMapGS * pixel->blue);
+
+    return (uint8_t)(temp >> pixScaleMultGS);
+}
+
+/* clamp_floor_u8()
+ * ----------------
+ * Attempts to perform a subtraction of two uint8_t integers, if the subtraction
+ * would result in underflow, the result is clamped from below and set to 0.
+ *
+ * val: Main value.
+ * sub: Value subtracted from val.
+ *
+ * Returns: The uint8_t result the clamped subtraction.
+ */
 static inline uint8_t clamp_floor_u8(const uint8_t val, const uint8_t sub)
 {
     return (uint8_t)((val > sub) ? (val - sub) : (0));
 }
 
+/* clamp_ceil_u8()
+ * ---------------
+ * Attempts to perform an addition of two uint8_t integers, if the addition
+ * would result in overflow, the result is clamped above and set to UINT8_MAX.
+ *
+ * val: Main value.
+ * add: Value added to val.
+ *
+ * Returns: The uint8_t result after the clamped addition.
+ */
 static inline uint8_t clamp_ceil_u8(const uint8_t val, const uint8_t add)
 {
     const int sum = val + add;
     return (uint8_t)((sum >= UINT8_MAX) ? (UINT8_MAX) : (sum));
 }
 
-static inline uint8_t average_channel(const uint8_t a, const uint8_t b)
+/* ave_u8_2x()
+ * -----------
+ * Calculates the arithmetic mean of two uint8_t integers.
+ *
+ * a: Number 1.
+ * b: Number 2.
+ *
+ * Returns: The arithmetic mean.
+ */
+static inline uint8_t ave_u8_2x(const uint8_t a, const uint8_t b)
 {
     return (uint8_t)((a + b) >> 1);
 }
@@ -149,9 +223,9 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff)
 
             // Average the each colour value from each image and update
             // value in primary image.
-            pPixel->blue = average_channel(pPixel->blue, sPixel->blue);
-            pPixel->green = average_channel(pPixel->green, sPixel->green);
-            pPixel->red = average_channel(pPixel->red, sPixel->red);
+            pPixel->blue = ave_u8_2x(pPixel->blue, sPixel->blue);
+            pPixel->green = ave_u8_2x(pPixel->green, sPixel->green);
+            pPixel->red = ave_u8_2x(pPixel->red, sPixel->red);
         }
     }
 
@@ -392,7 +466,7 @@ void colour_scaler(
     });
 }
 
-static inline uint8_t bound_double_to_u8(double val)
+static inline uint8_t bound_double_to_u8(const double val)
 {
     return (uint8_t)((val >= UINT8_MAX) ? (UINT8_MAX) : (val));
 }
@@ -407,8 +481,8 @@ void colour_scaler_strict(
     });
 }
 
-static inline void populate_row_pointer(
-        size_t* lookup, size_t width, size_t start, size_t perimeter)
+static inline void populate_row_pointer(size_t* lookup, const size_t width,
+        size_t start, const size_t perimeter)
 {
     for (size_t y = 0; y < perimeter; y++) {
         lookup[y] = width * (start++);
@@ -572,7 +646,7 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
     return final;
 }
 
-void edge_detection(Image* image, int threshold)
+void edge_detection(Image* image, const int threshold)
 {
     for (size_t y = 0; y < image->height; y++) {
         size_t rowOffset = y * image->width;
