@@ -4,9 +4,20 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-constexpr char eos = '\0';
 constexpr int base10 = 10;
 
+/* vlongB()
+ * --------
+ * Macro to safely parse a string into a numeric type with bounds checking.
+ *
+ * output: Pointer to the variable to store the result.
+ * arg: String to parse.
+ * min: Minimum allowed value.
+ * max: Maximum allowed value.
+ * type: The type of the output variable (e.g., int, long).
+ *
+ * Returns: true if successful, false otherwise.
+ */
 #define vlongB(output, arg, min, max, type)                                    \
     __extension__({                                                            \
         long _temp;                                                            \
@@ -17,9 +28,22 @@ constexpr int base10 = 10;
         _success;                                                              \
     })
 
-int is_str_in_const_str_array(const void* restrict arg,
-        const char* const strArray[], const size_t nread);
-
+/* fast_u8_to_buf()
+ * ----------------
+ * Converts a uint8_t value to its decimal string representation and stores it
+ * in the provided buffer.
+ *
+ * buf: Buffer to store the digits.
+ * val: The value to convert.
+ *
+ * Returns: The number of digits written to the buffer (1-3).
+ *
+ * Note
+ * ----
+ * It is assumed the buffer to store the digits is at least 4 bytes, and has
+ * been initialised to zero prior to calling, so that the output is NULL
+ * terminated.
+ */
 static inline size_t fast_u8_to_buf(char* buf, uint8_t val)
 {
     if (val >= 100) {
@@ -48,58 +72,68 @@ static inline size_t fast_u8_to_buf(char* buf, uint8_t val)
     }
 }
 
+/* is_str_in_const_str_array()
+ * ---------------------------
+ * Checks if a string is present within a NULL terminated array of strings.
+ * Comparison is limited to nRead bytes.
+ *
+ * arg: String to target.
+ * strArray: NULL terminated array of strings.
+ * nRead: Maximum number of bytes to compare.
+ *
+ * Returns: EXIT_SUCCESS if found, -1 otherwise.
+ */
+[[nodiscard]] int is_str_in_const_str_array(const void* restrict arg,
+        const char* const strArray[], const size_t nRead);
+
 /* ends_with()
  * -----------
- * Checks if an input string ends in a target string.
+ * Checks if an input string ends in a supplied suffix.
  *
- * target: String expected at end of arg string.
+ * suffix: String suffix.
  * arg: Input string.
  *
- * Returns: 1 if the string does end with target, -1 if the input target string
+ * Returns: 1 if the string does end with the suffix, -1 if the suffix string
  *          is larger than the arg string, and 0 otherwise.
  */
-int ends_with(const char* const target, const char* arg);
+[[nodiscard]] int ends_with(const char* const suffix, const char* arg);
 
 /* check_each_char_is_digit()
  * --------------------------
- * Checks each character in a string is a digit (0 <-> 9).
+ * Checks if each character in a string is a digit (0 <-> 9).
  *
- * argv: String argument input.
+ * arg: String argument input.
  *
- * Returns: EXIT_SUCCESS if each character is a digit, else returns -1 on
- *          error.
+ * Returns: EXIT_SUCCESS if valid, else -1.
  */
-int check_each_char_is_digit(const char* arg);
+[[nodiscard]] int check_each_char_is_digit(const char* arg);
 
 /* check_long_within_bounds()
  * --------------------------
- * Checks if a number is between a minimum and maximum value. The boundry
- * includes the boarder values.
+ * Checks if a number is within a specified range [min, max].
  *
  * num: Number to check.
- * min: Minimum bound on number.
- * max: Maximum bound on number.
+ * min: Minimum allowed value.
+ * max: Maximum allowed value.
  *
- * Returns: EXIT_SUCCESS if within bounds.
- *
- * Errors: Returns -1.
+ * Returns: EXIT_SUCCESS if within bounds, else -1.
  */
-int check_long_within_bounds(const long num, const long min, const long max);
+[[nodiscard]] int check_long_within_bounds(
+        const long num, const long min, const long max);
 
 /* vlongB_check()
- * ----------------------------
- * Checks whether an input string represents a base 10 number, within specified
- * upper and lower bounds.
+ * --------------
+ * Helper function for vlongB macro. Parses a string to a long and verifies
+ * it falls within the specified bounds.
  *
- * arg: String argument input.
- * min: Minimum bound on number.
- * max: Maximum bound on number.
+ * output: Pointer to store the parsed long value.
+ * arg: String to parse.
+ * min: Minimum allowed value.
+ * max: Maximum allowed value.
  *
- * Returns: EXIT_SUCCESS if within bounds.
- *
- * Errors: Returns -1.
+ * Returns: true if parsing and bounds check succeed, false otherwise.
  */
-bool vlongB_check(
+[[nodiscard]] bool vlongB_check(
         long* output, const char* arg, const long min, const long max);
 
 #endif

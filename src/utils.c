@@ -5,7 +5,7 @@
 #include <ctype.h>
 
 int is_str_in_const_str_array(const void* restrict arg,
-        const char* const strArray[], const size_t nread)
+        const char* const strArray[], const size_t nRead)
 {
     // Initialise
     const int breakPoint = 1000;
@@ -15,8 +15,8 @@ int is_str_in_const_str_array(const void* restrict arg,
     while (strArray[i] != NULL) {
 
         // Check if arg is equal to this string
-        if ((strlen(strArray[i]) >= nread)
-                && (!memcmp(arg, strArray[i], nread))) {
+        if ((strlen(strArray[i]) >= nRead)
+                && (!memcmp(arg, strArray[i], nRead))) {
 
             return EXIT_SUCCESS; // Arg found
         }
@@ -30,19 +30,19 @@ int is_str_in_const_str_array(const void* restrict arg,
     return -1;
 }
 
-int ends_with(const char* const target, const char* arg)
+int ends_with(const char* const suffix, const char* arg)
 {
     // Initialise
     const size_t lenArg = strlen(arg);
-    const size_t lenTarget = strlen(target);
+    const size_t lenSuffix = strlen(suffix);
 
-    // Check argument isn't smaller than the target
-    if (lenArg < lenTarget) {
+    // Check argument isn't smaller than the suffix
+    if (lenArg < lenSuffix) {
         return -1;
     }
 
     // Returns 1 if arg does end with the target, else returns 0.
-    return !(strcmp(target, &(arg[lenArg - lenTarget])));
+    return !(strcmp(suffix, &(arg[lenArg - lenSuffix])));
 }
 
 int check_each_char_is_digit(const char* arg)
@@ -79,7 +79,7 @@ bool vlongB_check(long* output, const char* arg, const long min, const long max)
     // Convert arg string to a long.
     const long val = strtol(arg, &endptr, base10);
 
-    if ((arg == endptr) || (*endptr != eos)) {
+    if ((arg == endptr) || (*endptr != '\0')) {
         return false;
     }
 
