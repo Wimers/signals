@@ -10,7 +10,7 @@ PFLAGS = -O3 -flto -funroll-loops
 DEBUG = -g -fsanitize=address -fsanitize=undefined
 
 .DEFAULT_GOAL := performance
-.PHONY: debug performance clean install uninstall link
+.PHONY: debug performance clean install uninstall link asm
 
 all: signals
 
@@ -24,7 +24,11 @@ signals signals-debug: src/*.[ch]
 	$(CC) $(CFLAGS) $(WARNINGS) $^ -o $@
 
 clean:
-	rm -f signals signals-debug *.o
+	rm -f signals signals-debug *.o *.s
+
+asm: CFLAGS := $(filter-out -flto, $(CFLAGS) $(PFLAGS)) -fverbose-asm
+asm:
+	$(CC) $(CFLAGS) $(WARNINGS) -S src/*.c
 
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
