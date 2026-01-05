@@ -4,9 +4,13 @@
 #include "fileParsing.h"
 #include <stdint.h>
 
+/* FX_TEMPLATE
+ * -----------
+ * Macro to iterate over every pixel in an image with SIMD optimisation.
+ */
 #define FX_TEMPLATE(image, function)                                           \
     for (size_t y = 0; y < image->height; y++) {                               \
-        size_t rowOffset = y * image->width;                                   \
+        const size_t rowOffset = y * image->width;                             \
         Pixel* rowPtr = get_pixel_fast(image, 0, rowOffset);                   \
                                                                                \
         _Pragma("omp simd") for (size_t x = 0; x < image->width; x++)          \
@@ -18,7 +22,7 @@
 
 /* invert_colours()
  * ----------------
- * Inverts the colour of each pixel.
+ * Inverts the colour of each pixel of an Image (creates a negative).
  *
  * image: Pointer to struct containing the pixel data.
  */
@@ -26,7 +30,7 @@ void invert_colours(Image* image);
 
 /* filter_red()
  * ------------
- * Sets the red component of each pixel to zero.
+ * Sets the red channel of each pixel in an Image to zero.
  *
  * image: Pointer to struct containing the pixel data.
  */
@@ -34,7 +38,7 @@ void filter_red(Image* image);
 
 /* filter_green()
  * --------------
- * Sets the green component of each pixel to zero.
+ * Sets the green channel of each pixel in an Image to zero.
  *
  * image: Pointer to struct containing the pixel data.
  */
@@ -42,22 +46,49 @@ void filter_green(Image* image);
 
 /* filter_blue()
  * -------------
- * Sets the green component of each pixel to zero.
+ * Sets the blue channel of each pixel in an Image to zero.
  *
  * image: Pointer to struct containing the pixel data.
  */
 void filter_blue(Image* image);
 
+/* filter_red_green()
+ * ------------------
+ * Sets the red and green channels of each pixel in an Image to zero.
+ *
+ * image: Pointer to struct containing the pixel data.
+ */
 void filter_red_green(Image* image);
+
+/* filter_red_blue()
+ * ------------------
+ * Sets the red and blue channels of each pixel in an Image to zero.
+ *
+ * image: Pointer to struct containing the pixel data.
+ */
 void filter_red_blue(Image* image);
+
+/* filter_green_blue()
+ * ------------------
+ * Sets the green and blue channels of each pixel in an Image to zero.
+ *
+ * image: Pointer to struct containing the pixel data.
+ */
 void filter_green_blue(Image* image);
+
+/* filter_all()
+ * ------------------
+ * Sets each channel of each pixel in an Image to zero.
+ *
+ * image: Pointer to struct containing the pixel data.
+ */
 void filter_all(Image* image);
 
 /* gray_filter()
  * -------------
- * Applies a gray scale filter to the image. Modifies each pixel based on
- * weighted values for each pixel component based on how sensitive the human eye
- * is to different wavelengths of light.
+ * Applies a gray scale filter to the Image. Modifies each pixel using the Luma
+ * RGB coefficients to account for the sensitivity of the human eye to different
+ * wavelengths of light.
  *
  * image: Pointer to struct containing the pixel data.
  */
@@ -65,8 +96,8 @@ void gray_filter(Image* image);
 
 /* average_pixels()
  * ----------------
- * Applies a pixel averaging filter to an image, which sets each pixel to the
- * average intensity of the pixels components.
+ * Applies a pixel averaging filter to an Image, which sets each pixel to the
+ * average intensity of each of the pixels components.
  *
  * image: Pointer to struct containing the pixel data.
  */
@@ -78,23 +109,34 @@ void average_pixels(Image* image);
  * if its intensity is greater than the brightness cutoff.
  *
  * image: Pointer to struct containing the pixel data.
- * maxBrightness: Maximum brightness threshold.
+ * cutoff: Maximum brightness threshold.
  */
 void brightness_cut_filter(Image* image, const uint8_t cutoff);
 
 /* combine_images()
  * ----------------
- * Combines two images together, updating the primary image with the pixels
- * averaged from primary and secondary images.
+ * Combines two images together, overwriting the primary image to store the
+ * result. Each pixel is the average of the primary and secondary Images pixels.
  *
- * primary: Destination image to store combination.
- * secondary: Image combined with primary.
+ * primary: Destination Image (and first source).
+ * secondary: Source Image to add to the primary.
  *
- * Returns: EXIT_SUCCESS on success.
- *
- * Errors: Returns EXIT_OUT_OF_BOUNDS, if the images dimensions do not match.
+ * Returns: EXIT_SUCCESS on success, EXIT_OUT_OF_BOUNDS if dimensions mismatch.
  */
 [[nodiscard]] int combine_images(
+        Image* restrict primary, const Image* restrict secondary);
+
+/* merge_images()
+ * --------------
+ * Merges two images by adding their pixel values together.
+ * The result is clamped above by UINT8_MAX to prevent overflow.
+ *
+ * primary: Destination image (and first source).
+ * secondary: Source image to add to the primary.
+ *
+ * Returns: EXIT_SUCCESS on success, EXIT_OUT_OF_BOUNDS if dimensions mismatch.
+ */
+[[nodiscard]] int merge_images(
         Image* restrict primary, const Image* restrict secondary);
 
 /* glitch_effect()
@@ -109,13 +151,13 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff);
  *
  * Returns: EXIT_SUCCESS on successful image filtering.
  *
- * Errors: Returns -1 upon malloc failure, and if offset is out of bounds.
+ * Errors: Returns -1 upon malloc failure, or if offset is out of bounds.
  */
 [[nodiscard]] int glitch_effect(Image* image, const size_t glitchOffset);
 
 /* verify_offset_bounds()
  * ----------------------
- * Checks if the offset is less than the images width. Prints error messages to
+ * Checks if the offset is less than the Images width. Prints error messages to
  * stderr if condition not met.
  *
  * image: Pointer to struct containing the pixel data.
@@ -127,61 +169,139 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff);
 
 /* contrast_effect()
  * -----------------
- * Applies a rough contrasting filter to an image.
+ * Applies a contrasting filter to an Image based on a min/max threshold.
+ * Channels with an intensity >= max or <= min will be effected.
  *
  * image: Pointer to struct containing the pixel data.
- * contrastFactor: Level of contrasting.
- * min: Lower bound of colour intensity to be uneffected.
- * max: Upper bound of colour intensity to be uneffected.
+ * contrastFactor: Level of contrasting (value added/subtracted).
+ * min: Lower bound of colour intensity to be effected.
+ * max: Upper bound of colour intensity to be effected.
  */
 void contrast_effect(Image* image, const uint8_t contrastFactor,
         const uint8_t min, const uint8_t max);
 
 /* dim_effect()
  * ------------
- * Reduces the indensity of every pixel by a constant dimming factor.
- * Pixels are reduced to a minimum of zero to prevent integer underflow.
+ * Reduces the intensity of each Pixel of an Image by a constant channel
+ * specific dimming factor. Pixels are reduced to a minimum of zero to prevent
+ * integer underflow.
  *
  * image: Pointer to struct containing the pixel data.
- * dimmingFactor: Factor each pixel component is reduced by.
+ * redDim: Factor red component is reduced by.
+ * greenDim: Factor green component is reduced by.
+ * blueDim: Factor blue component is reduced by.
  */
 void dim_effect(Image* image, const uint8_t redDim, const uint8_t greenDim,
         const uint8_t blueDim);
 
-/* contrast_effect_val()
- * ---------------------
- * Calculates the resulting pixel intensity provided contrast effect parameters.
- *
- * val: Current intensity of a pixel component.
- * contrastFactor: Level of contrasting.
- * min: Lower bound of colour intensity to be uneffected.
- * max: Upper bound of colour intensity to be uneffected.
- *
- * Returns: Colour intensity for a pixel component.
- */
-uint8_t contrast_effect_val(uint8_t val, const uint8_t contrastFactor,
-        const uint8_t min, const uint8_t max);
-
 /* swap_red_blue()
  * ---------------
- * Swaps the red and blue components of each pixel for a provided image.
+ * Swaps the red and blue components of each pixel in an Image.
  *
  * image: Pointer to struct containing the pixel data.
  */
 void swap_red_blue(Image* image);
 
-[[nodiscard]] int melt(BMP* bmp, const int32_t startPoint);
+/* melt()
+ * ------
+ * Applies a "pixel sorting" effect to the image, creating a melting appearance
+ * (from top to bottom). Pixel columns are sorted by intensity (qsort) in
+ * ascending order, and Images are rotated before and after sorting to minimise
+ * cache misses.
+ *
+ * Rotation directions can be swapped using a negative `start` value. This has
+ * the effect of "melting" the image from the bottom up.
+ *
+ * bmp: Pointer to the BMP structure containing the image.
+ * start: Determines the sorting threshold and orientation.
+ *        Negative values trigger an inverse rotation before sorting.
+ *
+ * Returns: EXIT_SUCCESS on success, or -1 on failure.
+ */
+[[nodiscard]] int melt(BMP* bmp, const int32_t start);
 
+/* colour_scaler_strict()
+ * ----------------------
+ * Scales the RGB components of each Pixel in an Image by the provided floating
+ * point channel multipliers. The result is clamped above by UINT8_MAX to
+ * prevent overflow.
+ *
+ * image: Pointer to struct containing the pixel data.
+ * red: Red component multiplier.
+ * green: Green component multiplier.
+ * blue: Blue component multiplier.
+ */
+void colour_scaler_strict(
+        Image* image, const double red, const double green, const double blue);
+
+/* colour_scaler()
+ * ---------------
+ * Scales the RGB components of each Pixel in an Image by the provided floating
+ * point channel multipliers.
+ *
+ * image: Pointer to struct containing the pixel data.
+ * red: Red component multiplier.
+ * green: Green component multiplier.
+ * blue: Blue component multiplier.
+ *
+ * Note
+ * ----
+ * uint8_t overflow from the float multiplication is not prevented, for strict
+ * scaling (clamped above by UINT8_MAX) see colour_scaler_strict().
+ */
 void colour_scaler(
         Image* image, const double red, const double green, const double blue);
 
-[[nodiscard]] int merge_images(
-        Image* restrict primary, const Image* restrict secondary);
-void edge_detection(Image* image, int threshold);
-void colour_scaler_strict(
-        Image* image, const double red, const double green, const double blue);
+/* even_faster_image_blur()
+ * ------------------------
+ * Applies a separable box blur to the image. It blurs rows, transposes the
+ * image, blurs the new rows (original columns), and transposes back.
+ *
+ * Algorithm complexity is O(1) (relative to radius). This blurring algorithm is
+ * better suited for blurring with a large radi, as the overhead from
+ * transposing the image twice is significant and counter-productive for small
+ * radi.
+ *
+ * image: Pointer to struct containing the pixel data.
+ * radius: The radius of the blur.
+ *
+ * Returns: A pointer to the new blurred Image, or NULL on failure.
+ */
+Image* even_faster_image_blur(const Image* restrict image, const size_t radius);
+
+/* faster_image_blur()
+ * -------------------
+ * Applies a separable box blur using a hybrid approach.
+ *
+ * Vertical Pass (O(R))
+ * --------------------
+ * Calculates the average of the vertical column for each pixel by iterating
+ * over the blur radius. Uses a pre-calculated lookup table of row offsets to
+ * minimize multiplication overhead.
+ *
+ * Horizontal Pass (O(1))
+ * ----------------------
+ * Applies a sliding window blur to the vertically averaged row.
+ *
+ * This function is deprecated because the vertical pass scales linearly with
+ * the radius, making it significantly slower than even_faster_image_blur() for
+ * large blur radii.
+ *
+ * image: Pointer to struct containing the pixel data.
+ * radius: The radius of the blur.
+ *
+ * Returns: A pointer to the new blurred Image, or NULL on failure.
+ */
 [[deprecated]] Image* faster_image_blur(
         const Image* restrict image, const size_t radius);
-Image* even_faster_image_blur(const Image* restrict image, const size_t radius);
+
+/* edge_detection()
+ * ----------------
+ * The algorithm is still in development... check back later :)
+ *
+ * image: Pointer to struct containing the pixel data.
+ * threshold: Minimum difference between pixels to register as an edge.
+ */
+void edge_detection(Image* image, const int threshold);
 
 #endif

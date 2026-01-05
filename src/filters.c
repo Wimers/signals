@@ -194,8 +194,7 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff)
     });
 }
 
-[[nodiscard]] int combine_images(
-        Image* restrict primary, const Image* restrict secondary)
+int combine_images(Image* restrict primary, const Image* restrict secondary)
 {
     const size_t height = primary->height;
     const size_t width = primary->width;
@@ -212,7 +211,7 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff)
 
     // For each row
     for (size_t y = 0; y < height; y++) {
-        size_t rowOffset = y * primary->width;
+        size_t rowOffset = y * width;
 
         // For each pixel in row
         for (size_t x = 0; x < width; x++) {
@@ -232,8 +231,7 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff)
     return EXIT_SUCCESS;
 }
 
-[[nodiscard]] int merge_images(
-        Image* restrict primary, const Image* restrict secondary)
+int merge_images(Image* restrict primary, const Image* restrict secondary)
 {
     const size_t height = primary->height;
     const size_t width = primary->width;
@@ -270,7 +268,7 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff)
     return EXIT_SUCCESS;
 }
 
-[[nodiscard]] int glitch_effect(Image* image, const size_t glitchOffset)
+int glitch_effect(Image* image, const size_t glitchOffset)
 {
     // Check if offset is out of image bounds
     if (verify_offset_bounds(image, glitchOffset) == -1) {
@@ -317,7 +315,7 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff)
     return EXIT_SUCCESS;
 }
 
-[[nodiscard]] int verify_offset_bounds(Image* image, const size_t offset) // FIX
+int verify_offset_bounds(Image* image, const size_t offset) // FIX
 {
     if (offset >= image->width) {
         fputs(glitchUsageMessage, stderr);
@@ -328,6 +326,32 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff)
     }
 
     return EXIT_SUCCESS;
+}
+
+/* contrast_effect_val()
+ * ---------------------
+ * Helper function to calculate the resulting pixel intensity provided contrast
+ * effect parameters.
+ *
+ * val: Current intensity of a pixel component.
+ * contrastFactor: Level of contrasting.
+ * min: Lower bound of colour intensity to be effected.
+ * max: Upper bound of colour intensity to be effected.
+ *
+ * Returns: Colour intensity for a pixel component.
+ */
+static inline uint8_t contrast_effect_val(const uint8_t val,
+        const uint8_t contrastFactor, const uint8_t min, const uint8_t max)
+{
+    if (val >= max) {
+        return clamp_ceil_u8(val, contrastFactor);
+    }
+
+    if (val <= min) {
+        return clamp_floor_u8(val, contrastFactor);
+    }
+
+    return val;
 }
 
 void contrast_effect(Image* image, const uint8_t contrastFactor,
@@ -361,20 +385,6 @@ void dim_effect(Image* image, const uint8_t redDim, const uint8_t greenDim,
             });
 }
 
-uint8_t contrast_effect_val(const uint8_t val, const uint8_t contrastFactor,
-        const uint8_t min, const uint8_t max)
-{
-    if (val >= max) {
-        return clamp_ceil_u8(val, contrastFactor);
-    }
-
-    if (val <= min) {
-        return clamp_floor_u8(val, contrastFactor);
-    }
-
-    return val;
-}
-
 void swap_red_blue(Image* image)
 {
     FX_TEMPLATE(image, { // Swap red and blue values
@@ -395,21 +405,21 @@ int cmp_pixels(const void* a, const void* b)
     return (s1 - s2);
 }
 
-[[nodiscard]] int melt(BMP* bmp, const int32_t startPoint)
+[[nodiscard]] int melt(BMP* bmp, const int32_t start)
 {
     Image* image = bmp->image;
     bool inv = false;
 
     size_t norm = 0;
-    if (startPoint == 0) {
+    if (start == 0) {
         return -1; // FIX
     }
 
-    if (startPoint < 0) {
-        norm = (size_t)(-startPoint);
+    if (start < 0) {
+        norm = (size_t)(-start);
         inv = true;
     } else {
-        norm = (size_t)startPoint;
+        norm = (size_t)start;
     }
     norm--;
 
@@ -456,16 +466,6 @@ int cmp_pixels(const void* a, const void* b)
     return EXIT_SUCCESS;
 }
 
-void colour_scaler(
-        Image* image, const double red, const double green, const double blue)
-{
-    FX_TEMPLATE(image, {
-        pixel->blue = (uint8_t)(pixel->blue * blue);
-        pixel->green = (uint8_t)(pixel->green * green);
-        pixel->red = (uint8_t)(pixel->red * red);
-    });
-}
-
 static inline uint8_t bound_double_to_u8(const double val)
 {
     return (uint8_t)((val >= UINT8_MAX) ? (UINT8_MAX) : (val));
@@ -481,12 +481,14 @@ void colour_scaler_strict(
     });
 }
 
-static inline void populate_row_pointer(size_t* lookup, const size_t width,
-        size_t start, const size_t perimeter)
+void colour_scaler(
+        Image* image, const double red, const double green, const double blue)
 {
-    for (size_t y = 0; y < perimeter; y++) {
-        lookup[y] = width * (start++);
-    }
+    FX_TEMPLATE(image, {
+        pixel->blue = (uint8_t)(pixel->blue * blue);
+        pixel->green = (uint8_t)(pixel->green * green);
+        pixel->red = (uint8_t)(pixel->red * red);
+    });
 }
 
 static inline void blurred_pixel_row(Image* image, const Pixel* buffer,
@@ -544,6 +546,62 @@ static inline void blurred_pixel_row(Image* image, const Pixel* buffer,
     }
 }
 
+// O(1)
+Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
+{
+    Image* t1 = create_image((int32_t)image->width, (int32_t)image->height);
+    if (t1 == NULL) {
+        return NULL;
+    }
+
+    const size_t nPixelsMax
+            = (image->width > image->height) ? (image->width) : (image->height);
+
+    Pixel* buffer = malloc(nPixelsMax * sizeof(Pixel));
+    if (buffer == NULL) {
+        free_image(&t1);
+        return NULL;
+    }
+
+    const size_t perimeter = (radius << 1) + 1;
+    const size_t rSizeT1 = image->width * sizeof(Pixel);
+
+    for (size_t y = 0; y < image->height; y++) {
+        Pixel* p = get_pixel_fast(image, 0, y * image->width);
+        memcpy(buffer, p, rSizeT1);
+        blurred_pixel_row(t1, buffer, y, radius, perimeter);
+    }
+
+    Image* t2 = transpose_image(t1);
+    free_image(&t1);
+
+    if (t2 == NULL) {
+        free(buffer);
+        return NULL;
+    }
+
+    const size_t rSizeT2 = t2->width * sizeof(Pixel);
+
+    for (size_t y = 0; y < t2->height; y++) {
+        Pixel* p = get_pixel_fast(t2, 0, y * t2->width);
+        memcpy(buffer, p, rSizeT2);
+        blurred_pixel_row(t2, buffer, y, radius, perimeter);
+    }
+
+    Image* final = transpose_image(t2);
+    free(buffer);
+    free_image(&t2);
+    return final;
+}
+
+static inline void populate_row_pointer(size_t* lookup, const size_t width,
+        size_t start, const size_t perimeter)
+{
+    for (size_t y = 0; y < perimeter; y++) {
+        lookup[y] = width * (start++);
+    }
+}
+
 // O(R)
 [[deprecated]] Image* faster_image_blur(
         const Image* restrict image, const size_t radius)
@@ -596,54 +654,6 @@ static inline void blurred_pixel_row(Image* image, const Pixel* buffer,
     free(buffer);
     free(lookup);
     return new;
-}
-
-// O(1)
-Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
-{
-    Image* t1 = create_image((int32_t)image->width, (int32_t)image->height);
-    if (t1 == NULL) {
-        return NULL;
-    }
-
-    const size_t nPixelsMax
-            = (image->width > image->height) ? (image->width) : (image->height);
-
-    Pixel* buffer = malloc(nPixelsMax * sizeof(Pixel));
-    if (buffer == NULL) {
-        free_image(&t1);
-        return NULL;
-    }
-
-    const size_t perimeter = (radius << 1) + 1;
-    const size_t rSizeT1 = image->width * sizeof(Pixel);
-
-    for (size_t y = 0; y < image->height; y++) {
-        Pixel* p = get_pixel_fast(image, 0, y * image->width);
-        memcpy(buffer, p, rSizeT1);
-        blurred_pixel_row(t1, buffer, y, radius, perimeter);
-    }
-
-    Image* t2 = transpose_image(t1);
-    free_image(&t1);
-
-    if (t2 == NULL) {
-        free(buffer);
-        return NULL;
-    }
-
-    const size_t rSizeT2 = t2->width * sizeof(Pixel);
-
-    for (size_t y = 0; y < t2->height; y++) {
-        Pixel* p = get_pixel_fast(t2, 0, y * t2->width);
-        memcpy(buffer, p, rSizeT2);
-        blurred_pixel_row(t2, buffer, y, radius, perimeter);
-    }
-
-    Image* final = transpose_image(t2);
-    free(buffer);
-    free_image(&t2);
-    return final;
 }
 
 void edge_detection(Image* image, const int threshold)
