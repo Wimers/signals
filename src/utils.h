@@ -136,4 +136,6 @@ static inline size_t fast_u8_to_buf(char* buf, uint8_t val)
 [[nodiscard]] bool vlongB_check(
         long* output, const char* arg, const long min, const long max);
 
+int* separate_to_int_array(const char* str, const char delim, const size_t exp);
+
 #endif

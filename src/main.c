@@ -38,6 +38,8 @@ constexpr char helpMessage[]
           "Colours & Channels:\n"
           "  -f, --filter <channels>     - Isolate specific channels (e.g. "
           "'rb')\n"
+          "  -h, --hue <R, G, B>         - Increase/decrease channel intensity "
+          "by a constant (-255 <-> 255)\n"
           "  -g, --grayscale             - Convert image to grayscale (Luma)\n"
           "  -a, --average               - Convert to grayscale (Average "
           "Intensity)\n"
@@ -56,8 +58,6 @@ constexpr char helpMessage[]
           "  -C, --contrast <val>        - Adjust contrast factor (0-255)\n"
           "  -b, --brightness-cut <val>  - Cuts pixel component if value "
           "exceeds cutoff (0-255)\n"
-          "  -D, --dim <val>             - Reduce brightness by value "
-          "(0-255)\n"
           "  -T, --scale-strict <val>    - Scale colour intensity "
           "(multiplier)\n"
           "\n"
@@ -108,6 +108,7 @@ typedef enum {
 
     // Colours & Channels:
     FILTERS = 'f',
+    HUE = 'h',
     GRAYSCALE = 'g',
     AVERAGE = 'a',
     INVERT = 'v',
@@ -122,7 +123,6 @@ typedef enum {
     // Brightness & Contrast:
     CONTRAST = 'C',
     BRIGHTNESS_CUT = 'b',
-    DIM = 'D',
     SCALE_STRICT = 'T',
 
     // Advanced Effects:
@@ -135,7 +135,7 @@ typedef enum {
 } Flag;
 
 constexpr char optstring[]
-        = "i:o:m:c:e:f:r:C:b:D:T:M:G:S:B:dpgavstRFE"; // Defined program flags
+        = "i:o:m:c:e:f:h:r:C:b:T:M:G:S:B:dpgavstRFE"; // Defined program flags
 
 static struct option const longOptions[] = {
         {"input", required_argument, NULL, INPUT},
@@ -143,6 +143,7 @@ static struct option const longOptions[] = {
         {"dump", no_argument, NULL, DUMP},
         {"print", no_argument, NULL, PRINT},
         {"filter", required_argument, NULL, FILTERS},
+        {"hue", required_argument, NULL, HUE},
         {"grayscale", no_argument, NULL, GRAYSCALE},
         {"invert", no_argument, NULL, INVERT},
         {"flip", no_argument, NULL, FLIP},
@@ -151,7 +152,6 @@ static struct option const longOptions[] = {
         {"glitch", required_argument, NULL, GLITCH},
         {"average", no_argument, NULL, AVERAGE},
         {"contrast", required_argument, NULL, CONTRAST},
-        {"dim", required_argument, NULL, DIM},
         {"swap", no_argument, NULL, SWAP},
         {"rotate", required_argument, NULL, ROTATE},
         {"transpose", no_argument, NULL, TRANSPOSE},
@@ -335,6 +335,12 @@ int command_list(const char* command)
                 "signals -i in.bmp -o out.bmp --filter rb");
         break;
 
+    case HUE:
+        print_cmd_help("hue", cmd, "Update...",
+                "-i <file> --hue <r, g, b>", // FIX
+                "signals -i in.bmp -o out.bmp --hue \'0, 0, 100\'");
+        break;
+
     case GRAYSCALE:
         print_cmd_help("grayscale", cmd,
                 "Converts the image to grayscale using the Luma RGB "
@@ -373,13 +379,6 @@ int command_list(const char* command)
                 "Sets a pixel channel to 0 if it exceeds the cutoff value.",
                 "-i <file> --brightness-cut <0-255>",
                 "signals -i in.bmp -o cut.bmp --brightness-cut 200");
-        break;
-
-    case DIM:
-        print_cmd_help("dim", cmd,
-                "Reduces the brightness of the image by a constant.",
-                "-i <file> --dim <0-255>",
-                "signals -i in.bmp -o dimmed.bmp --dim 50");
         break;
 
     case SCALE_STRICT:
@@ -498,6 +497,19 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
         }
 
+        case HUE: {
+            int* hueScales = separate_to_int_array(optarg, ',', 3);
+            if (hueScales == NULL) {
+                fprintf(stderr, invalidVal, optarg);
+                printf("See \'signals help hue\'\n");
+                return EXIT_INVALID_PARAMETER;
+            }
+
+            userInput->hue = true;
+            userInput->hueScales = hueScales;
+            break;
+        }
+
         case GRAYSCALE:
             userInput->grayscale = true;
             break;
@@ -559,15 +571,6 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
                         uint8_t))) {
                 fprintf(stderr, invalidVal, optarg);
                 printf("See \'signals help contrast\'\n");
-                return EXIT_INVALID_PARAMETER;
-            }
-            break;
-        }
-
-        case DIM: { // If dim flag set, verify the required argument
-            if (!(vlongB(&(userInput->dim), optarg, 0, UINT8_MAX, uint8_t))) {
-                fprintf(stderr, invalidVal, optarg);
-                printf("See \'signals help dim\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
             break;
@@ -780,9 +783,12 @@ int handle_commands(UserInput* userInput)
             bmpImage.image = blurred;
         }
 
-        if (userInput->dim) { // If dim mode enabled
-            dim_effect(bmpImage.image, userInput->dim, userInput->dim,
-                    userInput->dim); // FIX Update docs
+        if (userInput->hue) { // If hue mode enabled
+            apply_hue(bmpImage.image, (userInput->hueScales)[0],
+                    (userInput->hueScales)[1],
+                    (userInput->hueScales)[2]); // FIX Update docs
+            free(userInput->hueScales);
+            userInput->hueScales = NULL;
         }
 
         if (userInput->melt) {

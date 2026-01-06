@@ -191,8 +191,8 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
  * greenDim: Factor green component is reduced by.
  * blueDim: Factor blue component is reduced by.
  */
-void dim_effect(Image* image, const uint8_t redDim, const uint8_t greenDim,
-        const uint8_t blueDim);
+[[deprecated]] void dim_effect(Image* image, const uint8_t redDim,
+        const uint8_t greenDim, const uint8_t blueDim);
 
 /* swap_red_blue()
  * ---------------
@@ -303,5 +303,7 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius);
  * threshold: Minimum difference between pixels to register as an edge.
  */
 void edge_detection(Image* image, const int threshold);
+
+void apply_hue(Image* image, const int red, const int green, const int blue);
 
 #endif

@@ -42,6 +42,8 @@ typedef struct {
     bool print;
     bool invert;
     uint8_t filters;
+    bool hue;
+    int* hueScales;
     bool grayscale;
     bool flip;
     uint8_t cutoff;
@@ -50,7 +52,6 @@ typedef struct {
     size_t glitch;
     uint8_t average;
     uint8_t contrast;
-    uint8_t dim;
     bool swap;
     long rotations;
     bool reverse;

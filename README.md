@@ -104,13 +104,13 @@ $ signals help [command]
 | Flag | Long Flag | Argument | Description |
 | :--- | :--- | :--- | :--- |
 | `-f` | `--filter` | `<channels>` | Isolate specific channels (e.g. 'RB') |
+| `-h` | `--hue` | `<R, G, B>` | Increase/decrease RGB channel intensity by a constant (-255 ↔ 255). |
 | `-g` | `--grayscale` | | Converts to black & white (Luma). |
 | `-a` | `--average` | | Convert to grayscale (Average Intensity). |
 | `-v` | `--invert` | | Inverts all colours (Negative effect). |
 | `-s` | `--swap` | | Swaps the red and blue colour channels. |
 | `-C` | `--contrast` | `<0-255>` | Adjusts contrast intensity. |
 | `-b` | `--brightness-cut` | `<0-255>` | Zeros pixel colour if value exceeds cutoff. |
-| `-D` | `--dim` | `<0-255>` | Reduce pixel intensity. |
 | `-T` | `--scale-strict` | `<float>` | Colour intensity multiplier |
 
 ### **Effects**

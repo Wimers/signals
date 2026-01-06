@@ -380,8 +380,41 @@ void contrast_effect(Image* image, const uint8_t contrastFactor,
     });
 }
 
-void dim_effect(Image* image, const uint8_t redDim, const uint8_t greenDim,
-        const uint8_t blueDim)
+void apply_hue(Image* image, const int red, const int green, const int blue)
+{
+    int sum;
+    FX_TEMPLATE(image, {
+        sum = (int)(pixel->blue) + blue;
+        if (sum < 0) {
+            pixel->blue = (uint8_t)(0);
+        } else if (sum >= UINT8_MAX) {
+            pixel->blue = (uint8_t)(UINT8_MAX);
+        } else {
+            pixel->blue = (uint8_t)(sum);
+        }
+
+        sum = (int)(pixel->green) + green;
+        if (sum < 0) {
+            pixel->green = (uint8_t)(0);
+        } else if (sum >= UINT8_MAX) {
+            pixel->green = (uint8_t)(UINT8_MAX);
+        } else {
+            pixel->green = (uint8_t)(sum);
+        }
+
+        sum = (int)(pixel->red) + red;
+        if (sum < 0) {
+            pixel->red = (uint8_t)(0);
+        } else if (sum >= UINT8_MAX) {
+            pixel->red = (uint8_t)(UINT8_MAX);
+        } else {
+            pixel->red = (uint8_t)(sum);
+        }
+    });
+}
+
+[[deprecated]] void dim_effect(Image* image, const uint8_t redDim,
+        const uint8_t greenDim, const uint8_t blueDim)
 {
     FX_TEMPLATE(image,
             { // Reduce value of each pixel component by the dimming factor
