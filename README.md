@@ -139,3 +139,17 @@ $ cd .. && rm -rf signals  # (optional cleanup after install)
 ```
 
 > If you intend to modify source code, consider using a symbolic link via `sudo make link`.
+
+## Optional Features
+
+Image rendering via SDL. Build with `make sdl`.
+
+### Prerequisites
+
+- SDL2
+
+### Arch
+
+```bash
+$ sudo pacman -S sdl2
+```
