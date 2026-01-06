@@ -8,22 +8,13 @@
 #include <string.h>
 
 // Error messages
-constexpr char fileOpeningErrorMessage[]
-        = "Error opening file \"%s\" for reading.\n";
 constexpr char errorReadingPixelsMessage[]
         = "Error reading pixels: (row %zu)\n";
 constexpr char invalidDimensionMessage[]
         = "Invalid image dimensions \"%dx%d\".\n";
 constexpr char bmpLoadFailMessage[] = "BMP could not be loaded.\n";
-constexpr char headerReadFailMessage[]
-        = "The header from \"%s\" could not be read.\n";
 constexpr char eofMismatchMessage[]
         = "Location of EOF mismatch: Got \'%ld\', expected \'%d\'.\n";
-constexpr char invalidCompressionMessage[]
-        = "Invalid compression method \"%u\", expected result between 0 <-> 13 "
-          "(inclusive).\n";
-constexpr char unsupportedCompressionMessage[]
-        = "Compression method not supported (code: \"%u\").\n";
 constexpr char fileSizeCompareMessage[]
         = "File contains \"%ld\" bytes: metadata asserts \"%u\" "
           "bytes.\n";
@@ -33,11 +24,7 @@ constexpr char fileCorruptionMessage[]
         = "File may be corrupted, or contain hidden data (%ld bytes).\n";
 constexpr char pixelOffsetInvalidMessage[]
         = "Pixel data offset invalid (%u).\n";
-constexpr char negVertResMessage[]
-        = "Warning: Vertical resolution is negative (%d).\n";
-constexpr char negHorzResMessage[]
-        = "Warning: Horizontal resolution is negative (%d).\n";
-constexpr char resettingIntValueMessage[] = "Resetting value to \"%d\".\n";
+constexpr char resettingIntValueMessage[] = "Resetting value to \'%d\'.\n";
 // constexpr char eofAddrMessage[] = "End of File Addr: %ld\n";
 
 // Constant program strings
@@ -60,7 +47,6 @@ constexpr int DIB_HEADER_SIZE = 40;
 constexpr int BI_RGB = 0;
 constexpr int comprMax = 13; // (BMP standard allows values range from 0 <-> 13)
 
-constexpr size_t p24bit_t = 3;
 constexpr size_t maxLenANSI = 32;
 constexpr size_t terminalBufferLen = 8192;
 
@@ -88,7 +74,8 @@ void initialise_bmp(BMP* bmpImage)
     }
 
     if (read_headers(bmpImage) == -1) {
-        fprintf(stderr, headerReadFailMessage, filePath);
+        fprintf(stderr, "The header from \'%s\' could not be read.\n",
+                filePath);
         return EXIT_FILE_INTEGRITY;
     }
 
@@ -101,7 +88,7 @@ void initialise_bmp(BMP* bmpImage)
         return EXIT_HEADER_SAFETY;
     }
 
-    bmpImage->image = load_bmp_2d(
+    bmpImage->image = load_bmp(
             bmpImage->file, &(bmpImage->bmpHeader), &(bmpImage->infoHeader));
 
     if (bmpImage->image == NULL) {
@@ -268,11 +255,16 @@ static inline void u16_to_str_LE(const uint16_t val, char (*str)[3])
     }
 
     if (info->compression > comprMax) {
-        fprintf(stderr, invalidCompressionMessage, info->compression);
+        fprintf(stderr,
+                "Compression method \'%u\' invalid, expected result in range "
+                "[0, 13].\n",
+                info->compression);
         return -1;
     }
+
     if (info->compression != BI_RGB) { // Could be updated in future
-        fprintf(stderr, unsupportedCompressionMessage, info->compression);
+        fprintf(stderr, "Compression method not supported (code: \'%u\').\n",
+                info->compression);
         return -1;
     }
 
@@ -293,7 +285,7 @@ static inline void u16_to_str_LE(const uint16_t val, char (*str)[3])
 
         if (diff > 0) {
             fprintf(stderr, fileTooSmallMessage, diff);
-            // return -1; // FIX
+            return -1;
         }
 
         fprintf(stderr, fileCorruptionMessage, -diff);
@@ -305,13 +297,14 @@ static inline void u16_to_str_LE(const uint16_t val, char (*str)[3])
     const uint32_t offset = bmpHeader->offset;
     const size_t padding = calc_row_byte_offset(
             info->bitsPerPixel, (size_t)info->bitmapWidth);
+    const size_t bytesPerPixel = (info->bitsPerPixel >> 3);
     const size_t minRequiredBytes
-            = (((size_t)abs(info->bitmapWidth) * p24bit_t + padding)
+            = (((size_t)abs(info->bitmapWidth) * bytesPerPixel + padding)
                     * (size_t)abs(info->bitmapHeight));
 
-    if ((info->imageSize != minRequiredBytes)
-            && (info->compression != BI_RGB)) {
-        fprintf(stderr, "image size error: \"%zu\".\n", minRequiredBytes);
+    if ((info->imageSize < minRequiredBytes) && (info->imageSize != 0)) {
+        fprintf(stderr, "Image size error, minimum is: %zu.\n",
+                minRequiredBytes);
         return -1;
     }
 
@@ -330,13 +323,15 @@ static inline void u16_to_str_LE(const uint16_t val, char (*str)[3])
 void check_image_resolution(BmpInfoHeader* info)
 {
     if (info->horzResolution < 0) {
-        fprintf(stderr, negHorzResMessage, info->horzResolution);
+        fprintf(stderr, "Warning: Horizontal resolution is negative (%d).\n",
+                info->horzResolution);
         fprintf(stderr, resettingIntValueMessage, 0);
         info->horzResolution = 0;
     }
 
     if (info->vertResolution < 0) {
-        fprintf(stderr, negVertResMessage, info->vertResolution);
+        fprintf(stderr, "Warning: Vertical resolution is negative (%d).\n",
+                info->vertResolution);
         fprintf(stderr, resettingIntValueMessage, 0);
         info->vertResolution = 0;
     }
@@ -443,7 +438,7 @@ int globalDecode = 0;
     return EXIT_SUCCESS;
 }
 
-Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
+Image* load_bmp(FILE* file, const BmpHeader* restrict header,
         const BmpInfoHeader* restrict bmp)
 {
     // Initialise pixel array
@@ -778,7 +773,7 @@ void write_pixel_data(
 [[nodiscard]] int check_file_opened(FILE* file, const char* const filePath)
 {
     if (file == NULL) { // Check if file can be opened
-        fprintf(stderr, fileOpeningErrorMessage, filePath);
+        fprintf(stderr, "Error opening file \"%s\" for reading.\n", filePath);
         return -1;
     }
 

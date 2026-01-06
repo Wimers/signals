@@ -168,9 +168,9 @@ void print_bmp_info_header(const BmpInfoHeader* bmp);
 int read_pixel_row(FILE* file, Image* image, const size_t rowNumber,
         const size_t byteOffset);
 
-/* load_bmp_2d()
+/* load_bmp()
  * -------------
- * Loads the entire 2D pixel array from the BMP file.
+ * Loads the entire pixel array from the BMP file.
  *
  * file: File stream to the open file.
  * header: Struct containing all parsed BMP Header metadata.
@@ -178,7 +178,7 @@ int read_pixel_row(FILE* file, Image* image, const size_t rowNumber,
  *
  * Returns: Pointer to the image struct containing the images pixel data.
  */
-Image* load_bmp_2d(FILE* file, const BmpHeader* restrict header,
+Image* load_bmp(FILE* file, const BmpHeader* restrict header,
         const BmpInfoHeader* restrict bmp);
 
 /* print_image_to_terminal()
