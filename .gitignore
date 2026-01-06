@@ -2,3 +2,4 @@
 .clang-format
 /*.[cho]
 signals
+signals-debug
