@@ -8,9 +8,10 @@ WARNINGS = -Wall -Wextra -Werror -Wshadow \
 CFLAGS = -std=c2x -march=native -fopenmp
 PFLAGS = -O3 -flto -funroll-loops
 DEBUG = -g -fsanitize=address -fsanitize=undefined
+LFLAGS =
 
 .DEFAULT_GOAL := performance
-.PHONY: debug performance clean install uninstall link asm
+.PHONY: debug performance clean install uninstall link asm sdl
 
 all: signals
 
@@ -21,7 +22,7 @@ performance: CFLAGS += $(PFLAGS)
 performance: signals
 
 signals signals-debug: src/*.[ch]
-	$(CC) $(CFLAGS) $(WARNINGS) $^ -o $@
+	$(CC) $(CFLAGS) $(WARNINGS) $^ -o $@ $(LFLAGS)
 
 clean:
 	rm -f signals signals-debug *.o *.s
@@ -29,6 +30,12 @@ clean:
 asm: CFLAGS := $(filter-out -flto, $(CFLAGS) $(PFLAGS)) -fverbose-asm
 asm:
 	$(CC) $(CFLAGS) $(WARNINGS) -S src/*.c
+
+sdl: CFLAGS += $(PFLAGS)
+sdl: CFLAGS += -DENABLE_SDL
+sdl: CFLAGS += $(shell sdl2-config --cflags)
+sdl: LFLAGS += $(shell sdl2-config --libs)
+sdl: signals
 
 PREFIX ?= /usr/local
 BINDIR = $(PREFIX)/bin
