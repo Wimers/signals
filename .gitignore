@@ -1,4 +1,5 @@
 /images/hidden/
+/hidden
 .clang-format
 /*.[chos]
 signals
