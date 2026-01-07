@@ -5,13 +5,13 @@ WARNINGS = -Wall -Wextra -Werror -Wshadow \
 	   -Wunreachable-code -Wcast-align -pedantic \
 	   -pedantic-errors
 
-CFLAGS = -std=c2x -march=native -fopenmp
+CFLAGS = -std=c23 -march=native -fopenmp
 PFLAGS = -O3 -flto -funroll-loops
 DEBUG = -g -fsanitize=address -fsanitize=undefined
 LFLAGS =
 
 .DEFAULT_GOAL := performance
-.PHONY: debug performance clean install uninstall link asm sdl
+.PHONY: debug performance clean install sdl-install uninstall link asm sdl
 
 all: signals
 
@@ -44,6 +44,11 @@ install: signals
 	@echo "Installing to $(BINDIR)..."
 	install -d $(BINDIR)
 	install -m 755 signals $(BINDIR)/signals
+
+sdl-install:
+	@$(MAKE) clean
+	@$(MAKE) sdl
+	@$(MAKE) install
 
 uninstall:
 	rm $(BINDIR)/signals
