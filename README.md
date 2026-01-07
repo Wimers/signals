@@ -41,38 +41,41 @@
 ## Examples
 
 ### Heart
-```bash
-$ signals -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightness-cut 245
-```
 
 <p align="center">
   <img src="images/original/heartOriginal.bmp" width="49%"/>
   <img src="images/modified/heart.bmp" width="49%"/> 
 </p>
 
+> ```bash
+> $ signals -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightness-cut 245
+> ```
+
 ---
 
 ### Melt </3
-```bash
-$ signals -i images/original/heartOriginal.bmp -o temp.bmp --reverse  --melt -1 --contrast 30
-$ signals -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
-```
 
 <p align="center">
   <img src="images/modified/dbmelt.bmp" width="1000" height="400" />
 </p>
 
+> ```bash
+> $ signals -i images/original/heartOriginal.bmp -o temp.bmp --reverse  --melt -1 --contrast 30
+> $ signals -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
+> ```
+
 ---
 
 ### InfraBW
-```bash
-$ signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 15 --scale-strict 1.7
-```
 
 <p align="center">
   <img src="images/original/birdsIndia.bmp" width="49%" />
   <img src="images/modified/infrabirds.bmp" width="49%" />
 </p>
+
+> ```bash
+> $ signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --contrast 15 --scale-strict 1.7
+> ```
 
 ---
 
@@ -129,27 +132,49 @@ $ signals help [command]
 | `-R` | `--reverse` | | Reverse image horizontally. |
 | `-F` | `--flip` | | Flips image vertically. |
 
-## Linux Build instructions
+## Prerequisites
 
-```bash
-$ git clone https://github.com/wimers/signals.git
-$ cd signals
-$ sudo make install
-$ cd .. && rm -rf signals  # (optional cleanup after install)
-```
+This project utilizes **C23** features.
 
-> If you intend to modify source code, consider using a symbolic link via `sudo make link`.
+- **GCC**: requires v14.0 or higher.
+  - If unsure see `gcc --version` for your current version.
+- **Make**: build system.
+- **SDL2**: *(optional)* for image rendering via a GUI.
 
-## Optional Features
-
-Image rendering via SDL. Build with `make sdl`.
-
-### Prerequisites
-
-- SDL2
+## Install Dependencies
 
 ### Arch
 
 ```bash
-$ sudo pacman -S sdl2
+$ sudo pacman -S base-devel
+$ sudo pacman -S sdl2   # (optional)
 ```
+
+## Linux Build instructions
+
+### Clone
+
+```bash
+$ git clone https://github.com/wimers/signals.git
+$ cd signals
+```
+
+### Install
+
+For standard build:
+
+```bash
+$ sudo make install
+```
+
+For SDL2 build:
+```bash
+$ sudo make sdl-install
+```
+
+### Cleanup (optional)
+```bash
+$ cd .. && rm -rf signals
+```
+
+> If you intend to modify source code, consider using a symbolic link via `sudo make link`.
