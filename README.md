@@ -150,6 +150,32 @@ $ sudo pacman -S base-devel
 $ sudo pacman -S sdl2   # (optional)
 ```
 
+### Ubuntu
+
+```bash
+$ sudo apt update
+$ sudo apt install build-essential
+$ sudo apt install libsdl2-dev   # (optional)
+```
+
+Check **GCC** version:
+```bash
+$ gcc --version
+```
+
+If **GCC** version older than v14.0:
+```bash
+# Add the toolchain repo (Only required for Ubuntu 22.04 or older)
+$ sudo add-apt-repository ppa:ubuntu-toolchain-r/test$
+$ sudo apt update
+
+# Install GCC 14
+$ sudo apt install gcc-14
+
+# Set it as the default compiler
+$ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100 --slave /usr/bin/g++ g++ /usr/bin/g++-14
+```
+
 ## Linux Build instructions
 
 ### Clone
@@ -167,14 +193,14 @@ For standard build:
 $ sudo make install
 ```
 
-For SDL2 build:
+For **SDL2** build:
 ```bash
 $ sudo make sdl-install
 ```
+
+> If you intend to modify source code, consider using a symbolic link via `sudo make link`.
 
 ### Cleanup (optional)
 ```bash
 $ cd .. && rm -rf signals
 ```
-
-> If you intend to modify source code, consider using a symbolic link via `sudo make link`.
