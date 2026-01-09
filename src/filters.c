@@ -557,7 +557,8 @@ void colour_scaler(
  * perimeter: The total width of the blur effect (radius * 2 + 1).
  */
 static inline void blurred_pixel_row(Image* image, const Pixel* buffer,
-        const size_t rNumber, const size_t radius, const size_t perimeter)
+        const size_t rNumber, const size_t radius, const size_t perimeter,
+        size_t* lookup)
 {
     const size_t rOffset = rNumber * image->width;
     size_t blueSum = 0;
@@ -581,9 +582,10 @@ static inline void blurred_pixel_row(Image* image, const Pixel* buffer,
             redSum += (size_t)(last.red);
 
             const size_t nmemb = x + 1 + radius;
-            p->blue = (uint8_t)(blueSum / nmemb);
-            p->green = (uint8_t)(greenSum / nmemb);
-            p->red = (uint8_t)(redSum / nmemb);
+            const size_t scaleFactor = lookup[nmemb];
+            p->blue = (uint8_t)((blueSum * scaleFactor) >> 16);
+            p->green = (uint8_t)((greenSum * scaleFactor) >> 16);
+            p->red = (uint8_t)((redSum * scaleFactor) >> 16);
 
         } else if (x + radius + 1 > image->width) { // Just subtracting
             Pixel first = buffer[x - radius - 1];
@@ -592,9 +594,11 @@ static inline void blurred_pixel_row(Image* image, const Pixel* buffer,
             redSum -= (size_t)(first.red);
 
             const size_t nmemb = image->width - x + radius;
-            p->blue = (uint8_t)(blueSum / nmemb);
-            p->green = (uint8_t)(greenSum / nmemb);
-            p->red = (uint8_t)(redSum / nmemb);
+            const size_t scaleFactor = lookup[nmemb];
+
+            p->blue = (uint8_t)((blueSum * scaleFactor) >> 16);
+            p->green = (uint8_t)((greenSum * scaleFactor) >> 16);
+            p->red = (uint8_t)((redSum * scaleFactor) >> 16);
 
         } else { // Adding and subtracting
             Pixel first = buffer[x - radius - 1];
@@ -604,9 +608,11 @@ static inline void blurred_pixel_row(Image* image, const Pixel* buffer,
             greenSum += (size_t)(last.green) - (size_t)(first.green);
             redSum += (size_t)(last.red) - (size_t)(first.red);
 
-            p->blue = (uint8_t)(blueSum / perimeter);
-            p->green = (uint8_t)(greenSum / perimeter);
-            p->red = (uint8_t)(redSum / perimeter);
+            const size_t scaleFactor = lookup[perimeter];
+
+            p->blue = (uint8_t)((blueSum * scaleFactor) >> 16);
+            p->green = (uint8_t)((greenSum * scaleFactor) >> 16);
+            p->red = (uint8_t)((redSum * scaleFactor) >> 16);
         }
     }
 }
@@ -631,10 +637,22 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
     const size_t perimeter = (radius << 1) + 1;
     const size_t rSizeT1 = image->width * sizeof(Pixel);
 
+    size_t* lookupBuffer = malloc((perimeter + 1) * sizeof(size_t));
+    if (lookupBuffer == NULL) {
+        free(buffer);
+        free_image(&t1);
+        return NULL;
+    }
+
+    lookupBuffer[0] = 0;
+    for (size_t l = 1; l <= perimeter; l++) {
+        lookupBuffer[l] = (1 << 16) / l;
+    }
+
     for (size_t y = 0; y < image->height; y++) {
         Pixel* p = get_pixel_fast(image, 0, y * image->width);
         memcpy(buffer, p, rSizeT1);
-        blurred_pixel_row(t1, buffer, y, radius, perimeter);
+        blurred_pixel_row(t1, buffer, y, radius, perimeter, lookupBuffer);
     }
 
     Image* t2 = transpose_image(t1);
@@ -642,6 +660,7 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
 
     if (t2 == NULL) {
         free(buffer);
+        free(lookupBuffer);
         return NULL;
     }
 
@@ -650,11 +669,12 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
     for (size_t y = 0; y < t2->height; y++) {
         Pixel* p = get_pixel_fast(t2, 0, y * t2->width);
         memcpy(buffer, p, rSizeT2);
-        blurred_pixel_row(t2, buffer, y, radius, perimeter);
+        blurred_pixel_row(t2, buffer, y, radius, perimeter, lookupBuffer);
     }
 
     Image* final = transpose_image(t2);
     free(buffer);
+    free(lookupBuffer);
     free_image(&t2);
     return final;
 }
@@ -680,6 +700,19 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
         return NULL;
     }
 
+    size_t* scalingBuffer = malloc((perimeter + 1) * sizeof(size_t));
+    if (scalingBuffer == NULL) {
+        free(lookup);
+        free(buffer);
+        free_image(&new);
+        return NULL;
+    }
+
+    scalingBuffer[0] = 0;
+    for (size_t l = 1; l <= perimeter; l++) {
+        scalingBuffer[l] = (1 << 16) / l;
+    }
+
     for (size_t row = radius; row < image->height - radius; row++) {
 
         // Populate row pointer
@@ -702,19 +735,20 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
             }
 
             Pixel average = {
-                    .blue = (uint8_t)(bAve / perimeter),
-                    .green = (uint8_t)(gAve / perimeter),
-                    .red = (uint8_t)(rAve / perimeter),
+                    .blue = (uint8_t)((bAve * scalingBuffer[perimeter]) >> 16),
+                    .green = (uint8_t)((gAve * scalingBuffer[perimeter]) >> 16),
+                    .red = (uint8_t)((rAve * scalingBuffer[perimeter]) >> 16),
             };
 
             buffer[x] = average;
         }
 
-        blurred_pixel_row(new, buffer, row, radius, perimeter);
+        blurred_pixel_row(new, buffer, row, radius, perimeter, scalingBuffer);
     }
 
     free(buffer);
     free(lookup);
+    free(scalingBuffer);
     return new;
 }
 

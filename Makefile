@@ -11,7 +11,7 @@ DEBUG = -g -fsanitize=address -fsanitize=undefined
 LFLAGS =
 
 .DEFAULT_GOAL := performance
-.PHONY: debug performance clean install sdl-install uninstall link asm sdl
+.PHONY: debug performance clean install sdl-install uninstall link asm sdl profile
 
 all: signals
 
@@ -49,6 +49,9 @@ sdl-install:
 	@$(MAKE) clean
 	@$(MAKE) sdl
 	@$(MAKE) install
+
+profile: CFLAGS += -fno-omit-frame-pointer -g
+profile: signals
 
 uninstall:
 	rm $(BINDIR)/signals

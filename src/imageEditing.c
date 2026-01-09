@@ -72,12 +72,39 @@ Image* transpose_image(const Image* restrict image)
     Image* transpose
             = create_image((int32_t)(image->height), (int32_t)(image->width));
 
-    if (transpose != NULL) {
-        FX_TEMPLATE(image, { // Swap (x, y) -> (y, x)
-            (transpose->pixelData)[(transpose->width * x) + y] = *pixel;
-        });
-    }
+    size_t blockSize = 16;
+    Pixel buffer[256];
+    memset(buffer, 0, sizeof(buffer));
 
+    for (size_t y = 0; y < image->height; y += blockSize) {
+        for (size_t x = 0; x < image->width; x += blockSize) {
+
+            size_t currentBlockW = (blockSize < (image->width - x))
+                    ? (blockSize)
+                    : (image->width - x);
+            size_t currentBlockH = (blockSize < (image->height - y))
+                    ? (blockSize)
+                    : (image->height - y);
+
+            for (size_t row = 0; row < currentBlockH; row++) {
+                size_t sourceRowOffset = (y + row) * image->width;
+                Pixel* rowPtr = get_pixel_fast(image, x, sourceRowOffset);
+
+                for (size_t col = 0; col < currentBlockW; col++) {
+                    buffer[(col * blockSize) + row] = rowPtr[col];
+                }
+            }
+
+            for (size_t row = 0; row < currentBlockW; row++) {
+                size_t destRowOffset = (x + row) * image->height;
+                Pixel* destPtr = get_pixel_fast(transpose, y, destRowOffset);
+
+                for (size_t col = 0; col < currentBlockH; col++) {
+                    destPtr[col] = buffer[(row * blockSize) + col];
+                }
+            }
+        }
+    }
     return transpose;
 }
 

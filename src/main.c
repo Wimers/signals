@@ -707,13 +707,7 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->experimental) {
-            edge_detection(bmpImage.image, 400);
-            Image* rotated = rotate_image_clockwise(bmpImage.image);
-            edge_detection(rotated, 400);
-            Image* unrotated = rotate_image_anticlockwise(rotated);
-            free_image(&rotated);
-            free_image(&(bmpImage.image));
-            bmpImage.image = unrotated;
+            ;
         }
 
         if (userInput->flip) { // If flip mode enabled
@@ -1040,9 +1034,10 @@ void handle_image_rotation(BMP* bmpImage, const long nRotations)
     case 0:
         break;
 
-    case 1:
+    case 1: {
         output = rotate_image_clockwise(bmpImage->image);
         break;
+    }
 
     case 2:
         if (flip_image(bmpImage->image) == -1) {
