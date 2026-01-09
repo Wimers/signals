@@ -10,24 +10,26 @@ int flip_image(Image* image)
         return -1;
     }
 
-    const size_t rowSize = image->width * sizeof(Pixel);
-    Pixel* rowBuffer = malloc(rowSize);
+    const size_t width = image->width;
+    const size_t height = image->height;
+
+    const size_t rowSize = width * sizeof(Pixel);
+    Pixel* restrict rowBuffer = malloc(rowSize);
 
     if (rowBuffer == NULL) {
         perror("malloc failed while flipping..");
         return -1;
     }
 
-    const size_t last = image->height >> 1;
+    const size_t last = height >> 1;
+
+    Pixel* restrict pixelData = image->pixelData;
 
     for (size_t y = 0; y < last; y++) {
 
         // Calculate offsets for starting index of current top/bottom rows
-        size_t topOffset = image->width * y;
-        size_t bottomOffset = (image->height - y - 1) * image->width;
-
-        Pixel* topRow = &(image->pixelData)[topOffset];
-        Pixel* bottomRow = &(image->pixelData)[bottomOffset];
+        Pixel* topRow = pixelData + (width * y);
+        Pixel* bottomRow = pixelData + ((height - y - 1) * width);
 
         // Swap top and bottom rows, via a buffer
         memcpy(rowBuffer, topRow, rowSize);
@@ -41,13 +43,16 @@ int flip_image(Image* image)
 
 void reverse_image(Image* image)
 {
+    const size_t width = image->width;
+    const size_t height = image->height;
+
     // Only need to iterate throgh half the width
-    const size_t iterBound = image->width >> 1;
+    const size_t iterBound = width >> 1;
 
     // For each row in the image
-    for (size_t y = 0; y < image->height; y++) {
-        size_t rowOffset = image->width * y;
-        size_t last = image->width - 1;
+    for (size_t y = 0; y < height; y++) {
+        size_t rowOffset = width * y;
+        size_t last = width - 1;
 
         // For each pixel in row, get current pair of start/end pixels (working
         // inwards towards centre) and swap the pixels in place.
@@ -66,29 +71,33 @@ void reverse_image(Image* image)
 
 Image* transpose_image(const Image* restrict image)
 {
+    const size_t xHeight = image->height;
+    const size_t xWidth = image->width;
+
     // Involves casting size_t to int32_t, this is safe provided the input image
     // was generated using create_image, which converts the size read from the
     // file header to a size_t. So no overflow can occur
-    Image* transpose
-            = create_image((int32_t)(image->height), (int32_t)(image->width));
+    Image* transpose = create_image((int32_t)xHeight, (int32_t)xWidth);
 
-    size_t blockSize = 16;
-    Pixel buffer[256];
+    constexpr size_t blockSize = 16;
+    Pixel buffer[blockSize * blockSize];
     memset(buffer, 0, sizeof(buffer));
 
-    for (size_t y = 0; y < image->height; y += blockSize) {
-        for (size_t x = 0; x < image->width; x += blockSize) {
+    for (size_t y = 0; y < xHeight; y += blockSize) {
+        for (size_t x = 0; x < xWidth; x += blockSize) {
 
-            size_t currentBlockW = (blockSize < (image->width - x))
-                    ? (blockSize)
-                    : (image->width - x);
-            size_t currentBlockH = (blockSize < (image->height - y))
-                    ? (blockSize)
-                    : (image->height - y);
+            const size_t xDiff = xWidth - x;
+            const size_t currentBlockW
+                    = (blockSize < xDiff) ? (blockSize) : (xDiff);
+
+            const size_t yDiff = xHeight - y;
+            const size_t currentBlockH
+                    = (blockSize < yDiff) ? (blockSize) : (yDiff);
 
             for (size_t row = 0; row < currentBlockH; row++) {
-                size_t sourceRowOffset = (y + row) * image->width;
-                Pixel* rowPtr = get_pixel_fast(image, x, sourceRowOffset);
+                const size_t sourceRowOffset = (y + row) * xWidth;
+                const Pixel* restrict rowPtr
+                        = get_pixel_fast(image, x, sourceRowOffset);
 
                 for (size_t col = 0; col < currentBlockW; col++) {
                     buffer[(col * blockSize) + row] = rowPtr[col];
@@ -96,8 +105,9 @@ Image* transpose_image(const Image* restrict image)
             }
 
             for (size_t row = 0; row < currentBlockW; row++) {
-                size_t destRowOffset = (x + row) * image->height;
-                Pixel* destPtr = get_pixel_fast(transpose, y, destRowOffset);
+                const size_t destRowOffset = (x + row) * xHeight;
+                Pixel* restrict destPtr
+                        = get_pixel_fast(transpose, y, destRowOffset);
 
                 for (size_t col = 0; col < currentBlockH; col++) {
                     destPtr[col] = buffer[(row * blockSize) + col];
