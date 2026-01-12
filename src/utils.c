@@ -156,3 +156,63 @@ int* separate_to_int_array(const char* str, const char delim, const size_t exp)
 
     return values;
 }
+
+float* separate_to_float_array(char* arg, const char delim, const size_t count)
+{
+    if ((!count) || (!arg) || (!delim) || (arg[0] == delim)) {
+        return NULL; // Invalid arguments
+    }
+
+    float* output = malloc(sizeof(float) * count);
+    if (!output) { // Malloc failed
+        return NULL;
+    }
+
+    char* cur = arg;
+    char* endptr = NULL;
+    size_t nCounted = 0;
+    size_t dCounted = 0;
+
+    while (1) {
+        const int c = cur[0];
+
+        if ((c != delim) && (c != '\0')) {
+            if (nCounted + 1 <= count) {
+                errno = 0;
+                output[nCounted] = strtof(cur, &endptr);
+
+                // If number out of range of float, or pointer hasn't moved
+                if ((errno == ERANGE) || (endptr == cur)) {
+                    goto cleanup;
+                }
+
+                nCounted++;
+                cur = endptr;
+
+            } else { // More numbers than specified
+                goto cleanup;
+            }
+
+        } else if (c == delim) {
+            cur++;
+            dCounted++;
+            if (cur[0] == '\0') { // If arg ends with a delimiter
+                goto cleanup;
+            }
+        } else { // End of string reached
+            break;
+        }
+    }
+
+    // If the number of numbers counted differs from number specified
+    if ((nCounted != count) || (dCounted + 1 != count)) {
+        goto cleanup;
+    }
+
+    return output; // Success, return float array
+
+// Free memory and return NULL upon error
+cleanup:
+    free(output);
+    return NULL;
+}

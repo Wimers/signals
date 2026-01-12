@@ -138,4 +138,5 @@ static inline size_t fast_u8_to_buf(char* buf, uint8_t val)
 
 int* separate_to_int_array(const char* str, const char delim, const size_t exp);
 
+float* separate_to_float_array(char* arg, const char delim, const size_t count);
 #endif

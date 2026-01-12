@@ -57,8 +57,10 @@ typedef struct {
     bool reverse;
     bool melt;
     int32_t meltOffset;
-    double scale;
-    double scaleStrict;
+    bool scale;
+    float* scaleArgs;
+    bool scaleStrict;
+    float* scaleStrictArgs;
     bool merge;
     char* mergeFilePath;
     size_t blur;

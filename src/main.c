@@ -609,11 +609,24 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
         }
 
         case SCALE:
-            userInput->scale = atof(optarg);
+            userInput->scaleArgs = separate_to_float_array(optarg, ',', 3);
+            if (!(userInput->scaleArgs)) {
+                fprintf(stderr, invalidVal, optarg);
+                printf("See \'signals help scale\'\n");
+                return EXIT_INVALID_PARAMETER;
+            }
+            userInput->scale = true;
             break;
 
         case SCALE_STRICT: {
-            userInput->scaleStrict = atof(optarg);
+            userInput->scaleStrictArgs
+                    = separate_to_float_array(optarg, ',', 3);
+            if (!(userInput->scaleStrictArgs)) {
+                fprintf(stderr, invalidVal, optarg);
+                printf("See \'signals help scale-strict\'\n");
+                return EXIT_INVALID_PARAMETER;
+            }
+            userInput->scaleStrict = true;
             break;
         }
 
@@ -738,13 +751,17 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->scale) {
-            colour_scaler(bmpImage.image, userInput->scale, userInput->scale,
-                    userInput->scale);
+            const float red = (userInput->scaleArgs)[0];
+            const float green = (userInput->scaleArgs)[1];
+            const float blue = (userInput->scaleArgs)[2];
+            colour_scaler(bmpImage.image, red, green, blue);
         }
 
         if (userInput->scaleStrict) {
-            colour_scaler_strict(bmpImage.image, userInput->scaleStrict,
-                    userInput->scaleStrict, userInput->scaleStrict);
+            const float red = (userInput->scaleStrictArgs)[0];
+            const float green = (userInput->scaleStrictArgs)[1];
+            const float blue = (userInput->scaleStrictArgs)[2];
+            colour_scaler_strict(bmpImage.image, red, green, blue);
         }
 
         if (userInput->cutoff) {
@@ -827,7 +844,7 @@ int handle_commands(UserInput* userInput)
                 break; // FIX add specific error code
             }
 
-            if (userInput->rotations % 2) {
+            if (userInput->rotations & 1) { // If number of rotations is odd
                 const int32_t temp = bmpImage.infoHeader.bitmapWidth;
                 bmpImage.infoHeader.bitmapWidth
                         = bmpImage.infoHeader.bitmapHeight;
