@@ -232,7 +232,7 @@ void swap_red_blue(Image* image);
  * blue: Blue component multiplier.
  */
 void colour_scaler_strict(
-        Image* image, const double red, const double green, const double blue);
+        Image* image, const float red, const float green, const float blue);
 
 /* colour_scaler()
  * ---------------
@@ -250,7 +250,7 @@ void colour_scaler_strict(
  * scaling (clamped above by UINT8_MAX) see colour_scaler_strict().
  */
 void colour_scaler(
-        Image* image, const double red, const double green, const double blue);
+        Image* image, const float red, const float green, const float blue);
 
 /* even_faster_image_blur()
  * ------------------------

@@ -32,6 +32,7 @@ constexpr char glitchUsageMessage[]
 extern const char* const readMode;
 extern const char* const writeMode;
 
+// These should be reordered for performance once finalised
 typedef struct {
     bool input;
     char* inputFilePath;

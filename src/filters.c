@@ -506,27 +506,27 @@ int cmp_pixels(const void* a, const void* b)
     return EXIT_SUCCESS;
 }
 
-/* bound_double_to_u8()
+/* bound_float_to_u8()
  * --------------------
- * Clamps a double precision floating point value above/below by UINT8_MAX and 0
+ * Clamps a floating point value above/below by UINT8_MAX and 0
  * respectively. This is to prevent overflow during type casting to uint8_t.
  *
  * val: The input floating point value.
  *
  * Returns: The clamped uint8_t value.
  */
-static inline uint8_t bound_double_to_u8(const double val)
+static inline uint8_t bound_double_to_u8(const float val)
 {
-    double d = val;
+    float f = val;
 
-    d = (d > 255.0) ? (255.0) : (d);
-    d = (d > 0.0) ? (d) : (0.0);
+    f = (f > 255.0f) ? (255.0f) : (f);
+    f = (f > 0.0f) ? (f) : (0.0f);
 
-    return (uint8_t)d;
+    return (uint8_t)f;
 }
 
 void colour_scaler_strict(
-        Image* image, const double red, const double green, const double blue)
+        Image* image, const float red, const float green, const float blue)
 {
     FX_TEMPLATE(image, {
         pixel->blue = bound_double_to_u8(pixel->blue * blue);
@@ -536,7 +536,7 @@ void colour_scaler_strict(
 }
 
 void colour_scaler(
-        Image* image, const double red, const double green, const double blue)
+        Image* image, const float red, const float green, const float blue)
 {
     FX_TEMPLATE(image, {
         pixel->blue = (uint8_t)(pixel->blue * blue);
