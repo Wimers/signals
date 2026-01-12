@@ -66,6 +66,20 @@
 
 ---
 
+### Voyager
+
+<p align="center">
+  <img src="images/graphics/turtleOriginal.jpg" width="49%" />
+  <img src="images/graphics/turtle.jpg" width="49%" />
+</p>
+
+> ```bash
+> $ signals -i images/original/turtle.bmp -o tmp.bmp --scale-strict "1.00, 0.60, 0.6"
+> $ signals -i tmp.bmp -o turtle.bmp --contrast 2.30 --scale-strict "2.30, 1.15, 1.0"
+> ```
+
+---
+
 ### InfraBW
 
 <p align="center">
