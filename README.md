@@ -80,19 +80,6 @@
 
 ---
 
-### Fortune
-
-<p align="center">
-  <img src="images/original/cat.jpg" width="49%" />
-  <img src="images/modified/cat.jpg" width="49%" />
-</p>
-
-> ```bash
-> $ signals -i images/original/cat.bmp -o cat.bmp --scale "1.8, -1, -1" --swap -C 1.5 -G 10
-> ```
-
----
-
 ### InfraBW
 
 <p align="center">
@@ -102,6 +89,19 @@
 
 > ```bash
 > $ signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --scale-strict "1.7, 1.7, 1.7" --contrast 15
+> ```
+
+---
+
+### Fortune
+
+<p align="center">
+  <img src="images/original/cat.jpg" width="49%" />
+  <img src="images/modified/cat.jpg" width="49%" />
+</p>
+
+> ```bash
+> $ signals -i images/original/cat.bmp -o cat.bmp --scale "1.8, -1, -1" --swap -C 1.5 -G 10
 > ```
 
 ---
