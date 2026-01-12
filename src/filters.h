@@ -169,16 +169,12 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff);
 
 /* contrast_effect()
  * -----------------
- * Applies a contrasting filter to an Image based on a min/max threshold.
- * Channels with an intensity >= max or <= min will be effected.
+ * Applies a contrasting filter to an Image
  *
  * image: Pointer to struct containing the pixel data.
- * contrastFactor: Level of contrasting (value added/subtracted).
- * min: Lower bound of colour intensity to be effected.
- * max: Upper bound of colour intensity to be effected.
+ * contrastFactor: Level of contrasting
  */
-void contrast_effect(Image* image, const uint8_t contrastFactor,
-        const uint8_t min, const uint8_t max);
+void contrast_effect(Image* image, const float contrastFactor);
 
 /* dim_effect()
  * ------------

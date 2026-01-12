@@ -342,35 +342,31 @@ int verify_offset_bounds(Image* image, const size_t offset) // FIX
  *
  * val: Current intensity of a pixel component.
  * contrastFactor: Level of contrasting.
- * min: Lower bound of colour intensity to be effected.
- * max: Upper bound of colour intensity to be effected.
  *
  * Returns: Colour intensity for a pixel component.
  */
-static inline uint8_t contrast_effect_val(const uint8_t val,
-        const uint8_t contrastFactor, const uint8_t min, const uint8_t max)
+static inline uint8_t contrast_effect_val(
+        const uint8_t val, const float contrastFactor)
 {
-    if (val >= max) {
-        return clamp_ceil_u8(val, contrastFactor);
+    float new = (((float)val - 128.0f) * contrastFactor) + 128.0f;
+
+    if (new > 255.0f) {
+        new = 255.0f;
+    } else if (new < 0.0f) {
+        new = 0.0f;
     }
 
-    if (val <= min) {
-        return clamp_floor_u8(val, contrastFactor);
-    }
-
-    return val;
+    return (uint8_t)(new);
 }
 
-void contrast_effect(Image* image, const uint8_t contrastFactor,
-        const uint8_t min, const uint8_t max)
+void contrast_effect(Image* image, const float contrastFactor)
 {
     // Create a lookup table mapping input -> output pixels based on the
     // contrast factor, and min and max values.
     uint8_t lookupTable[UINT8_MAX + 1] = {0};
 
     for (int i = 0; i <= UINT8_MAX; i++) {
-        lookupTable[i]
-                = contrast_effect_val((uint8_t)i, contrastFactor, min, max);
+        lookupTable[i] = contrast_effect_val((uint8_t)i, contrastFactor);
     }
 
     FX_TEMPLATE(image, { // Apply contrast filter to each colour

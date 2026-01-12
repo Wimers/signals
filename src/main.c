@@ -572,12 +572,16 @@ int parse_user_commands(const int argc, char** argv, UserInput* userInput)
             break;
 
         case CONTRAST: { // If contrast flag set, verify the required argument
-            if (!(vlongB(&(userInput->contrast), optarg, 0, UINT8_MAX,
-                        uint8_t))) {
+            float* arg = separate_to_float_array(optarg, ',', 1);
+            if (!arg) {
                 fprintf(stderr, invalidVal, optarg);
                 printf("See \'signals help contrast\'\n");
                 return EXIT_INVALID_PARAMETER;
             }
+
+            userInput->contrast = true;
+            userInput->contrastFactor = arg[0];
+            free(arg);
             break;
         }
 
@@ -784,8 +788,7 @@ int handle_commands(UserInput* userInput)
         }
 
         if (userInput->contrast) { // If contrast mode enabled
-            contrast_effect( // Prev 100 160
-                    bmpImage.image, userInput->contrast, 80, 200); // FIX Magic
+            contrast_effect(bmpImage.image, userInput->contrastFactor);
         }
 
         if (userInput->blur) {

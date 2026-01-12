@@ -52,7 +52,8 @@ typedef struct {
     char* combineFilePath;
     size_t glitch;
     uint8_t average;
-    uint8_t contrast;
+    bool contrast;
+    float contrastFactor;
     bool swap;
     long rotations;
     bool reverse;
