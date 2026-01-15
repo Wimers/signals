@@ -27,8 +27,13 @@ typedef struct {
     bool print;
     bool invert;
     uint8_t filters;
+
+    // Hue
     bool hue;
-    int* hueScales;
+    int hueRed;
+    int hueBlue;
+    int hueGreen;
+
     bool grayscale;
     bool flip;
     uint8_t cutoff;
@@ -43,10 +48,19 @@ typedef struct {
     bool reverse;
     bool melt;
     int32_t meltOffset;
+
+    // Scale
     bool scale;
-    float* scaleArgs;
+    float scaleRed;
+    float scaleGreen;
+    float scaleBlue;
+
+    // Scale Strict
     bool scaleStrict;
-    float* scaleStrictArgs;
+    float strictRed;
+    float strictGreen;
+    float strictBlue;
+
     bool merge;
     char* mergeFilePath;
     size_t blur;
@@ -225,7 +239,11 @@ static int verify_hue(void)
     }
 
     userInput->hue = true;
-    userInput->hueScales = hueScales;
+    userInput->hueRed = hueScales[0];
+    userInput->hueGreen = hueScales[1];
+    userInput->hueBlue = hueScales[2];
+    free(hueScales);
+
     return 0;
 }
 
@@ -361,25 +379,37 @@ static int verify_melt(void)
 
 static int verify_scale(void)
 {
-    userInput->scaleArgs = separate_to_float_array(optarg, ',', 3);
-    if (!(userInput->scaleArgs)) {
+    float* scaleArgs = separate_to_float_array(optarg, ',', 3);
+    if (!scaleArgs) {
         fprintf(stderr, invalidVal, optarg);
         printf("See \'signals help scale\'\n");
         return EXIT_INVALID_PARAMETER;
     }
+
     userInput->scale = true;
+    userInput->scaleRed = scaleArgs[0];
+    userInput->scaleGreen = scaleArgs[1];
+    userInput->scaleBlue = scaleArgs[2];
+    free(scaleArgs);
+
     return 0;
 }
 
 static int verify_scale_strict(void)
 {
-    userInput->scaleStrictArgs = separate_to_float_array(optarg, ',', 3);
-    if (!(userInput->scaleStrictArgs)) {
+    float* scaleStrictArgs = separate_to_float_array(optarg, ',', 3);
+    if (!scaleStrictArgs) {
         fprintf(stderr, invalidVal, optarg);
         printf("See \'signals help scale-strict\'\n");
         return EXIT_INVALID_PARAMETER;
     }
+
     userInput->scaleStrict = true;
+    userInput->strictRed = scaleStrictArgs[0];
+    userInput->strictGreen = scaleStrictArgs[1];
+    userInput->strictBlue = scaleStrictArgs[2];
+    free(scaleStrictArgs);
+
     return 0;
 }
 
@@ -572,11 +602,8 @@ static int run_filter(void* obj)
 static int run_hue(void* obj)
 {
     BMP* bmpImage = (BMP*)obj;
-    apply_hue(bmpImage->image, (userInput->hueScales)[0],
-            (userInput->hueScales)[1], (userInput->hueScales)[2]);
-
-    free(userInput->hueScales);
-    userInput->hueScales = NULL;
+    apply_hue(bmpImage->image, userInput->hueRed, userInput->hueGreen,
+            userInput->hueBlue);
     return EXIT_SUCCESS;
 }
 
@@ -625,11 +652,8 @@ static int run_brightness_cut(void* obj)
 static int run_scale_strict(void* obj)
 {
     BMP* bmpImage = (BMP*)obj;
-    const float red = (userInput->scaleStrictArgs)[0];
-    const float green = (userInput->scaleStrictArgs)[1];
-    const float blue = (userInput->scaleStrictArgs)[2];
-
-    colour_scaler_strict(bmpImage->image, red, green, blue);
+    colour_scaler_strict(bmpImage->image, userInput->strictRed,
+            userInput->strictGreen, userInput->strictBlue);
     return EXIT_SUCCESS;
 }
 
@@ -657,11 +681,8 @@ static int run_glitch(void* obj)
 static int run_scale(void* obj)
 {
     BMP* bmpImage = (BMP*)obj;
-    const float red = (userInput->scaleArgs)[0];
-    const float green = (userInput->scaleArgs)[1];
-    const float blue = (userInput->scaleArgs)[2];
-
-    colour_scaler(bmpImage->image, red, green, blue);
+    colour_scaler(bmpImage->image, userInput->scaleRed, userInput->scaleGreen,
+            userInput->scaleBlue);
     return EXIT_SUCCESS;
 }
 
