@@ -801,7 +801,7 @@ static int run_experimental(void* obj)
  * -----------------------
  */
 
-const Command Input = {
+static const Command Input = {
 	.verify = verify_input,
 	.run = run_input,
         .help = {
@@ -815,7 +815,7 @@ const Command Input = {
 	},
 };
 
-const Command Output = {
+static const Command Output = {
 	.verify = verify_output,
 	.run = run_output,
         .help = {
@@ -828,7 +828,7 @@ const Command Output = {
 	},
 };
 
-const Command Merge = {
+static const Command Merge = {
 	.verify = verify_merge,
 	.run = run_merge,
         .help = {
@@ -841,7 +841,7 @@ const Command Merge = {
 	},
 };
 
-const Command Combine = {
+static const Command Combine = {
     .verify = verify_combine,
     .run = run_combine,
     .help = {
@@ -855,7 +855,7 @@ const Command Combine = {
     },
 };
 
-const Command Dump = {
+static const Command Dump = {
     .verify = verify_dump,
     .run = run_dump,
     .help = {
@@ -868,7 +868,7 @@ const Command Dump = {
     },
 };
 
-const Command Print = {
+static const Command Print = {
     .verify = verify_print,
     .run = run_print,
     .help = {
@@ -883,7 +883,7 @@ const Command Print = {
     },
 };
 
-const Command Encode = {
+static const Command Encode = {
     .verify = verify_encode,
     .run = run_encode,
     .help = {
@@ -896,7 +896,7 @@ const Command Encode = {
     },
 };
 
-const Command Filters = {
+static const Command Filters = {
     .verify = verify_filter,
     .run = run_filter,
     .help = {
@@ -910,7 +910,7 @@ const Command Filters = {
     },
 };
 
-const Command Hue = {
+static const Command Hue = {
     .verify = verify_hue,
     .run = run_hue,
     .help = {
@@ -922,7 +922,7 @@ const Command Hue = {
     },
 };
 
-const Command Grayscale = {
+static const Command Grayscale = {
     .verify = verify_grayscale,
     .run = run_grayscale,
     .help = {
@@ -935,7 +935,7 @@ const Command Grayscale = {
     },
 };
 
-const Command Average = {
+static const Command Average = {
     .verify = verify_average,
     .run = run_average,
     .help = {
@@ -948,7 +948,7 @@ const Command Average = {
     },
 };
 
-const Command Invert = {
+static const Command Invert = {
     .verify = verify_invert,
     .run = run_invert,
     .help = {
@@ -960,7 +960,7 @@ const Command Invert = {
     },
 };
 
-const Command Swap = {
+static const Command Swap = {
     .verify = verify_swap,
     .run = run_swap,
     .help = {
@@ -972,7 +972,7 @@ const Command Swap = {
     },
 };
 
-const Command Contrast = {
+static const Command Contrast = {
     .verify = verify_contrast,
     .run = run_contrast,
     .help = {
@@ -984,7 +984,7 @@ const Command Contrast = {
     },
 };
 
-const Command BrightnessCut = {
+static const Command BrightnessCut = {
     .verify = verify_brightness_cut,
     .run = run_brightness_cut,
     .help = {
@@ -996,7 +996,7 @@ const Command BrightnessCut = {
     },
 };
 
-const Command ScaleStrict = {
+static const Command ScaleStrict = {
     .verify = verify_scale_strict,
     .run = run_scale_strict,
     .help = {
@@ -1009,7 +1009,7 @@ const Command ScaleStrict = {
     },
 };
 
-const Command Melt = {
+static const Command Melt = {
     .verify = verify_melt,
     .run = run_melt,
     .help = {
@@ -1022,7 +1022,7 @@ const Command Melt = {
     },
 };
 
-const Command Glitch = {
+static const Command Glitch = {
     .verify = verify_glitch,
     .run = run_glitch,
     .help = {
@@ -1037,7 +1037,7 @@ const Command Glitch = {
     },
 };
 
-const Command Scale = {
+static const Command Scale = {
     .verify = verify_scale,
     .run = run_scale,
     .help = {
@@ -1050,7 +1050,7 @@ const Command Scale = {
     },
 };
 
-const Command Blur = {
+static const Command Blur = {
     .verify = verify_blur,
     .run = run_blur,
     .help = {
@@ -1062,7 +1062,7 @@ const Command Blur = {
     },
 };
 
-const Command Rotate = {
+static const Command Rotate = {
     .verify = verify_rotate,
     .run = run_rotate,
     .help = {
@@ -1075,7 +1075,7 @@ const Command Rotate = {
     },
 };
 
-const Command Transpose = {
+static const Command Transpose = {
     .verify = verify_transpose,
     .run = run_transpose,
     .help = {
@@ -1087,7 +1087,7 @@ const Command Transpose = {
     },
 };
 
-const Command Reverse = {
+static const Command Reverse = {
     .verify = verify_reverse,
     .run = run_reverse,
     .help = {
@@ -1099,7 +1099,7 @@ const Command Reverse = {
     },
 };
 
-const Command Flip = {
+static const Command Flip = {
     .verify = verify_flip,
     .run = run_flip,
     .help = {
@@ -1111,7 +1111,7 @@ const Command Flip = {
     },
 };
 
-const Command Experimental = {
+static const Command Experimental = {
     .verify = verify_experimental,
     .run = run_experimental,
     .help = {
