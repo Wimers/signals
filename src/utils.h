@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-constexpr int base10 = 10;
-
 /* vlongB()
  * --------
  * Macro to safely parse a string into a numeric type with bounds checking.

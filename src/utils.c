@@ -4,6 +4,8 @@
 #include <ctype.h>
 #include "utils.h"
 
+constexpr int base10 = 10;
+
 int is_str_in_const_str_array(const void* restrict arg,
         const char* const strArray[], const size_t nRead)
 {
