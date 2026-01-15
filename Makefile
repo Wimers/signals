@@ -3,7 +3,7 @@ CC = gcc
 WARNINGS = -Wall -Wextra -Werror -Wshadow \
 	   -Wconversion -Wformat=2 -Wnull-dereference \
 	   -Wunreachable-code -Wcast-align -pedantic \
-	   -pedantic-errors
+	   -pedantic-errors -Wunused
 
 CFLAGS = -std=c23 -march=native -fopenmp
 PFLAGS = -O3 -flto -funroll-loops
