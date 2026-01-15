@@ -20,8 +20,8 @@
 
 ### Key Features
 
-- **Effects:** Channel isolation, colour scaling, contrast, inversion, and more!
-- **Transformations:** Image rotation, reversing, and flipping.
+- **Effects:** Channel isolation/scaling, hues, contrast, inversion, and more!
+- **Transformations:** Image rotation, reversing, transposing and flipping.
 - **Steganography**: Encode secret messages for later decoding.
 - **Blending:** Combine and merge images.
 
@@ -34,7 +34,9 @@
   - Useful for checking parameters without saving to disk.
 
 - **Cascading Operations**:
-  - You can combine flags to process multiple effects simultaneously.
+  - Commands are applied in the order specified enabling multiple effects to be processed simultaneously.
+
+> Note: This excludes the input and output/print commands, which always execute before/after all other commands respectively.
 
 ---
 
