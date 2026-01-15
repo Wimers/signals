@@ -1,6 +1,7 @@
 /images/
 /hidden
 .clang-format
+.gdb_history
 /*.[chos]
 signals
 signals-debug
