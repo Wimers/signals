@@ -120,44 +120,44 @@ $ signals help [command]
 > Note: Aside from the help command, all operations require an input file to be specified via `-i` or `--input`.
 
 ### **I/O**
-| Flag | Long Flag | Argument | Description |
-| :--- | :--- | :--- | :--- |
-| `-i` | `--input` | `<file>` | Input BMP file path. |
-| `-o` | `--output` | `<file>` | Output file path. |
-| `-m` | `--merge` | `<file>` | Averages the pixel data of the two images together. |
-| `-c` | `--combine` | `<file>` | Overlays a second image onto the input. |
-| `-d` | `--dump` | | Dumps the BMP header data to the terminal. |
-| `-p` | `--print` | | Renders the image to the terminal. |
-| `-e` | `--encode` | `<file>` | Embeds contents of a file into an image. |
+| Flag | Long Flag | Argument | Type | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `-i` | `--input` | `<file>` | `.bmp` | Input BMP file path. |
+| `-o` | `--output` | `<file>` | `Any` | Output file path. |
+| `-m` | `--merge` | `<file>` | `.bmp` | Averages the pixel data of the two images together. |
+| `-c` | `--combine` | `<file>` | `.bmp` | Overlays a second image onto the input. |
+| `-d` | `--dump` | | | Dumps the BMP header data to the terminal. |
+| `-p` | `--print` | | | Renders the image to the terminal. |
+| `-e` | `--encode` | `<file>` | `.bmp` | Embeds contents of a file into an image. |
 
 ### **Filters**
-| Flag | Long Flag | Argument | Description |
-| :--- | :--- | :--- | :--- |
-| `-f` | `--filter` | `<channels>` | Isolate specific channels (e.g. 'RB') |
-| `-h` | `--hue` | `<R, G, B>` | Increase/decrease RGB channel intensity by a constant (-255 ↔ 255). |
-| `-g` | `--grayscale` | | Converts to black & white (Luma). |
-| `-a` | `--average` | | Convert to grayscale (Average Intensity). |
-| `-v` | `--invert` | | Inverts all colours (Negative effect). |
-| `-s` | `--swap` | | Swaps the red and blue colour channels. |
-| `-C` | `--contrast` | `<0-255>` | Adjusts contrast intensity. |
-| `-b` | `--brightness-cut` | `<0-255>` | Zeros pixel colour if value exceeds cutoff. |
-| `-T` | `--scale-strict` | `<float>` | Colour intensity multiplier |
+| Flag | Long Flag | Argument | Type | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `-f` | `--filter` | `<channels>` | `char` | Isolate specific channels (e.g. 'RB') |
+| `-h` | `--hue` | `<R, G, B>` | `int` | Increase/decrease RGB channel intensity by a constant (-255 ↔ 255). |
+| `-g` | `--grayscale` | | | Converts to black & white (Luma). |
+| `-a` | `--average` | | | Convert to grayscale (Average Intensity). |
+| `-v` | `--invert` | | | Inverts all colours (Negative effect). |
+| `-s` | `--swap` | | | Swaps the red and blue colour channels. |
+| `-C` | `--contrast` | `<factor>` | `float`| Adjusts contrast intensity. |
+| `-b` | `--brightness-cut` | `<0-255>` | `uint8_t` | Zeros pixel colour if value exceeds cutoff. |
+| `-T` | `--scale-strict` | `<R, G, B>` | `float` | Scale R, G, B channels by respective multipliers. |
 
 ### **Effects**
-| Flag | Long Flag | Argument | Description |
-| :--- | :--- | :--- | :--- |
-| `-M` | `--melt` | `<offset>` | Pixel Sorting Effect (negative input to invert). |
-| `-G` | `--glitch` | `<offset>` | Apply horizontal shift effect to red and blue channels. |
-| `-S` | `--scale` | `<float>` | Colour intensity multiplier (overflow allowed) |
-| `-B`,| `--blur` | `<radius>`| Blurs the image using the set radius. |
+| Flag | Long Flag | Argument | Type | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `-M` | `--melt` | `<offset>` | `int32_t` | Pixel Sorting Effect (negative input to invert). |
+| `-G` | `--glitch` | `<offset>` | `size_t` | Apply horizontal shift effect to red and blue channels. |
+| `-S` | `--scale` | `<R, G, B>` | `float` | Scale R, G, B channels by respective multipliers, with integer overflow allowed. |
+| `-B`,| `--blur` | `<radius>`| `size_t` | Blurs the image using the set radius. |
 
 ### **Geometry**
-| Flag | Long Flag | Argument | Description |
-| :--- | :--- | :--- | :--- |
-| `-r` | `--rotate` | `<N>` | Rotates image 90° clockwise `N` times. |
-| `-t` | `--transpose` | | Tranposes the image. |
-| `-R` | `--reverse` | | Reverse image horizontally. |
-| `-F` | `--flip` | | Flips image vertically. |
+| Flag | Long Flag | Argument | Type | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `-r` | `--rotate` | `<N>` | `long` | Rotates image 90° clockwise `N` times. |
+| `-t` | `--transpose` | | | Tranposes the image. |
+| `-R` | `--reverse` | | | Reverse image horizontally. |
+| `-F` | `--flip` | | | Flips image vertically. |
 
 ## Prerequisites
 
