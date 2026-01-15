@@ -1,8 +1,8 @@
 #ifndef FILTERS_H
 #define FILTERS_H
 
-#include "fileParsing.h"
 #include <stdint.h>
+#include "fileParsing.h"
 
 /* FX_TEMPLATE
  * -----------

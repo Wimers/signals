@@ -1,11 +1,12 @@
 // Included Libraries
-#include "fileParsing.h"
-#include "utils.h"
-#include "main.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "pixels.h"
+#include "fileParsing.h"
+#include "utils.h"
+#include "errors.h"
 
 // Error messages
 constexpr char errorReadingPixelsMessage[]
@@ -38,6 +39,10 @@ constexpr char newlineChar = '\n';
 
 static const char* const bmpIdentifier[]
         = {"BM", "BA", "CI", "CP", "IC", "PT", NULL};
+
+// Assorted constant chars
+const char* const readMode = "rb";
+const char* const writeMode = "wb";
 
 // File constants
 constexpr int BMP_HEADER_SIZE = 14;

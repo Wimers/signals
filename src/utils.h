@@ -2,7 +2,7 @@
 #define UTILS_H
 
 #include <stdint.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 constexpr int base10 = 10;
 

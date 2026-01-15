@@ -1,14 +1,20 @@
 // Included Libraries
 #include <stdlib.h>
 #include <string.h>
-#include "fileParsing.h"
+#include <stdint.h>
 #include "filters.h"
-#include "main.h"
 #include "imageEditing.h"
 
 constexpr char fileDimensionMismatchMessage[]
         = "File dimension mismatch: \"%zux%zu\" is not \"%zux%zu\"\n";
 constexpr char imageBoundsMessage[] = "Image bounds (%zux%zu)\n";
+
+constexpr char glitchOffsetValMessage[]
+        = "\nOffset must be a positive integer, within input image "
+          "bounds.\n";
+constexpr char glitchUsageMessage[]
+        = "Glitch Effect\nUsage:  -l, --glitch <offset>  "
+          "    - Apply horizontal glitch effect\n";
 
 // Constants to best map RGB values to grayscale
 // Each multiplied by 1024 to avoid floats

@@ -4,6 +4,7 @@
 // Included Libraries
 #include <stdint.h>
 #include <stdio.h>
+#include "pixels.h"
 
 // Exit codes
 #define EXIT_FILE_INTEGRITY 7
@@ -48,18 +49,6 @@ typedef struct { // 40 bytes
     uint32_t coloursInPalette;
     uint32_t importantColours;
 } BmpInfoHeader;
-
-typedef struct __attribute__((packed)) {
-    uint8_t blue;
-    uint8_t green;
-    uint8_t red;
-} Pixel;
-
-typedef struct {
-    size_t width;
-    size_t height;
-    Pixel* pixelData;
-} Image;
 
 static inline Pixel* get_pixel_fast(
         const Image* restrict image, const size_t x, const size_t rowOffset)

@@ -1,8 +1,8 @@
-#include "utils.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include "utils.h"
 
 int is_str_in_const_str_array(const void* restrict arg,
         const char* const strArray[], const size_t nRead)

@@ -1,7 +1,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include "fileParsing.h"
+#include "pixels.h"
 
 /* flip_image()
  * ------------

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "imageEditing.h"
-#include "fileParsing.h"
 #include "filters.h"
 
 int flip_image(Image* image)
