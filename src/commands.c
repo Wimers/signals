@@ -596,7 +596,7 @@ static int run_print(void* obj)
     BMP* bmpImage = (BMP*)obj;
 
     if (flip_image(bmpImage->image) == -1) {
-        status = EXIT_FAILURE; // FIX
+        status = EXIT_FLIP_FAILURE;
         return status;
     }
 
@@ -636,12 +636,8 @@ static int run_filter(void* obj)
     typedef void (*ColourFilter)(Image* image);
     ColourFilter filter = (ColourFilter)(filterMap[index]);
 
-    if (filter == NULL) { // Check this is even possible
-        status = EXIT_FAILURE; // FIX
-        return status;
-    }
-
     filter(bmpImage->image);
+
     return EXIT_SUCCESS;
 }
 
@@ -708,7 +704,7 @@ static int run_melt(void* obj)
     BMP* bmpImage = (BMP*)obj;
     if (melt(bmpImage, userInput->meltOffset) == -1) {
         fprintf(stderr, "Melt failed\n");
-        status = EXIT_FAILURE; // FIX
+        status = EXIT_MELT_FAILURE;
         return status;
     }
     return EXIT_SUCCESS;
@@ -739,7 +735,7 @@ static int run_blur(void* obj)
 
     if (blurred == NULL) {
         fprintf(stderr, "Blurring failed\n");
-        status = EXIT_FAILURE; // FIX
+        status = EXIT_BLUR_FAILURE;
         return status;
     }
 
@@ -789,11 +785,12 @@ static int run_rotate(void* obj)
 
     if (bmpImage->image == NULL) {
         fprintf(stderr, "Rotation failed\n");
-        status = EXIT_FAILURE; // FIX
+        status = EXIT_ROTATION_FAILURE;
         return status;
     }
 
-    if (userInput->rotations & 1) { // If number of rotations is odd
+    // If number of rotations is odd
+    if (userInput->rotations & 1) {
         const int32_t temp = (bmpImage->infoHeader).bitmapWidth;
         (bmpImage->infoHeader).bitmapWidth
                 = (bmpImage->infoHeader).bitmapHeight;
@@ -829,7 +826,8 @@ static int run_flip(void* obj)
 {
     BMP* bmpImage = (BMP*)obj;
     if (flip_image(bmpImage->image) == -1) {
-        status = EXIT_FAILURE; // FIX
+        fprintf(stderr, "Flip failed.\n");
+        status = EXIT_FLIP_FAILURE;
         return status;
     }
     return EXIT_SUCCESS;
@@ -1213,7 +1211,7 @@ int parse_user_commands(const int argc, char** argv)
 
         if (activeCommands & mask) { // Check if this command has
                                      // already been parsed
-            return EXIT_FAILURE; // FIX
+            return EXIT_REPEATED_CMD;
         }
 
         int success = cmd->verify();

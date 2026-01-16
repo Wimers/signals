@@ -176,20 +176,6 @@ void brightness_cut_filter(Image* image, const uint8_t cutoff);
  */
 void contrast_effect(Image* image, const float contrastFactor);
 
-/* dim_effect()
- * ------------
- * Reduces the intensity of each Pixel of an Image by a constant channel
- * specific dimming factor. Pixels are reduced to a minimum of zero to prevent
- * integer underflow.
- *
- * image: Pointer to struct containing the pixel data.
- * redDim: Factor red component is reduced by.
- * greenDim: Factor green component is reduced by.
- * blueDim: Factor blue component is reduced by.
- */
-[[deprecated]] void dim_effect(Image* image, const uint8_t redDim,
-        const uint8_t greenDim, const uint8_t blueDim);
-
 /* swap_red_blue()
  * ---------------
  * Swaps the red and blue components of each pixel in an Image.

@@ -107,11 +107,11 @@ void initialise_bmp(BMP* bmpImage)
 [[nodiscard]] int read_headers(BMP* bmpImage)
 {
     if (parse_bmp_header(bmpImage) == -1) {
-        return -1; // FIX add specific code
+        return -1;
     }
 
     if (parse_bmp_info_header(bmpImage) == -1) {
-        return -1; // FIX add specific code
+        return -1;
     }
 
     return EXIT_SUCCESS;

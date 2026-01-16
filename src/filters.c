@@ -292,8 +292,8 @@ int glitch_effect(Image* image, const size_t glitchOffset)
 
     Pixel* rowCopy = malloc(rowSize);
     if (rowCopy == NULL) {
-        // Malloc failed
-        return -1; // FIX Add unique exit code
+        perror("Malloc failed");
+        return -1;
     }
 
     // For each row
@@ -336,13 +336,13 @@ int glitch_effect(Image* image, const size_t glitchOffset)
     return EXIT_SUCCESS;
 }
 
-int verify_offset_bounds(Image* image, const size_t offset) // FIX
+int verify_offset_bounds(Image* image, const size_t offset)
 {
     if (offset >= image->width) {
         fputs(glitchUsageMessage, stderr);
         fprintf(stderr, imageBoundsMessage, image->width, image->height);
         fputs(glitchOffsetValMessage, stderr);
-        fprintf(stderr, "got \"%zu\".\n", offset); // FIX
+        fprintf(stderr, "Got \'%zu\'.\n", offset);
         return -1;
     }
 
@@ -405,18 +405,6 @@ void apply_hue(Image* image, const int red, const int green, const int blue)
     });
 }
 
-[[deprecated]] void dim_effect(Image* image, const uint8_t redDim,
-        const uint8_t greenDim, const uint8_t blueDim)
-{
-    FX_TEMPLATE(image,
-            { // Reduce value of each pixel component by the dimming factor
-              // Zero is the minimum value components can be reduced to.
-                pixel->blue = clamp_floor_u8(pixel->blue, blueDim);
-                pixel->green = clamp_floor_u8(pixel->green, greenDim);
-                pixel->red = clamp_floor_u8(pixel->red, redDim);
-            });
-}
-
 void swap_red_blue(Image* image)
 {
     FX_TEMPLATE(image, { // Swap red and blue values
@@ -444,7 +432,7 @@ int cmp_pixels(const void* a, const void* b)
 
     size_t norm = 0;
     if (start == 0) {
-        return -1; // FIX
+        return -1;
     }
 
     if (start < 0) {
@@ -466,7 +454,7 @@ int cmp_pixels(const void* a, const void* b)
     } else {
         rotated = rotate_image_anticlockwise(image);
     }
-    if (rotated == NULL) {
+    if (!rotated) {
         return -1;
     }
 
@@ -489,12 +477,13 @@ int cmp_pixels(const void* a, const void* b)
 
     free_image(&rotated);
 
-    if (unRotated == NULL) {
+    if (!unRotated) {
         return -1;
     }
 
     free_image(&image);
     bmp->image = unRotated;
+
     return EXIT_SUCCESS;
 }
 
@@ -621,7 +610,7 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
             = (image->width > image->height) ? (image->width) : (image->height);
 
     Pixel* buffer = malloc(nPixelsMax * sizeof(Pixel));
-    if (buffer == NULL) {
+    if (!buffer) {
         free_image(&t1);
         return NULL;
     }
@@ -630,7 +619,7 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
     const size_t rSizeT1 = image->width * sizeof(Pixel);
 
     size_t* lookupBuffer = malloc((perimeter + 1) * sizeof(size_t));
-    if (lookupBuffer == NULL) {
+    if (!lookupBuffer) {
         free(buffer);
         free_image(&t1);
         return NULL;
@@ -650,7 +639,7 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
     Image* t2 = transpose_image(t1);
     free_image(&t1);
 
-    if (t2 == NULL) {
+    if (!t2) {
         free(buffer);
         free(lookupBuffer);
         return NULL;
@@ -680,20 +669,20 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
 
     Pixel* buffer = malloc(sizeof(Pixel) * image->width);
 
-    if (buffer == NULL) {
+    if (!buffer) {
         free_image(&new);
         return NULL;
     }
 
     size_t* lookup = malloc(perimeter * sizeof(size_t));
-    if (lookup == NULL) {
+    if (!lookup) {
         free_image(&new);
         free(buffer);
         return NULL;
     }
 
     size_t* scalingBuffer = malloc((perimeter + 1) * sizeof(size_t));
-    if (scalingBuffer == NULL) {
+    if (!scalingBuffer) {
         free(lookup);
         free(buffer);
         free_image(&new);
@@ -744,6 +733,8 @@ Image* even_faster_image_blur(const Image* restrict image, const size_t radius)
     return new;
 }
 
+// Ignore, this needs to be updated to an implimentation using convolution
+// and a kernal.
 void edge_detection(Image* image, const int threshold)
 {
     for (size_t y = 0; y < image->height; y++) {
