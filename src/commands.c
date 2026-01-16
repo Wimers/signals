@@ -752,13 +752,12 @@ static int run_rotate(void* obj)
 {
     BMP* bmpImage = (BMP*)obj;
 
-    // Handle image rotation
-    long rotMode = (userInput->rotations % 4);
-    rotMode = (rotMode < 0) ? (rotMode + 4) : rotMode;
-
     Image* output = NULL;
 
-    switch (rotMode) {
+    // Uses bit magic with mod 4
+    const uint8_t mode = (uint8_t)(userInput->rotations & 3);
+
+    switch (mode) {
     case 0:
         break;
 
@@ -1172,32 +1171,20 @@ static const Command Experimental = {
 };
 
 static const Entry CmdRegistry[] = {
-    {"input", INPUT, Input},
-    {"output", OUTPUT, Output},
-    {"dump", DUMP, Dump},
-    {"print", PRINT, Print},
-    {"filter", FILTERS, Filters},
-    {"hue", HUE, Hue},
-    {"grayscale", GRAYSCALE, Grayscale},
-    {"invert", INVERT, Invert},
-    {"flip", FLIP, Flip},
-    {"brightness-cut", BRIGHTNESS_CUT, BrightnessCut},
-    {"combine", COMBINE, Combine},
-    {"glitch", GLITCH, Glitch},
-    {"average", AVERAGE, Average},
-    {"contrast", CONTRAST, Contrast},
-    {"swap", SWAP, Swap},
-    {"rotate", ROTATE, Rotate},
-    {"transpose", TRANSPOSE, Transpose},
-    {"reverse", REVERSE, Reverse},
-    {"melt", MELT, Melt},
-    {"scale", SCALE, Scale},
-    {"scale-strict", SCALE_STRICT, ScaleStrict},
-    {"merge", MERGE, Merge},
-    {"blur", BLUR, Blur},
-    {"encode", ENCODE, Encode},
-    {"experimental", EXPERIMENTAL, Experimental},
-    {NULL, INVALID, {0}}, // INVALID
+        {"input", INPUT, Input}, {"output", OUTPUT, Output},
+        {"dump", DUMP, Dump}, {"print", PRINT, Print},
+        {"filter", FILTERS, Filters}, {"hue", HUE, Hue},
+        {"grayscale", GRAYSCALE, Grayscale}, {"invert", INVERT, Invert},
+        {"flip", FLIP, Flip}, {"brightness-cut", BRIGHTNESS_CUT, BrightnessCut},
+        {"combine", COMBINE, Combine}, {"glitch", GLITCH, Glitch},
+        {"average", AVERAGE, Average}, {"contrast", CONTRAST, Contrast},
+        {"swap", SWAP, Swap}, {"rotate", ROTATE, Rotate},
+        {"transpose", TRANSPOSE, Transpose}, {"reverse", REVERSE, Reverse},
+        {"melt", MELT, Melt}, {"scale", SCALE, Scale},
+        {"scale-strict", SCALE_STRICT, ScaleStrict}, {"merge", MERGE, Merge},
+        {"blur", BLUR, Blur}, {"encode", ENCODE, Encode},
+        {"experimental", EXPERIMENTAL, Experimental},
+        {NULL, INVALID, {0}}, // INVALID
 };
 
 int parse_user_commands(const int argc, char** argv)
