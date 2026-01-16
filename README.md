@@ -62,8 +62,8 @@
 </p>
 
 > ```bash
-> $ signals -i images/original/heartOriginal.bmp -o temp.bmp --reverse  --melt -1 --contrast 30
-> $ signals -i images/modified/heart.bmp -o dbmelt.bmp --merge temp.bmp --melt  1 --contrast 30
+> $ signals -i images/original/heartOriginal.bmp -o tmp.bmp --reverse --contrast 1.30 --melt -1
+> $ signals -i images/modified/heart.bmp -o dbmelt.bmp --contrast 1.30 --melt 1 --merge tmp.bmp
 > ```
 
 ---
