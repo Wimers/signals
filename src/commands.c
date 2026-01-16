@@ -850,17 +850,17 @@ static int run_experimental(void* obj)
 ///////////////////////////////////////////////////////////////////////////////
 
 static const Command Input = {
-	.verify = verify_input,
-	.run = run_input,
-        .help = {
-		.code = 'i',
-		.name = "input",
-                .usage = "--input <file>",
-                .desc = "Specifies the source BMP image file to be "
-                        "processed.\n\tFilename "
-                        "must end in \'.bmp\'.",
-                .examples = "signals -i images/beach.bmp",
-	},
+    .verify = verify_input,
+    .run = run_input,
+    .help = {
+	.code = 'i',
+	.name = "input",
+	.usage = "--input <file>",
+	.desc = "Specifies the source BMP image file to be "
+		"processed.\n\tFilename "
+		"must end in \'.bmp\'.",
+	.examples = "signals -i images/beach.bmp",
+    },
 };
 
 static const Command Output = {
