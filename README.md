@@ -76,8 +76,8 @@
 </p>
 
 > ```bash
-> $ signals -i images/original/turtle.bmp -o tmp.bmp --scale-strict "1.00, 0.60, 0.6"
-> $ signals -i tmp.bmp -o turtle.bmp --contrast 2.30 --scale-strict "2.30, 1.15, 1.0"
+> $ signals -i images/original/turtle.bmp --scale-strict "1.00, 0.60, 0.6" -o tmp.bmp
+> $ signals -i tmp.bmp -o turtle.bmp --scale-strict "2.30, 1.15, 1.0" -C 2.30
 > ```
 
 ---
@@ -103,7 +103,7 @@
 </p>
 
 > ```bash
-> $ signals -i images/original/cat.bmp -o cat.bmp --scale "1.8, -1, -1" --swap -C 1.5 -G 10
+> $ signals -i images/original/cat.bmp -o cat.bmp --scale "1.8, -1, -1" -G 10 -s -C 1.5
 > ```
 
 ---
