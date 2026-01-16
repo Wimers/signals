@@ -84,10 +84,6 @@ int check_valid_file_type(const char* const type, const char* filePath)
     return EXIT_SUCCESS;
 }
 
-typedef void (*Function)(void);
-Function handle_colour_filters(const uint8_t filters);
-[[nodiscard]] int filtr_col_check(uint8_t* setting, const char* arg);
-
 int status;
 
 typedef enum {
@@ -221,12 +217,43 @@ static int verify_output(void)
 
 static int verify_filter(void)
 {
-    if (filtr_col_check(&(userInput->filters), optarg) == -1) {
+    uint8_t colourBitVect = 0;
+
+    for (const char* s = optarg; *s != '\0'; s++) {
+
+        // Sets bit in bit vector to indicate presence of colour to
+        // filter. Both 'r' and 'R' are represented by the same bit.
+        switch (*s) {
+        case 'r':
+        case 'R':
+            colourBitVect |= 1; // Bit 0
+            break;
+
+        case 'g':
+        case 'G':
+            colourBitVect |= 2; // Bit 1
+            break;
+
+        case 'b':
+        case 'B':
+            colourBitVect |= 4; // Bit 2
+            break;
+
+        default:
+            userInput->filters = 0;
+            status = EXIT_INVALID_PARAMETER;
+            goto esc;
+        }
+    }
+esc:
+    if (status) {
         fprintf(stderr, invalidFilterColourMessage, optarg);
         printf("See \'signals help filter\'\n");
-        return EXIT_INVALID_PARAMETER;
+    } else {
+        userInput->filters = colourBitVect;
     }
-    return 0;
+
+    return status;
 }
 
 static int verify_hue(void)
@@ -586,9 +613,22 @@ static int run_filter(void* obj)
 {
     BMP* bmpImage = (BMP*)obj;
 
+    const uint8_t index = userInput->filters & 0x07;
+
+    typedef void (*Function)(void);
+    static const Function filterMap[8] = {
+            NULL,
+            (Function)&filter_red,
+            (Function)&filter_green,
+            (Function)&filter_red_green,
+            (Function)&filter_blue,
+            (Function)&filter_red_blue,
+            (Function)&filter_green_blue,
+            (Function)&filter_all,
+    };
+
     typedef void (*ColourFilter)(Image* image);
-    ColourFilter filter
-            = (ColourFilter)handle_colour_filters(userInput->filters);
+    ColourFilter filter = (ColourFilter)(filterMap[index]);
 
     if (filter == NULL) { // Check this is even possible
         status = EXIT_FAILURE; // FIX
@@ -978,7 +1018,7 @@ static const Command Contrast = {
     .help = {
         .code = 'C',
         .name = "contrast",
-        .usage = "-i <file> --contrast <0-255>",
+        .usage = "-i <file> --contrast <factor>",
         .desc = "Increase the contrast of an image.",
         .examples = "signals -i in.bmp -o out.bmp --contrast 150",
     },
@@ -1301,57 +1341,5 @@ int command_list(const char* command)
     }
 
     get_cmd_help(&((CmdRegistry[i]).cmd));
-    return EXIT_SUCCESS;
-}
-
-Function handle_colour_filters(const uint8_t filters)
-{
-    const uint8_t index = filters & 0x07;
-
-    const Function filterMap[8] = {
-            NULL,
-            (Function)&filter_red,
-            (Function)&filter_green,
-            (Function)&filter_red_green,
-            (Function)&filter_blue,
-            (Function)&filter_red_blue,
-            (Function)&filter_green_blue,
-            (Function)&filter_all,
-    };
-
-    return filterMap[index];
-}
-
-[[nodiscard]] int filtr_col_check(uint8_t* setting, const char* arg)
-{
-    uint8_t colourBitVect = 0;
-
-    for (const char* s = arg; *s != '\0'; s++) {
-
-        // Sets bit in bit vector to indicate presence of colour to
-        // filter. Both 'r' and 'R' are represented by the same bit.
-        switch (*s) {
-        case 'r':
-        case 'R':
-            colourBitVect |= 1; // Bit 0
-            break;
-
-        case 'g':
-        case 'G':
-            colourBitVect |= 2; // Bit 1
-            break;
-
-        case 'b':
-        case 'B':
-            colourBitVect |= 4; // Bit 2
-            break;
-
-        default:
-            *setting = 0;
-            return -1;
-        }
-    }
-
-    *setting = colourBitVect;
     return EXIT_SUCCESS;
 }
