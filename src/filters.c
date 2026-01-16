@@ -311,6 +311,14 @@ int glitch_effect(Image* image, const size_t glitchOffset)
 
             // Update pixel value if data access region is within image
             // bounds, else set component to zero.
+
+            /* Original GLITCH EFFECT
+            const size_t accessRedRegion = x - glitchOffset;
+            (accessRedRegion < image->width)
+                    ? (pixel->red = rowCopy[accessRedRegion].red)
+                    : 0;
+            */
+
             const size_t accessRedRegion = x + glitchOffset;
             (accessRedRegion < image->width)
                     ? (pixel->red = rowCopy[accessRedRegion].red)

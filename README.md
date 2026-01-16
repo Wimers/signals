@@ -50,7 +50,7 @@
 </p>
 
 > ```bash
-> $ signals -i images/original/heartOriginal.bmp -o heart.bmp --glitch 60 --brightness-cut 245
+> $ signals -i images/original/heartOriginal.bmp -o heart.bmp --brightness-cut 245 --glitch 60
 > ```
 
 ---
