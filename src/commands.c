@@ -70,6 +70,11 @@ typedef struct {
     bool transpose;
 } UserInput;
 
+// Initialise global instance and ptr to data
+static UserInput store = {0};
+static UserInput* userInput = &store;
+
+// Probably move this is the utils file and separate the error messages
 int check_valid_file_type(const char* const type, const char* filePath)
 {
     // Check path ends with expected file type string
@@ -158,9 +163,6 @@ static struct option const longOptions[] = {
         {NULL, 0, NULL, 0},
 };
 
-static UserInput store = {0};
-static UserInput* userInput = &store;
-
 typedef struct {
     const char code;
     const char* const name;
@@ -185,9 +187,11 @@ static uint64_t activeCommands = 0;
 static int32_t cmdOrder[64] = {INVALID};
 static uint32_t cmdCount = 0;
 
-/* COMMAND LINE ARGUMENT VERIFICATION COMMANDS
- * -------------------------------------------
- */
+///////////////////////////////////////////////////////////////////////////////
+//
+//		COMMAND LINE ARGUMENT VERIFICATION COMMANDS
+//
+///////////////////////////////////////////////////////////////////////////////
 
 static int verify_dump(void)
 {
@@ -456,9 +460,11 @@ static int verify_experimental(void)
     return 0;
 }
 
-/* EXECUTION COMMANDS
- * ------------------
- */
+///////////////////////////////////////////////////////////////////////////////
+//
+//			EXECUTION COMMANDS
+//
+///////////////////////////////////////////////////////////////////////////////
 
 static int run_input(void* obj)
 {
@@ -837,9 +843,11 @@ static int run_experimental(void* obj)
     return EXIT_SUCCESS;
 }
 
-/* INITIALISE ALL COMMANDS
- * -----------------------
- */
+///////////////////////////////////////////////////////////////////////////////
+//
+//			INITIALISE ALL COMMANDS
+//
+///////////////////////////////////////////////////////////////////////////////
 
 static const Command Input = {
 	.verify = verify_input,
@@ -856,29 +864,29 @@ static const Command Input = {
 };
 
 static const Command Output = {
-	.verify = verify_output,
-	.run = run_output,
-        .help = {
-		.code = 'o',
-		.name = "output",
-		.usage = "-i <file> --output <file>",
-                .desc = "Specifies the destination path"
-			"where the processed BMP will be saved.",
-		.examples = "signals -i in.bmp -o out.bmp",
-	},
+    .verify = verify_output,
+    .run = run_output,
+    .help = {
+        .code = 'o',
+	.name = "output",
+	.usage = "-i <file> --output <file>",
+	.desc = "Specifies the destination path"
+		"where the processed BMP will be saved.",
+	.examples = "signals -i in.bmp -o out.bmp",
+    },
 };
 
 static const Command Merge = {
-	.verify = verify_merge,
-	.run = run_merge,
-        .help = {
-		.code = 'm',
-		.name = "merge",
-                .usage = "-i <file> --merge <file>",
-                .desc = "Overlays the specified file onto the input file."
-			"\n\tInput and merge paths must be unique.",
-		.examples = "signals -i face1.bmp -m face2.bmp -o morph.bmp",
-	},
+    .verify = verify_merge,
+    .run = run_merge,
+    .help = {
+	.code = 'm',
+	.name = "merge",
+        .usage = "-i <file> --merge <file>",
+        .desc = "Overlays the specified file onto the input file."
+		"\n\tInput and merge paths must be unique.",
+	.examples = "signals -i face1.bmp -m face2.bmp -o morph.bmp",
+    },
 };
 
 static const Command Combine = {
@@ -944,7 +952,7 @@ static const Command Filters = {
         .name = "filter",
         .usage = "-i <file> --filter <channels>",
         .desc = "Isolates specific colour channels. Use 'R', 'G', or 'B' "
-		" in any combination.\n\tThe channels specified will be "
+		"in any combination.\n\tThe channels specified will be "
 		"removed from the output image.",
         .examples = "signals -i in.bmp -o out.bmp --filter rb",
     },
@@ -1164,20 +1172,32 @@ static const Command Experimental = {
 };
 
 static const Entry CmdRegistry[] = {
-        {"input", INPUT, Input}, {"output", OUTPUT, Output},
-        {"dump", DUMP, Dump}, {"print", PRINT, Print},
-        {"filter", FILTERS, Filters}, {"hue", HUE, Hue},
-        {"grayscale", GRAYSCALE, Grayscale}, {"invert", INVERT, Invert},
-        {"flip", FLIP, Flip}, {"brightness-cut", BRIGHTNESS_CUT, BrightnessCut},
-        {"combine", COMBINE, Combine}, {"glitch", GLITCH, Glitch},
-        {"average", AVERAGE, Average}, {"contrast", CONTRAST, Contrast},
-        {"swap", SWAP, Swap}, {"rotate", ROTATE, Rotate},
-        {"transpose", TRANSPOSE, Transpose}, {"reverse", REVERSE, Reverse},
-        {"melt", MELT, Melt}, {"scale", SCALE, Scale},
-        {"scale-strict", SCALE_STRICT, ScaleStrict}, {"merge", MERGE, Merge},
-        {"blur", BLUR, Blur}, {"encode", ENCODE, Encode},
-        {"experimental", EXPERIMENTAL, Experimental},
-        {NULL, INVALID, {0}}, // INVALID
+    {"input", INPUT, Input},
+    {"output", OUTPUT, Output},
+    {"dump", DUMP, Dump},
+    {"print", PRINT, Print},
+    {"filter", FILTERS, Filters},
+    {"hue", HUE, Hue},
+    {"grayscale", GRAYSCALE, Grayscale},
+    {"invert", INVERT, Invert},
+    {"flip", FLIP, Flip},
+    {"brightness-cut", BRIGHTNESS_CUT, BrightnessCut},
+    {"combine", COMBINE, Combine},
+    {"glitch", GLITCH, Glitch},
+    {"average", AVERAGE, Average},
+    {"contrast", CONTRAST, Contrast},
+    {"swap", SWAP, Swap},
+    {"rotate", ROTATE, Rotate},
+    {"transpose", TRANSPOSE, Transpose},
+    {"reverse", REVERSE, Reverse},
+    {"melt", MELT, Melt},
+    {"scale", SCALE, Scale},
+    {"scale-strict", SCALE_STRICT, ScaleStrict},
+    {"merge", MERGE, Merge},
+    {"blur", BLUR, Blur},
+    {"encode", ENCODE, Encode},
+    {"experimental", EXPERIMENTAL, Experimental},
+    {NULL, INVALID, {0}}, // INVALID
 };
 
 int parse_user_commands(const int argc, char** argv)
