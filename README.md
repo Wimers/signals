@@ -90,7 +90,7 @@
 </p>
 
 > ```bash
-> $ signals -i images/original/birdsIndia.bmp -o infrabird.bmp -g -v --scale-strict "1.7, 1.7, 1.7" --contrast 15
+> $ signals -i images/original/birdsIndia.bmp -o infrabirds.bmp -g -C 1.10 --scale-strict "1.7, 1.7, 1.7" -v
 > ```
 
 ---
