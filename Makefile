@@ -8,7 +8,7 @@ WARNINGS = -Wall -Wextra -Werror -Wshadow \
 CFLAGS = -std=c23 -march=native -fopenmp
 PFLAGS = -O3 -flto -funroll-loops
 DEBUG = -g -fsanitize=address -fsanitize=undefined
-LFLAGS =
+LFLAGS = -pthread
 
 .DEFAULT_GOAL := performance
 .PHONY: debug performance clean install sdl-install uninstall link asm sdl profile

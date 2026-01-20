@@ -2,6 +2,7 @@
 #define FILTERS_H
 
 #include <stdint.h>
+#include <pthread.h>
 #include "fileParsing.h"
 
 /* FX_TEMPLATE
@@ -9,11 +10,15 @@
  * Macro to iterate over every pixel in an image with SIMD optimisation.
  */
 #define FX_TEMPLATE(image, function)                                           \
-    for (size_t y = 0; y < image->height; y++) {                               \
-        const size_t rowOffset = y * image->width;                             \
+                                                                               \
+    const size_t _height = image->height;                                      \
+    const size_t _width = image->width;                                        \
+                                                                               \
+    for (size_t y = 0; y < _height; y++) {                                     \
+        const size_t rowOffset = y * _width;                                   \
         Pixel* rowPtr = get_pixel_fast(image, 0, rowOffset);                   \
                                                                                \
-        _Pragma("omp simd") for (size_t x = 0; x < image->width; x++)          \
+        _Pragma("omp simd") for (size_t x = 0; x < _width; x++)                \
         {                                                                      \
             Pixel* pixel = rowPtr + x;                                         \
             function;                                                          \
