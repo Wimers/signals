@@ -1277,7 +1277,7 @@ int handle_commands(void)
         const char* const name = (cmd->help).name;
         if (!strcmp(name, "dump") || !strcmp(name, "input")
                 || !strcmp(name, "output") || !strcmp(name, "print")) {
-            fprintf(stderr, "Ignoring \'%s\'\n", name);
+            // fprintf(stderr, "Ignoring \'%s\'\n", name);
             continue;
         }
 

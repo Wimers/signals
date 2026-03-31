@@ -16,6 +16,7 @@ constexpr char glitchUsageMessage[]
         = "Glitch Effect\nUsage:  -l, --glitch <offset>  "
           "    - Apply horizontal glitch effect\n";
 
+
 // Constants to best map RGB values to grayscale
 // Each multiplied by 1024 to avoid floats
 constexpr int rMapGS = 306; // 0.299
@@ -63,8 +64,9 @@ static inline uint8_t calc_pixel_grayscale(Pixel* pixel)
 
 /* clamp_floor_u8()
  * ----------------
- * Attempts to perform a subtraction of two uint8_t integers, if the subtraction
- * would result in underflow, the result is clamped from below and set to 0.
+ * Attempts to perform a subtraction of two uint8_t integers, if the
+ * subtraction would result in underflow, the result is clamped from below
+ * and set to 0.
  *
  * val: Main value.
  * sub: Value subtracted from val.
@@ -79,7 +81,8 @@ static inline uint8_t clamp_floor_u8(const uint8_t val, const uint8_t sub)
 /* clamp_ceil_u8()
  * ---------------
  * Attempts to perform an addition of two uint8_t integers, if the addition
- * would result in overflow, the result is clamped above and set to UINT8_MAX.
+ * would result in overflow, the result is clamped above and set to
+ * UINT8_MAX.
  *
  * val: Main value.
  * add: Value added to val.
@@ -351,8 +354,8 @@ int verify_offset_bounds(Image* image, const size_t offset)
 
 /* contrast_effect_val()
  * ---------------------
- * Helper function to calculate the resulting pixel intensity provided contrast
- * effect parameters.
+ * Helper function to calculate the resulting pixel intensity provided
+ * contrast effect parameters.
  *
  * val: Current intensity of a pixel component.
  * contrastFactor: Level of contrasting.
